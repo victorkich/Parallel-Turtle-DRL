@@ -138,70 +138,14 @@ def empty_torch_queue(q):
     q.close()
 
 
-class ReplayBufferRL:
-    def __init__(self, max_size):
-        self.storage = []
-        self.max_size = max_size
-        self.ptr = 0
-
-    def push(self, data):
-        if len(self.storage) == self.max_size:
-            self.storage[int(self.ptr)] = data
-            self.ptr = (self.ptr + 1) % self.max_size
-        else:
-            self.storage.append(data)
-
-    def sample(self, batch_size):
-        ind = np.random.randint(0, len(self.storage), size=batch_size)
-        x, y, u, r, d = [], [], [], [], []
-
-        for i in ind:
-            X, Y, U, R, D = self.storage[i]
-            x.append(np.array(X, copy=False))
-            y.append(np.array(Y, copy=False))
-            u.append(np.array(U, copy=False))
-            r.append(np.array(R, copy=False))
-            d.append(np.array(D, copy=False))
-
-        return np.array(x), np.array(y), np.array(u), np.array(r).reshape(-1, 1), np.array(d).reshape(-1, 1)
-
-
-class ReplayBuffer:
-    def __init__(self, max_size=50):
-        assert max_size > 0, "Empty buffer or trying to create a black hole. Be careful."
-        self.max_size = max_size
-        self.data = []
-
-    def push_and_pop(self, data):
-        to_return = []
-        for element in data.data:
-            element = torch.unsqueeze(element, 0)
-            if len(self.data) < self.max_size:
-                self.data.append(element)
-                to_return.append(element)
-            else:
-                if random.uniform(0, 1) > 0.5:
-                    i = random.randint(0, self.max_size - 1)
-                    to_return.append(self.data[i].clone())
-                    self.data[i] = element
-                else:
-                    to_return.append(element)
-        return Variable(torch.cat(to_return))
-
-
-class LambdaLR:
-    def __init__(self, n_epochs, offset, decay_start_epoch):
-        assert (n_epochs - decay_start_epoch) > 0, "Decay must start before the training session ends!"
-        self.n_epochs = n_epochs
-        self.offset = offset
-        self.decay_start_epoch = decay_start_epoch
-
-    def step(self, epoch):
-        return 1.0 - max(0, epoch + self.offset - self.decay_start_epoch) / (self.n_epochs - self.decay_start_epoch)
-
-
-class ReplayBufferD4PG(object):
+class ReplayBuffer(object):
     def __init__(self, size):
+        """
+        Create replay buffer.
+        Args:
+            size (int): max number of transitions to store in the buffer. When the buffer
+            overflows the old memories are dropped.
+        """
         self._storage = []
         self._maxsize = size
         self._next_idx = 0
@@ -235,6 +179,27 @@ class ReplayBufferD4PG(object):
             gammas)]
 
     def sample(self, batch_size, **kwags):
+        """Sample a batch of experiences.
+        Parameters
+        ----------
+        batch_size: int
+            How many transitions to sample.
+        Returns
+        -------
+        obs_batch: np.array
+            batch of observations
+        act_batch: np.array
+            batch of actions executed given obs_batch
+        rew_batch: np.array
+            rewards received as results of executing act_batch
+        next_obs_batch: np.array
+            next set of observations seen after executing act_batch
+        done_mask: np.array
+            done_mask[i] = 1 if executing act_batch[i] resulted in
+            the end of an episode and 0 otherwise.
+        gammas: np.array
+            product of gammas for N-step returns
+        """
         idxes = [random.randint(0, len(self._storage) - 1) for _ in range(batch_size)]
         weights = np.zeros(len(idxes))
         inds = np.zeros(len(idxes))
@@ -247,15 +212,27 @@ class ReplayBufferD4PG(object):
         print(f"Buffer dumped to {fn}")
 
 
-class PrioritizedReplayBuffer(ReplayBufferD4PG):
+class PrioritizedReplayBuffer(ReplayBuffer):
     def __init__(self, size, alpha, save_dir):
+        """Create Prioritized Replay buffer.
+        Parameters
+        ----------
+        size: int
+            Max number of transitions to store in the buffer. When the buffer
+            overflows the old memories are dropped.
+        alpha: float
+            how much prioritization is used
+            (0 - no prioritization, 1 - full prioritization)
+        See Also
+        --------
+        ReplayBuffer.__init__
+        """
         super(PrioritizedReplayBuffer, self).__init__(size)
         assert alpha >= 0
         self._alpha = alpha
 
         self.it_capacity = 1
-        while self.it_capacity < size * 2:  # We use double the soft capacity of the PER for the segment trees to
-            # allow for any overflow over the soft capacity limit before samples are removed
+        while self.it_capacity < size * 2:  # We use double the soft capacity of the PER for the segment trees to allow for any overflow over the soft capacity limit before samples are removed
             self.it_capacity *= 2
 
         self._it_sum = SumSegmentTree(self.it_capacity)
@@ -264,9 +241,7 @@ class PrioritizedReplayBuffer(ReplayBufferD4PG):
 
     def add(self, *args, **kwargs):
         idx = self._next_idx
-        assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please "\
-                                       "increase capacity of segment trees or increase the frequency at which samples "\
-                                       "are removed from the replay memory "
+        assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
 
         super().add(*args, **kwargs)
         self._it_sum[idx] = self._max_priority ** self._alpha
@@ -288,6 +263,39 @@ class PrioritizedReplayBuffer(ReplayBufferD4PG):
         return res
 
     def sample(self, batch_size, beta):
+        """Sample a batch of experiences.
+        compared to ReplayBuffer.sample
+        it also returns importance weights and idxes
+        of sampled experiences.
+        Parameters
+        ----------
+        batch_size: int
+            How many transitions to sample.
+        beta: float
+            To what degree to use importance weights
+            (0 - no corrections, 1 - full correction)
+        Returns
+        -------
+        obs_batch: np.array
+            batch of observations
+        act_batch: np.array
+            batch of actions executed given obs_batch
+        rew_batch: np.array
+            rewards received as results of executing act_batch
+        next_obs_batch: np.array
+            next set of observations seen after executing act_batch
+        done_mask: np.array
+            done_mask[i] = 1 if executing act_batch[i] resulted in
+            the end of an episode and 0 otherwise.
+        gammas: np.array
+            product of gammas for N-step returns
+        weights: np.array
+            Array of shape (batch_size,) and dtype np.float32
+            denoting importance weight of each sampled transition
+        idxes: np.array
+            Array of shape (batch_size,) and dtype np.int32
+            idexes in buffer of sampled experiences
+        """
         assert beta > 0
 
         idxes = self._sample_proportional(batch_size)
@@ -305,6 +313,18 @@ class PrioritizedReplayBuffer(ReplayBufferD4PG):
         return tuple(list(encoded_sample) + [weights, idxes])
 
     def update_priorities(self, idxes, priorities):
+        """Update priorities of sampled transitions.
+        sets priority of transition at index idxes[i] in buffer
+        to priorities[i].
+        Parameters
+        ----------
+        idxes: [int]
+            List of idxes of sampled transitions
+        priorities: [float]
+            List of updated priorities corresponding to
+            transitions at the sampled idxes denoted by
+            variable `idxes`.
+        """
         assert len(idxes) == len(priorities)
         for idx, priority in zip(idxes, priorities):
             assert priority > 0
@@ -321,11 +341,9 @@ class PrioritizedReplayBuffer(ReplayBufferD4PG):
         print(f"Buffer dumped to {fn}")
 
 
-def create_replay_buffer(save_dir):
-    replay_memory_prioritized = 0
-    size = 1000000  # maximum capacity of replay memory
-    if replay_memory_prioritized:
-        alpha = 0.6  # controls the randomness vs prioritisation of the prioritised sampling (0.0 = Uniform sampling,
-        # 1.0 = Greedy prioritisation)
-        return PrioritizedReplayBuffer(size=size, alpha=alpha, save_dir=save_dir)
-    return ReplayBufferD4PG(size)
+def create_replay_buffer(config):
+    size = config['replay_mem_size']
+    if config['replay_memory_prioritized']:
+        alpha = config['priority_alpha']
+        return PrioritizedReplayBuffer(size=size, alpha=alpha)
+    return ReplayBuffer(size)

@@ -1,48 +1,47 @@
-import time
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import queue
 from utils.utils import OUNoise, empty_torch_queue
-from models import ValueNetwork
 from utils.l2_projection import _l2_project
-# device = 'cuda' if torch.cuda.is_available() else 'cpu'
-device = 'cpu'
+from models import ValueNetwork
+import torch.optim as optim
+import torch.nn as nn
+import numpy as np
+import queue
+import torch
+import time
 
 
 class LearnerD4PG(object):
     """Policy and value network update routine. """
-
-    def __init__(self, policy_net, target_policy_net, learner_w_queue, log_dir=''):
-        hidden_dim = 128  # size of the 2 hidden layers in networks
-        state_dim = 26
-        action_dim = 2
+    def __init__(self, config, policy_net, target_policy_net, learner_w_queue, writer, log_dir=''):
+        self.config = config
+        self.writer = writer
         action_low = [-1.5, -0.1]
         action_high = [1.5, 0.12]
-        value_lr = 0.0005
-        policy_lr = 0.0005
-        self.v_min = -20.0  # lower bound of critic value output distribution
-        self.v_max = 0.0  # upper bound of critic value output distribution
-        self.num_atoms = 51  # number of atoms in output layer of distributed critic
-        self.device = device
-        self.max_steps = 500  # maximum number of steps per episode
-        self.num_train_steps = 500000  # number of episodes from all agents
-        self.batch_size = 256
-        self.tau = 0.001  # parameter for soft target network updates
-        self.gamma = 0.99  # Discount rate (gamma) for future rewards
+        value_lr = config['critic_learning_rate']
+        policy_lr = config['actor_learning_rate']
+        self.n_step_return = config['n_step_return']
+        self.v_min = config['v_min']  # lower bound of critic value output distribution
+        self.v_max = config['v_max']  # upper bound of critic value output distribution
+        self.num_atoms = config['num_atoms']  # number of atoms in output layer of distributed critic
+        self.device = config['device']
+        self.max_steps = config['max_ep_length']  # maximum number of steps per episode
+        self.num_train_steps = config['num_steps_train']  # number of episodes from all agents
+        self.batch_size = config['batch_size']
+        self.tau = config['tau']  # parameter for soft target network updates
+        self.gamma = config['discount_rate']  # Discount rate (gamma) for future rewards
         self.log_dir = log_dir
-        self.prioritized_replay = 0
+        self.prioritized_replay = config['replay_memory_prioritized']
         self.learner_w_queue = learner_w_queue
         self.delta_z = (self.v_max - self.v_min) / (self.num_atoms - 1)
 
         # Noise process
-        self.ou_noise = OUNoise(dim=action_dim, low=action_low, high=action_high)
+        self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
         # Value and policy nets
-        self.value_net = ValueNetwork(state_dim, action_dim, hidden_dim, self.v_min, self.v_max, self.num_atoms, device=self.device)
+        self.value_net = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,
+                                      self.v_max, self.num_atoms, device=self.device)
         self.policy_net = policy_net
-        self.target_value_net = ValueNetwork(state_dim, action_dim, hidden_dim, self.v_min, self.v_max, self.num_atoms, device=self.device)
+        self.target_value_net = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                             self.v_min, self.v_max, self.num_atoms, device=self.device)
         self.target_policy_net = target_policy_net
 
         for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
@@ -84,9 +83,14 @@ class LearnerD4PG(object):
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
 
         # Get projected distribution
-        target_z_projected = _l2_project(next_distr_v=target_value, rewards_v=reward, dones_mask_t=done,
-                                         gamma=self.gamma ** 5, n_atoms=self.num_atoms, v_min=self.v_min,
-                                         v_max=self.v_max, delta_z=self.delta_z)
+        target_z_projected = _l2_project(next_distr_v=target_value,
+                                         rewards_v=reward,
+                                         dones_mask_t=done,
+                                         gamma=self.gamma ** self.n_step_return,
+                                         n_atoms=self.num_atoms,
+                                         v_min=self.v_min,
+                                         v_max=self.v_max,
+                                         delta_z=self.delta_z)
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
 
         critic_value = self.value_net.get_probs(state, action)
@@ -110,6 +114,7 @@ class LearnerD4PG(object):
         self.value_optimizer.step()
 
         # -------- Update actor -----------
+
         policy_loss = self.value_net.get_probs(state, self.policy_net(state))
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
         policy_loss = torch.sum(policy_loss, dim=1)
@@ -133,11 +138,24 @@ class LearnerD4PG(object):
         if update_step.value % 100 == 0:
             try:
                 params = [p.data.cpu().detach().numpy() for p in self.policy_net.parameters()]
-                self.learner_w_queue.put(params)
+                self.learner_w_queue.put_nowait(params)
             except:
                 pass
 
+        # Logging
+        step = update_step.value
+        self.writer.add_scalars(
+            "data/losses",
+            {
+                "policy_loss": policy_loss.item(),
+                "value_loss": value_loss.item(),
+                "learner_update_timing": time.time() - update_time,
+            },
+            step
+        )
+
     def run(self, training_on, batch_queue, replay_priority_queue, update_step):
+        torch.set_num_threads(4)
         while update_step.value < self.num_train_steps:
             try:
                 batch = batch_queue.get_nowait()

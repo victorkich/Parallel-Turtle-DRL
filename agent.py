@@ -4,7 +4,6 @@ import rospy
 from utils.utils import OUNoise, empty_torch_queue
 from collections import deque
 import gym_turtlebot3
-import pandas as pd
 import numpy as np
 import torch
 import time
@@ -14,25 +13,28 @@ env_name = 'TurtleBot3_Circuit_Simple-v0'
 
 
 class Agent(object):
-    def __init__(self, policy, global_episode, n_agent=0, agent_type='exploration', log_dir=''):
+    def __init__(self, config, policy, global_episode, writer, n_agent=0, agent_type='exploration', log_dir=''):
         print(f"Initializing agent {n_agent}...")
-        state_dim = 26
-        action_dim = 2
+        self.config = config
+        self.writer = writer
         self.action_low = [-1.5, -0.1]
         self.action_high = [1.5, 0.12]
         self.n_agent = n_agent
         self.agent_type = agent_type
-        self.max_steps = 500  # maximum number of steps per episode
-        self.num_episode_save = 100
+        self.max_steps = config['max_ep_length']  # maximum number of steps per episode
+        self.num_episode_save = config['num_episode_save']
         self.global_episode = global_episode
         self.local_episode = 0
         self.log_dir = log_dir
-        self.n_step_returns = 5  # number of future steps to collect experiences for N-step returns
-        self.discount_rate = 0.99  # Discount rate (gamma) for future rewards
-        self.update_agent_ep = 1  # agent gets latest parameters from learner every update_agent_ep episodes
+        self.n_step_returns = config['n_steps_return']  # number of future steps to collect experiences for N-step returns
+        self.discount_rate = config['discount_rate']  # Discount rate (gamma) for future rewards
+        self.update_agent_ep = config['update_agent_ep']  # agent gets latest parameters from learner every update_agent_ep episodes
+
+        # Initialise deque buffer to store experiences for N-step returns
+        self.exp_buffer = deque()
 
         # Create environment
-        self.ou_noise = OUNoise(dim=action_dim, low=self.action_low, high=self.action_high)
+        self.ou_noise = OUNoise(dim=config['action_dim'], low=self.action_low, high=self.action_high)
         self.ou_noise.reset()
 
         self.actor = policy
@@ -56,12 +58,8 @@ class Agent(object):
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(env_name.replace('-', '_') + "_w{}".format(self.n_agent))
-        env = gym.make(env_name, observation_mode=0, continuous=True,
-                       goal_list=[(-1.0, 1.0), (1.0, -1.0), (-1.0, -1.0), (1.0, 1.0)])
+        env = gym.make(env_name, observation_mode=0, continuous=True)
         time.sleep(1)
-        df = pd.DataFrame(columns=['episode', 'reward'])
-        # Initialise deque buffer to store experiences for N-step returns
-        self.exp_buffer = deque()
 
         best_reward = -float("inf")
         rewards = []
@@ -86,23 +84,19 @@ class Agent(object):
                     action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                     action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
                 next_state, reward, done, info = env.step(action)
-
                 episode_reward += reward
-
-                # state = env.normalise_state(state)
-                # reward = env.normalise_reward(reward)
 
                 self.exp_buffer.append((state, action, reward))
 
                 # We need at least N steps in the experience buffer before we can compute Bellman
                 # rewards and add an N-step experience to replay memory
-                if len(self.exp_buffer) >= self.n_step_returns:
+                if len(self.exp_buffer) >= self.config['n_step_returns']:
                     state_0, action_0, reward_0 = self.exp_buffer.popleft()
                     discounted_reward = reward_0
-                    gamma = self.discount_rate
+                    gamma = self.config['discount_rate']
                     for (_, _, r_i) in self.exp_buffer:
                         discounted_reward += r_i * gamma
-                        gamma *= self.discount_rate
+                        gamma *= self.config['discount_rate']
                     # We want to fill buffer only with form explorator
                     if self.agent_type == "exploration":
                         try:
@@ -117,33 +111,40 @@ class Agent(object):
                     while len(self.exp_buffer) != 0:
                         state_0, action_0, reward_0 = self.exp_buffer.popleft()
                         discounted_reward = reward_0
-                        gamma = self.discount_rate
+                        gamma = self.config['discount_rate']
                         for (_, _, r_i) in self.exp_buffer:
                             discounted_reward += r_i * gamma
-                            gamma *= self.discount_rate
+                            gamma *= self.config['discount_rate']
                         if self.agent_type == "exploration":
                             try:
                                 replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
                             except:
-                               pass
+                                pass
                     break
 
                 num_steps += 1
 
-            df = df.append({'episode': self.local_episode, 'reward': episode_reward}, ignore_index=True)
-            df.to_csv('log/agent_{}.csv'.format(self.n_agent))
-
-            print('Episode:', self.local_episode, 'Agent:', self.n_agent, 'Reward:', episode_reward)
+            # Log metrics
+            step = update_step.value
+            self.writer.add_scalars(
+                "data/agent{}".format(self.n_agent),
+                {
+                    "reward": episode_reward,
+                    "episode_timing": time.time() - ep_start_time,
+                },
+                step
+            )
 
             # Saving agent
+            reward_outperformed = episode_reward - best_reward > self.config["save_reward_threshold"]
             time_to_save = self.local_episode % self.num_episode_save == 0
-            if self.n_agent == 0 and time_to_save:
+            if self.agent_type == "exploitation" and (time_to_save or reward_outperformed):
                 if episode_reward > best_reward:
                     best_reward = episode_reward
                 self.save(f"local_episode_{self.local_episode}_reward_{best_reward:4f}")
 
             rewards.append(episode_reward)
-            if self.agent_type == "exploration" and self.local_episode % self.update_agent_ep == 0:
+            if self.agent_type == "exploration" and self.local_episode % self.config['update_agent_ep'] == 0:
                 self.update_actor_learner(learner_w_queue, training_on)
 
         empty_torch_queue(replay_queue)
