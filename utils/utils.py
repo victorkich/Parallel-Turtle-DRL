@@ -1,9 +1,7 @@
-from torch.autograd import Variable
 import numpy as np
 import operator
 import random
 import pickle
-import torch
 import os
 
 
