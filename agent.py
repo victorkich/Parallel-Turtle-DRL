@@ -26,7 +26,7 @@ class Agent(object):
         self.global_episode = global_episode
         self.local_episode = 0
         self.log_dir = log_dir
-        self.n_step_returns = config['n_steps_return']  # number of future steps to collect experiences for N-step returns
+        self.n_step_returns = config['n_step_return']  # number of future steps to collect experiences for N-step returns
         self.discount_rate = config['discount_rate']  # Discount rate (gamma) for future rewards
         self.update_agent_ep = config['update_agent_ep']  # agent gets latest parameters from learner every update_agent_ep episodes
 
@@ -90,7 +90,7 @@ class Agent(object):
 
                 # We need at least N steps in the experience buffer before we can compute Bellman
                 # rewards and add an N-step experience to replay memory
-                if len(self.exp_buffer) >= self.config['n_step_returns']:
+                if len(self.exp_buffer) >= self.config['n_step_return']:
                     state_0, action_0, reward_0 = self.exp_buffer.popleft()
                     discounted_reward = reward_0
                     gamma = self.config['discount_rate']
@@ -124,9 +124,11 @@ class Agent(object):
 
                 num_steps += 1
 
+
+
             # Log metrics
             step = update_step.value
-            self.writer.add_scalars(
+            self.writer.value.add_scalars(
                 "data/agent{}".format(self.n_agent),
                 {
                     "reward": episode_reward,
@@ -134,6 +136,7 @@ class Agent(object):
                 },
                 step
             )
+            print('Reward:', episode_reward, 'Step:', step, 'Episode timing:', time.time() - ep_start_time)
 
             # Saving agent
             reward_outperformed = episode_reward - best_reward > self.config["save_reward_threshold"]

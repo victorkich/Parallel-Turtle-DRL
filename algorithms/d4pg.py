@@ -144,7 +144,7 @@ class LearnerD4PG(object):
 
         # Logging
         step = update_step.value
-        self.writer.add_scalars(
+        self.writer.value.add_scalars(
             "data/losses",
             {
                 "policy_loss": policy_loss.item(),

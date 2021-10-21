@@ -5,8 +5,14 @@ import comet_ml
 from multiprocessing import set_start_method
 import torch.multiprocessing as torch_mp
 import multiprocessing as mp
-import time
+import numpy as np
+import ctypes
 import queue
+import torch
+import time
+import yaml
+import copy
+import os
 try:
     set_start_method('spawn')
 except:
@@ -16,37 +22,10 @@ from algorithms.d4pg import LearnerD4PG
 from tensorboardX import SummaryWriter
 from models import PolicyNetwork
 from agent import Agent
-import numpy as np
-import torch
-import yaml
-import copy
-import os
-
-
-# Helper function to display logged assets in the Comet UI
-def display(tab=None):
-    experiment = comet_ml.get_global_experiment()
-    experiment.display(tab=tab)
-
-
-def update_actor_learner(self, learner_w_queue, training_on):
-    """Update local actor to the actor from learner. """
-    if not training_on.value:
-        return
-    try:
-        source = learner_w_queue.get_nowait()
-    except:
-        return
-    target = self.actor
-    for target_param, source_param in zip(target.parameters(), source):
-        w = torch.tensor(source_param).float()
-        target_param.data.copy_(w)
-    del source
 
 
 def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, update_step,
                    writer, experiment_dir):
-
     # Create replay buffer
     replay_buffer = create_replay_buffer(config)
     batch_size = config['batch_size']
@@ -77,7 +56,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
 
         # Log data structures sizes
         step = update_step.value
-        writer.add_scalars(
+        writer.value.add_scalars(
             "data/data_struct",
             {
                 "global_episode": global_episode.value,
@@ -97,14 +76,14 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
                    update_step, writer, experiment_dir):
-    learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, writer, log_dir=experiment_dir)
+    learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir, writer=writer)
     learner.run(training_on, batch_queue, replay_priority_queue, update_step)
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
                  replay_queue, update_step, writer):
-    agent = Agent(config=config, policy=policy, global_episode=global_episode, writer=writer, n_agent=i,
-                  agent_type=agent_type, log_dir=experiment_dir)
+    agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
+                  log_dir=experiment_dir, writer=writer)
     agent.run(training_on, replay_queue, learner_w_queue, update_step)
 
 
@@ -113,22 +92,27 @@ if __name__ == "__main__":
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
-    with open(path + '/config/config.yml', 'r') as ymlfile:
+    with open(path + '/configs/config.yml', 'r') as ymlfile:
         config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
     # Initialize the SummaryWriter
     writer = SummaryWriter(comet_config={"disabled": False})
+    writer = mp.Value(ctypes.py_object, writer)  # lock=True
+    writer.value.add_hparams(
+        hparam_dict=config,
+        metric_dict={}
+    )
 
     # Opening gazebo environments
     for i in range(config['num_agents']):
         os.system('gnome-terminal --tab --working-directory=WORK_DIR -- bash -c "export '
                   'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                  'turtlebot3_gazebo_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                  'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
         time.sleep(2)
+    time.sleep(10)
 
     # Adjust as much as you need, limited number of physical cores of your cpu
     env_name = 'TurtleBot3_Circuit_Simple-v0'
-    script_name = os.path.basename(__file__)
 
     if config['seed']:
         torch.manual_seed(config['random_seed'])
@@ -180,8 +164,8 @@ if __name__ == "__main__":
 
     for p in processes:
         p.start()
-        time.sleep(0.25)
     for p in processes:
         p.join()
-
+        
+    writer.value.close()
     print("End.")
