@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     # Opening gazebo environments
     for i in range(config['num_agents']):
-        os.system('gnome-terminal --tab --working-directory=WORK_DIR -- bash -c "export '
+        os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                   'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
                   'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
         time.sleep(2)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         np.random.seed(config['random_seed'])
 
     # Create directory for experiment
-    experiment_dir = path + 'saved_models/'
+    experiment_dir = path + '/saved_models/'
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
 
