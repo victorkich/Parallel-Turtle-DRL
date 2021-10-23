@@ -1,5 +1,6 @@
 from utils.utils import OUNoise, empty_torch_queue
 from utils.l2_projection import _l2_project
+from tensorboardX import SummaryWriter
 from models import ValueNetwork
 import torch.optim as optim
 import torch.nn as nn
@@ -11,9 +12,8 @@ import time
 
 class LearnerD4PG(object):
     """Policy and value network update routine. """
-    def __init__(self, config, policy_net, target_policy_net, learner_w_queue, writer, log_dir=''):
+    def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
-        self.writer = writer
         action_low = [-1.5, -0.1]
         action_high = [1.5, 0.12]
         value_lr = config['critic_learning_rate']
@@ -55,7 +55,7 @@ class LearnerD4PG(object):
 
         self.value_criterion = nn.BCELoss(reduction='none')
 
-    def _update_step(self, batch, replay_priority_queue, update_step):
+    def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
         state, action, reward, next_state, done, gamma, weights, inds = batch
@@ -143,18 +143,13 @@ class LearnerD4PG(object):
                 pass
 
         # Logging
-        step = update_step.value
-        self.writer.value.add_scalars(
-            "data/losses",
-            {
-                "policy_loss": policy_loss.item(),
-                "value_loss": value_loss.item(),
-                "learner_update_timing": time.time() - update_time,
-            },
-            step
-        )
+        # step = update_step.value
+        with logs.get_lock():
+            logs[3] = policy_loss.item()
+            logs[4] = value_loss.item()
+            logs[5] = time.time() - update_time
 
-    def run(self, training_on, batch_queue, replay_priority_queue, update_step):
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
         torch.set_num_threads(4)
         while update_step.value < self.num_train_steps:
             try:
@@ -162,13 +157,15 @@ class LearnerD4PG(object):
             except queue.Empty:
                 continue
 
-            self._update_step(batch, replay_priority_queue, update_step)
-            update_step.value += 1
+            self._update_step(batch, replay_priority_queue, update_step, logs)
+            with update_step.get_lock():
+                update_step.value += 1
 
             if update_step.value % 1000 == 0:
                 print("Training step ", update_step.value)
 
-        training_on.value = 0
+        with training_on.get_lock():
+            training_on.value = 0
 
         empty_torch_queue(self.learner_w_queue)
         empty_torch_queue(replay_priority_queue)

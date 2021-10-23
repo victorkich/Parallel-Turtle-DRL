@@ -2,6 +2,7 @@
 
 import rospy
 from utils.utils import OUNoise, empty_torch_queue
+from tensorboardX import SummaryWriter
 from collections import deque
 import gym_turtlebot3
 import numpy as np
@@ -13,10 +14,9 @@ env_name = 'TurtleBot3_Circuit_Simple-v0'
 
 
 class Agent(object):
-    def __init__(self, config, policy, global_episode, writer, n_agent=0, agent_type='exploration', log_dir=''):
+    def __init__(self, config, policy, global_episode, n_agent=0, agent_type='exploration', log_dir=''):
         print(f"Initializing agent {n_agent}...")
         self.config = config
-        self.writer = writer
         self.action_low = [-1.5, -0.1]
         self.action_high = [1.5, 0.12]
         self.n_agent = n_agent
@@ -54,7 +54,7 @@ class Agent(object):
             target_param.data.copy_(w)
         del source
 
-    def run(self, training_on, replay_queue, learner_w_queue, update_step):
+    def run(self, training_on, replay_queue, learner_w_queue, update_step, logs):
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(env_name.replace('-', '_') + "_w{}".format(self.n_agent))
@@ -121,22 +121,16 @@ class Agent(object):
                             except:
                                 pass
                     break
-
                 num_steps += 1
-
-
 
             # Log metrics
             step = update_step.value
-            self.writer.value.add_scalars(
-                "data/agent{}".format(self.n_agent),
-                {
-                    "reward": episode_reward,
-                    "episode_timing": time.time() - ep_start_time,
-                },
-                step
-            )
-            print('Reward:', episode_reward, 'Step:', step, 'Episode timing:', time.time() - ep_start_time)
+            episode_timing = time.time() - ep_start_time
+            print('Agent:', self.n_agent, 'Reward:', episode_reward, 'Step:', step, 'Episode timing:', episode_timing)
+            aux = 6 + self.n_agent * 2
+            with logs.get_lock():
+                logs[aux] = episode_reward
+                logs[aux+1] = episode_timing
 
             # Saving agent
             reward_outperformed = episode_reward - best_reward > self.config["save_reward_threshold"]

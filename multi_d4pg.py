@@ -25,7 +25,11 @@ from agent import Agent
 
 
 def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, update_step,
-                   writer, experiment_dir):
+                   logs, experiment_dir):
+    # Logging
+    # os.environ['COMET_API_KEY'] = "53WlWYRLtr1QwZTbjazoEv35u"
+    # writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
+
     # Create replay buffer
     replay_buffer = create_replay_buffer(config)
     batch_size = config['batch_size']
@@ -55,53 +59,60 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             continue
 
         # Log data structures sizes
-        step = update_step.value
-        writer.value.add_scalars(
-            "data/data_struct",
-            {
-                "global_episode": global_episode.value,
-                "replay_queue": replay_queue.qsize(),
-                "batch_queue": batch_queue.qsize(),
-                "replay_buffer": len(replay_buffer)
-            },
-            step
-        )
+        # step = update_step.value
+        with logs.get_lock():
+            logs[0] = replay_queue.qsize()
+            logs[1] = batch_queue.qsize()
+            logs[2] = len(replay_buffer)
 
     if config['save_buffer']:
         replay_buffer.dump(experiment_dir)
 
+    # writer.close()
     empty_torch_queue(batch_queue)
     print("Stop sampler worker.")
 
 
+def logger(config, logs, training_on, update_step, global_episode):
+    # Initialize the SummaryWriter
+    os.environ['COMET_API_KEY'] = config['api_key']
+    comet_ml.init(project_name=config['project_name'])
+    writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
+    writer.add_hparams(hparam_dict=config, metric_dict={})
+    num_agents = config['num_agents']
+    while training_on.value:
+        step = update_step.value
+        global_ep = global_episode.value
+        writer.add_scalars(main_tag="data/data_struct", tag_scalar_dict={"global_episode": global_ep, "replay_queue":
+                           logs[0], "batch_queue": logs[1], "replay_buffer": logs[2]}, global_step=global_ep)
+        writer.add_scalars(main_tag="data/losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],
+                           "learner_update_timing": logs[5]}, global_step=global_ep)
+        for agent in range(num_agents):
+            aux = 6 + agent * 2
+            writer.add_scalars(main_tag="data/agent{}".format(agent), tag_scalar_dict={"reward": logs[aux],
+                               "episode_timing": logs[aux+1]}, global_step=global_ep)
+        time.sleep(1)
+    writer.close()
+
+
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
-                   update_step, writer, experiment_dir):
-    learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir, writer=writer)
-    learner.run(training_on, batch_queue, replay_priority_queue, update_step)
+                   update_step, logs, experiment_dir):
+    learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+    learner.run(training_on, batch_queue, replay_priority_queue, update_step, logs)
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
-                 replay_queue, update_step, writer):
+                 replay_queue, logs, update_step):
     agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
-                  log_dir=experiment_dir, writer=writer)
-    agent.run(training_on, replay_queue, learner_w_queue, update_step)
+                  log_dir=experiment_dir)
+    agent.run(training_on, replay_queue, learner_w_queue, update_step, logs)
 
 
 if __name__ == "__main__":
-    comet_ml.init(project_name='tensorboardX')
-
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
     with open(path + '/configs/config.yml', 'r') as ymlfile:
         config = yaml.load(ymlfile, Loader=yaml.FullLoader)
-
-    # Initialize the SummaryWriter
-    writer = SummaryWriter(comet_config={"disabled": False})
-    writer = mp.Value(ctypes.py_object, writer)  # lock=True
-    writer.value.add_hparams(
-        hparam_dict=config,
-        metric_dict={}
-    )
 
     # Opening gazebo environments
     for i in range(config['num_agents']):
@@ -129,13 +140,18 @@ if __name__ == "__main__":
     training_on = mp.Value('i', 1)
     update_step = mp.Value('i', 0)
     global_episode = mp.Value('i', 0)
+    logs = mp.Array('d', np.zeros(6 + 2 * config['num_agents']))
     learner_w_queue = torch_mp.Queue(maxsize=config['num_agents'])
     replay_priorities_queue = mp.Queue(maxsize=config['replay_queue_size'])
+
+    # Logger
+    p = torch_mp.Process(target=logger, args=(config, logs, training_on, update_step, global_episode))
+    processes.append(p)
 
     # Data sampler
     batch_queue = mp.Queue(maxsize=config['batch_queue_size'])
     p = torch_mp.Process(target=sampler_worker, args=(config, replay_queue, batch_queue, replay_priorities_queue,
-                                                      training_on, global_episode, update_step, writer, experiment_dir))
+                                                      training_on, global_episode, update_step, logs, experiment_dir))
     processes.append(p)
 
     # Learner (neural net training process)
@@ -147,25 +163,24 @@ if __name__ == "__main__":
     target_policy_net.share_memory()
 
     p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
-                         learner_w_queue, replay_priorities_queue, batch_queue, update_step, writer, experiment_dir))
+                         learner_w_queue, replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
     processes.append(p)
 
     # Single agent for exploitation
     p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
-                                                    experiment_dir, training_on, replay_queue, update_step, writer))
+                                                    experiment_dir, training_on, replay_queue, logs, update_step))
     processes.append(p)
 
     # Agents (exploration processes)
     for i in range(1, config['num_agents']):
         p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
-                             global_episode, i, "exploration", experiment_dir, training_on, replay_queue, update_step,
-                             writer))
+                             global_episode, i, "exploration", experiment_dir, training_on, replay_queue, logs,
+                             update_step))
         processes.append(p)
 
     for p in processes:
         p.start()
     for p in processes:
         p.join()
-        
-    writer.value.close()
+
     print("End.")
