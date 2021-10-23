@@ -143,7 +143,6 @@ class LearnerD4PG(object):
                 pass
 
         # Logging
-        # step = update_step.value
         with logs.get_lock():
             logs[3] = policy_loss.item()
             logs[4] = value_loss.item()

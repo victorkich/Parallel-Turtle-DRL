@@ -10,7 +10,6 @@ import torch
 import time
 import gym
 import os
-env_name = 'TurtleBot3_Circuit_Simple-v0'
 
 
 class Agent(object):
@@ -57,8 +56,8 @@ class Agent(object):
     def run(self, training_on, replay_queue, learner_w_queue, update_step, logs):
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
-        rospy.init_node(env_name.replace('-', '_') + "_w{}".format(self.n_agent))
-        env = gym.make(env_name, observation_mode=0, continuous=True)
+        rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
+        env = gym.make(self.config['env_name'], observation_mode=0, continuous=True)
         time.sleep(1)
 
         best_reward = -float("inf")
@@ -67,9 +66,7 @@ class Agent(object):
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
-            self.global_episode.value += 1
             self.exp_buffer.clear()
-
             ep_start_time = time.time()
             state = env.reset(new_random_goals=True)
             self.ou_noise.reset()
@@ -123,14 +120,18 @@ class Agent(object):
                     break
                 num_steps += 1
 
+            with self.global_episode.get_lock():
+                self.global_episode.value += 1
+
             # Log metrics
             step = update_step.value
             episode_timing = time.time() - ep_start_time
             print('Agent:', self.n_agent, 'Reward:', episode_reward, 'Step:', step, 'Episode timing:', episode_timing)
-            aux = 6 + self.n_agent * 2
+            aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 logs[aux] = episode_reward
-                logs[aux+1] = episode_timing
+                logs[aux + 1] = episode_timing
+                logs[aux + 2] = self.local_episode
 
             # Saving agent
             reward_outperformed = episode_reward - best_reward > self.config["save_reward_threshold"]

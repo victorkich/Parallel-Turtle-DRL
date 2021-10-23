@@ -6,7 +6,6 @@ from multiprocessing import set_start_method
 import torch.multiprocessing as torch_mp
 import multiprocessing as mp
 import numpy as np
-import ctypes
 import queue
 import torch
 import time
@@ -26,10 +25,6 @@ from agent import Agent
 
 def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, update_step,
                    logs, experiment_dir):
-    # Logging
-    # os.environ['COMET_API_KEY'] = "53WlWYRLtr1QwZTbjazoEv35u"
-    # writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
-
     # Create replay buffer
     replay_buffer = create_replay_buffer(config)
     batch_size = config['batch_size']
@@ -59,7 +54,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             continue
 
         # Log data structures sizes
-        # step = update_step.value
         with logs.get_lock():
             logs[0] = replay_queue.qsize()
             logs[1] = batch_queue.qsize()
@@ -68,7 +62,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
     if config['save_buffer']:
         replay_buffer.dump(experiment_dir)
 
-    # writer.close()
     empty_torch_queue(batch_queue)
     print("Stop sampler worker.")
 
@@ -80,18 +73,27 @@ def logger(config, logs, training_on, update_step, global_episode):
     writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
     writer.add_hparams(hparam_dict=config, metric_dict={})
     num_agents = config['num_agents']
+    fake_local_eps = np.zeros(num_agents, dtype=np.int)
+    fake_data_struct = np.zeros(3)
+    fake_step = 0
     while training_on.value:
         step = update_step.value
-        global_ep = global_episode.value
-        writer.add_scalars(main_tag="data/data_struct", tag_scalar_dict={"global_episode": global_ep, "replay_queue":
-                           logs[0], "batch_queue": logs[1], "replay_buffer": logs[2]}, global_step=global_ep)
-        writer.add_scalars(main_tag="data/losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],
-                           "learner_update_timing": logs[5]}, global_step=global_ep)
+        if all(fake_data_struct != logs[:3]):
+            fake_data_struct[:] = logs[:3]
+            writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
+                               "replay_queue": logs[0], "batch_queue": logs[1], "replay_buffer": logs[2]},
+                               global_step=step)
+        if fake_step != step:
+            fake_step = step
+            writer.add_scalars(main_tag="losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],
+                               "learner_update_timing": logs[5]}, global_step=step)
         for agent in range(num_agents):
-            aux = 6 + agent * 2
-            writer.add_scalars(main_tag="data/agent{}".format(agent), tag_scalar_dict={"reward": logs[aux],
-                               "episode_timing": logs[aux+1]}, global_step=global_ep)
-        time.sleep(1)
+            aux = 6 + agent * 3
+            if fake_local_eps[agent] != logs[aux + 2]:
+                fake_local_eps[agent] = logs[aux + 2]
+                writer.add_scalars(main_tag="agent_{}".format(agent), tag_scalar_dict={"reward": logs[aux],
+                                   "episode_timing": logs[aux + 1], "episode": logs[aux + 2]}, global_step=step)
+        time.sleep(0.05)
     writer.close()
 
 
@@ -122,9 +124,6 @@ if __name__ == "__main__":
         time.sleep(2)
     time.sleep(10)
 
-    # Adjust as much as you need, limited number of physical cores of your cpu
-    env_name = 'TurtleBot3_Circuit_Simple-v0'
-
     if config['seed']:
         torch.manual_seed(config['random_seed'])
         np.random.seed(config['random_seed'])
@@ -140,7 +139,7 @@ if __name__ == "__main__":
     training_on = mp.Value('i', 1)
     update_step = mp.Value('i', 0)
     global_episode = mp.Value('i', 0)
-    logs = mp.Array('d', np.zeros(6 + 2 * config['num_agents']))
+    logs = mp.Array('d', np.zeros(6 + 3 * config['num_agents']))
     learner_w_queue = torch_mp.Queue(maxsize=config['num_agents'])
     replay_priorities_queue = mp.Queue(maxsize=config['replay_queue_size'])
 
