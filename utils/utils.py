@@ -347,7 +347,8 @@ def create_replay_buffer(config, save_dir):
         return PrioritizedReplayBuffer(size=size, alpha=alpha, save_dir=save_dir)
     return ReplayBuffer(size)
 
+
 def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
     lim = 1. / np.sqrt(fan_in)
-    return (-lim, lim)
+    return -lim, lim
