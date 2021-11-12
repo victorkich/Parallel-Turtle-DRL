@@ -118,9 +118,9 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
                    update_step, global_episode, logs, experiment_dir):
-    if config['algorithm'] == 'D4PG':
+    if config['model'] == 'D4PG':
         learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    elif config['algorithm'] == 'DSAC':
+    elif config['model'] == 'DSAC':
         learner = LearnerDSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     learner.run(training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs)
 
@@ -182,13 +182,13 @@ if __name__ == "__main__":
     processes.append(p)
 
     # Learner (neural net training process)
-    assert config['algorithm'] == 'D4PG' or config['algorithm'] == 'SAC'  # Only D4PG or DSAC algorithms
-    if config['algorithm'] == 'D4PG':
+    assert config['model'] == 'D4PG' or config['model'] == 'SAC'  # Only D4PG or DSAC algorithms
+    if config['model'] == 'D4PG':
         target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         policy_net = copy.deepcopy(target_policy_net)
         policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
-    elif config['algorithm'] == 'DSAC':
+    elif config['model'] == 'DSAC':
         target_policy_net = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'], hidden_size=config['dense_size'], device=config['device'])
         policy_net = copy.deepcopy(target_policy_net)
         policy_net_cpu = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'], hidden_size=config['dense_size'], device=config['device'])
