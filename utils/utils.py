@@ -226,7 +226,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         ReplayBuffer.__init__
         """
         super(PrioritizedReplayBuffer, self).__init__(size)
-        assert alpha >= 0
+        #assert alpha >= 0
         self._alpha = alpha
 
         self.it_capacity = 1
@@ -239,7 +239,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
     def add(self, *args, **kwargs):
         idx = self._next_idx
-        assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
+        # assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
 
         super().add(*args, **kwargs)
         self._it_sum[idx] = self._max_priority ** self._alpha
@@ -260,7 +260,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             res.append(idx)
         return res
 
-    def sample(self, batch_size, beta):
+    def sample(self, batch_size, beta=0.4):
         """Sample a batch of experiences.
         compared to ReplayBuffer.sample
         it also returns importance weights and idxes
@@ -327,6 +327,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         for idx, priority in zip(idxes, priorities):
             assert priority > 0
             assert 0 <= idx < len(self._storage)
+            idx = int(idx)
             self._it_sum[idx] = priority ** self._alpha
             self._it_min[idx] = priority ** self._alpha
 
@@ -339,9 +340,9 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         print(f"Buffer dumped to {fn}")
 
 
-def create_replay_buffer(config):
+def create_replay_buffer(config, save_dir):
     size = config['replay_mem_size']
     if config['replay_memory_prioritized']:
         alpha = config['priority_alpha']
-        return PrioritizedReplayBuffer(size=size, alpha=alpha)
+        return PrioritizedReplayBuffer(size=size, alpha=alpha, save_dir=save_dir)
     return ReplayBuffer(size)

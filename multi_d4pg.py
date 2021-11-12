@@ -25,13 +25,17 @@ from agent import Agent
 
 def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, update_step,
                    logs, experiment_dir):
+                   
+    torch.set_num_threads(4)
     # Create replay buffer
-    replay_buffer = create_replay_buffer(config)
+    replay_buffer = create_replay_buffer(config, experiment_dir)
     batch_size = config['batch_size']
 
     while training_on.value:
         # (1) Transfer replays to global buffer
+        time.sleep(0.1)
         n = replay_queue.qsize()
+
         for _ in range(n):
             replay = replay_queue.get()
             replay_buffer.add(*replay)
@@ -41,23 +45,33 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             continue
 
         try:
+            # print('Try 1!!!!!!!!!!!!!!!!!!!!!!!!!!')
             inds, weights = replay_priorities_queue.get_nowait()
             replay_buffer.update_priorities(inds, weights)
         except queue.Empty:
+            print('Erro 1!!!!!!!!!!!!!!!!!!!!!!!!!')
             pass
 
         try:
-            batch = replay_buffer.sample(batch_size)
+            # print('Try 2!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            batch = replay_buffer.sample(batch_size, beta=0.4)
             batch_queue.put_nowait(batch)
+            if len(replay_buffer) > config['replay_mem_size']:
+                replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
         except:
+            print('Erro 2!!!!!!!!!!!!!!!!!!!!!!!!')
             time.sleep(0.1)
             continue
 
-        # Log data structures sizes
-        with logs.get_lock():
-            logs[0] = replay_queue.qsize()
-            logs[1] = batch_queue.qsize()
-            logs[2] = len(replay_buffer)
+        try:
+            # print('Try 3!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            # Log data structures sizes
+            with logs.get_lock():
+                logs[0] = replay_queue.qsize()
+                logs[1] = batch_queue.qsize()
+                logs[2] = len(replay_buffer)
+        except:
+            print('Erro 3!!!!!!!!!!!!!!!!!!!!!!!!')
 
     if config['save_buffer']:
         replay_buffer.dump(experiment_dir)
@@ -77,23 +91,27 @@ def logger(config, logs, training_on, update_step, global_episode):
     fake_data_struct = np.zeros(3)
     fake_step = 0
     while training_on.value:
-        step = update_step.value
-        if all(fake_data_struct != logs[:3]):
-            fake_data_struct[:] = logs[:3]
-            writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
-                               "replay_queue": logs[0], "batch_queue": logs[1], "replay_buffer": logs[2]},
-                               global_step=step)
-        if fake_step != step:
-            fake_step = step
-            writer.add_scalars(main_tag="losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],
+        try:
+            step = update_step.value
+            if all(fake_data_struct != logs[:3]):
+                fake_data_struct[:] = logs[:3]
+                writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
+                                   "replay_queue": logs[0], "batch_queue": logs[1], "replay_buffer": logs[2]},
+                                   global_step=step)
+            if fake_step != step:
+                fake_step = step
+                writer.add_scalars(main_tag="losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],
                                "learner_update_timing": logs[5]}, global_step=step)
-        for agent in range(num_agents):
-            aux = 6 + agent * 3
-            if fake_local_eps[agent] != logs[aux + 2]:
-                fake_local_eps[agent] = logs[aux + 2]
-                writer.add_scalars(main_tag="agent_{}".format(agent), tag_scalar_dict={"reward": logs[aux],
-                                   "episode_timing": logs[aux + 1], "episode": logs[aux + 2]}, global_step=step)
-        time.sleep(0.05)
+            for agent in range(num_agents):
+                aux = 6 + agent * 3
+                if fake_local_eps[agent] != logs[aux + 2]:
+                    fake_local_eps[agent] = logs[aux + 2]
+                    writer.add_scalars(main_tag="agent_{}".format(agent), tag_scalar_dict={"reward": logs[aux],
+                                       "episode_timing": logs[aux + 1], "episode": logs[aux + 2]}, global_step=step)
+            time.sleep(0.05)
+            writer.flush()
+        except:
+            pass
     writer.close()
 
 
@@ -118,11 +136,16 @@ if __name__ == "__main__":
 
     # Opening gazebo environments
     for i in range(config['num_agents']):
-        os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                  'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                  'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+        if not i:
+            os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                      'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+        else:
+            os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                      'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
         time.sleep(2)
-    time.sleep(10)
+    time.sleep(25)
 
     if config['seed']:
         torch.manual_seed(config['random_seed'])

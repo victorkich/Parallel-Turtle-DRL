@@ -119,6 +119,7 @@ class Agent(object):
                                 pass
                     break
                 num_steps += 1
+                # time.sleep(0.1)
 
             with self.global_episode.get_lock():
                 self.global_episode.value += 1
@@ -126,7 +127,7 @@ class Agent(object):
             # Log metrics
             step = update_step.value
             episode_timing = time.time() - ep_start_time
-            print('Agent:', self.n_agent, 'Reward:', episode_reward, 'Step:', step, 'Episode timing:', episode_timing)
+            print('Agent:', self.n_agent, 'Reward:', episode_reward, 'Step:', step, 'Episode Timing:', episode_timing)
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 logs[aux] = episode_reward
