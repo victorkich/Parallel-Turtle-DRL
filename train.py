@@ -94,7 +94,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
             if all(fake_data_struct != logs[:3]):
                 fake_data_struct[:] = logs[:3]
                 writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
-                                   "global_step": global_step, "replay_queue": logs[0], "batch_queue": logs[1],
+                                   "global_step": global_step.value, "replay_queue": logs[0], "batch_queue": logs[1],
                                    "replay_buffer": logs[2]}, global_step=step)
             if fake_step != step:
                 fake_step = step
@@ -111,7 +111,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         except:
             print('Error on Logger!')
             pass
-    process_dir = f"{log_dir}/{config['algorithm']}_{config['dense_size']}_A{config['num_agents']}"
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}"
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
 

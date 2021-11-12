@@ -152,7 +152,7 @@ class Agent(object):
         print(f"Agent {self.n_agent} done.")
 
     def save(self, checkpoint_name):
-        process_dir = f"{self.log_dir}/{self.config['algorithm']}_{self.config['dense_size']}_A{self.config['num_agents']}"
+        process_dir = f"{self.log_dir}/{self.config['model']}_{self.config['dense_size']}_A{self.config['num_agents']}"
         if not os.path.exists(process_dir):
             os.makedirs(process_dir)
         model_fn = f"{process_dir}/{checkpoint_name}.pt"
