@@ -1,135 +1,239 @@
-import argparse
+import time
+import numpy as np
 import torch
-import rlkit.torch.pytorch_util as ptu
-import yaml
-from rlkit.data_management.torch_replay_buffer import TorchReplayBuffer
-from rlkit.envs import make_env
-from rlkit.envs.vecenv import SubprocVectorEnv, VectorEnv
-from rlkit.launchers.launcher_util import set_seed, setup_logger
-from rlkit.samplers.data_collector import (VecMdpPathCollector, VecMdpStepCollector)
-from rlkit.torch.dsac.dsac import DSACTrainer
-from rlkit.torch.dsac.networks import QuantileMlp, softmax
-from rlkit.torch.networks import FlattenMlp
-from rlkit.torch.sac.policies import MakeDeterministic, TanhGaussianPolicy
-from rlkit.torch.torch_rl_algorithm import TorchVecOnlineRLAlgorithm
-
-torch.set_num_threads(4)
-torch.set_num_interop_threads(4)
+import torch.nn as nn
+import torch.optim as optim
+import queue
+from utils.utils import OUNoise, empty_torch_queue
+from torch.distributions import MultivariateNormal
+from models import ValueNetwork
+from utils.l2_projection import _l2_project
 
 
-def experiment(variant):
-    dummy_env = make_env(variant['env'])
-    obs_dim = dummy_env.observation_space.low.size
-    action_dim = dummy_env.action_space.low.size
-    expl_env = VectorEnv([lambda: make_env(variant['env']) for _ in range(variant['expl_env_num'])])
-    expl_env.seed(variant["seed"])
-    expl_env.action_space.seed(variant["seed"])
-    eval_env = SubprocVectorEnv([lambda: make_env(variant['env']) for _ in range(variant['eval_env_num'])])
-    eval_env.seed(variant["seed"])
+class LearnerDSAC(object):
+    """Policy and value network update routine. """
 
-    M = variant['layer_size']
-    num_quantiles = variant['num_quantiles']
+    def __init__(self, policy_net, target_policy_net, learner_w_queue, config, log_dir=''):
+        self.config = config
+        action_low = [-1.5, -0.1]
+        action_high = [1.5, 0.12]
+        value_lr = config['critic_learning_rate']
+        policy_lr = config['actor_learning_rate']
+        self.n_step_return = config['n_step_return']
+        self.v_min = config['v_min']  # lower bound of critic value output distribution
+        self.v_max = config['v_max']  # upper bound of critic value output distribution
+        self.num_atoms = config['num_atoms']  # number of atoms in output layer of distributed critic
+        self.device = config['device']
+        self.max_steps = config['max_ep_length']  # maximum number of steps per episode
+        self.num_train_steps = config['num_steps_train']  # number of episodes from all agents
+        self.batch_size = config['batch_size']
+        self.tau = config['tau']  # parameter for soft target network updates
+        self.gamma = config['discount_rate']  # Discount rate (gamma) for future rewards
+        self.log_dir = log_dir
+        self.prioritized_replay = config['replay_memory_prioritized']
+        self.learner_w_queue = learner_w_queue
+        self.delta_z = (self.v_max - self.v_min) / (self.num_atoms - 1)
+        self.alpha = 1
+        self.log_alpha = torch.tensor([0.0], requires_grad=True)
+        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=config['actor_learning_rate'])
+        self._action_prior = config['action_prior']
+        self.target_entropy = -config['action_dim']
+        self.action_size = config['action_dim']
 
-    zf1 = QuantileMlp(
-        input_size=obs_dim + action_dim,
-        output_size=1,
-        num_quantiles=num_quantiles,
-        hidden_sizes=[M, M],
-    )
-    zf2 = QuantileMlp(
-        input_size=obs_dim + action_dim,
-        output_size=1,
-        num_quantiles=num_quantiles,
-        hidden_sizes=[M, M],
-    )
-    target_zf1 = QuantileMlp(
-        input_size=obs_dim + action_dim,
-        output_size=1,
-        num_quantiles=num_quantiles,
-        hidden_sizes=[M, M],
-    )
-    target_zf2 = QuantileMlp(
-        input_size=obs_dim + action_dim,
-        output_size=1,
-        num_quantiles=num_quantiles,
-        hidden_sizes=[M, M],
-    )
-    policy = TanhGaussianPolicy(
-        obs_dim=obs_dim,
-        action_dim=action_dim,
-        hidden_sizes=[M, M],
-    )
-    eval_policy = MakeDeterministic(policy)
-    target_policy = TanhGaussianPolicy(
-        obs_dim=obs_dim,
-        action_dim=action_dim,
-        hidden_sizes=[M, M],
-    )
-    # fraction proposal network
-    fp = target_fp = None
-    if variant['trainer_kwargs'].get('tau_type') == 'fqf':
-        fp = FlattenMlp(
-            input_size=obs_dim + action_dim,
-            output_size=num_quantiles,
-            hidden_sizes=[M // 2, M // 2],
-            output_activation=softmax,
-        )
-        target_fp = FlattenMlp(
-            input_size=obs_dim + action_dim,
-            output_size=num_quantiles,
-            hidden_sizes=[M // 2, M // 2],
-            output_activation=softmax,
-        )
-    eval_path_collector = VecMdpPathCollector(
-        eval_env,
-        eval_policy,
-    )
-    expl_path_collector = VecMdpStepCollector(
-        expl_env,
-        policy,
-    )
-    replay_buffer = TorchReplayBuffer(
-        variant['replay_buffer_size'],
-        dummy_env,
-    )
-    trainer = DSACTrainer(
-        env=dummy_env,
-        policy=policy,
-        target_policy=target_policy,
-        zf1=zf1,
-        zf2=zf2,
-        target_zf1=target_zf1,
-        target_zf2=target_zf2,
-        fp=fp,
-        target_fp=target_fp,
-        num_quantiles=num_quantiles,
-        **variant['trainer_kwargs'],
-    )
-    algorithm = TorchVecOnlineRLAlgorithm(
-        trainer=trainer,
-        exploration_env=expl_env,
-        evaluation_env=eval_env,
-        exploration_data_collector=expl_path_collector,
-        evaluation_data_collector=eval_path_collector,
-        replay_buffer=replay_buffer,
-        **variant['algorithm_kwargs'],
-    )
-    algorithm.to(ptu.device)
-    algorithm.train()
+        # Noise process
+        self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
+        # Value 1 nets
+        self.value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
+        self.target_value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
+        for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
+            target_param.data.copy_(param.data)
+        
+        #value 2 nets
+        self.value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
+        self.target_value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
+        for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
+            target_param.data.copy_(param.data)
+        
+        #policy nets
+        self.policy_net = policy_net
+        self.target_policy_net = target_policy_net
+        for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):
+            target_param.data.copy_(param.data)
+        
+        # optimizers
+        self.value_optimizer_1 = optim.Adam(self.value_net_1.parameters(), lr=value_lr)
+        self.value_optimizer_2 = optim.Adam(self.value_net_2.parameters(), lr=value_lr)
+        self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr=policy_lr)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Distributional Soft Actor Critic')
-    parser.add_argument('--config', type=str, default="configs/lunarlander.yaml")
-    parser.add_argument('--gpu', type=int, default=0, help="using cpu with -1")
-    parser.add_argument('--seed', type=int, default=0)
-    args = parser.parse_args()
-    with open(args.config, 'r', encoding="utf-8") as f:
-        variant = yaml.load(f, Loader=yaml.FullLoader)
-    variant["seed"] = args.seed
-    log_prefix = "_".join(["dsac", variant["env"][:-3].lower(), str(variant["version"])])
-    setup_logger(log_prefix, variant=variant, seed=args.seed)
-    if args.gpu >= 0:
-        ptu.set_gpu_mode(True, args.gpu)
-    set_seed(args.seed)
-    experiment(variant)
+        self.value_criterion = nn.BCELoss(reduction='none')
+
+    def _update_step(self, batch, replay_priority_queue, update_step, logs):
+        update_time = time.time()
+
+        state, action, reward, next_state, done, gamma, weights, inds = batch
+
+        state = np.asarray(state)
+        action = np.asarray(action)
+        reward = np.asarray(reward)
+        next_state = np.asarray(next_state)
+        done = np.asarray(done)
+        weights = np.asarray(weights)
+        inds = np.asarray(inds).flatten()
+
+        state = torch.from_numpy(state).float().to(self.device)
+        next_state = torch.from_numpy(next_state).float().to(self.device)
+        action = torch.from_numpy(action).float().to(self.device)
+        reward = torch.from_numpy(reward).float().to(self.device)
+        done = torch.from_numpy(done).float().to(self.device)
+
+        # ------- Update critic -------
+
+        # Get predicted next-state actions and Q values from target models
+        next_action, log_pis_next = self.target_policy_net.evaluate(next_state)
+
+        # Predict Z distribution with target value network
+        target_value_1 = self.target_value_net_1.get_probs(next_state, next_action.detach())
+        target_value_2 = self.target_value_net_2.get_probs(next_state, next_action.detach())
+
+        # take the mean of both critics for updating
+        target_value_next = torch.min(target_value_1, target_value_2)
+
+        # Get projected distribution
+        target_z_projected = _l2_project(next_distr_v=target_value_next, rewards_v=reward, dones_mask_t=done,
+                                         gamma=self.gamma ** 5, n_atoms=self.num_atoms, v_min=self.v_min,
+                                         v_max=self.v_max, delta_z=self.delta_z)
+        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
+
+        if not self.config['fixed_alpha']:
+            # Compute Q targets for current states (y_i)
+            target_z_projected = target_z_projected - self.alpha * log_pis_next.squeeze(0)
+        else:
+            target_z_projected = target_z_projected - self.config['fixed_alpha'] * log_pis_next.squeeze(0)
+
+        critic_value_1 = self.value_net_1.get_probs(state, action)
+        critic_value_1 = critic_value_1.to(self.device)
+
+        value_loss_1 = self.value_criterion(critic_value_1, target_z_projected)
+        value_loss_1 = value_loss_1.mean(axis=1)
+
+        critic_value_2 = self.value_net_2.get_probs(state, action)
+        critic_value_2 = critic_value_2.to(self.device)
+
+        value_loss_2 = self.value_criterion(critic_value_2, target_z_projected)
+        value_loss_2 = value_loss_2.mean(axis=1)
+
+        # Update priorities in buffer 1
+        value_loss = torch.min(value_loss_1, value_loss_2)
+        td_error = value_loss.cpu().detach().numpy().flatten()
+
+        if self.prioritized_replay:
+            weights_update = np.abs(td_error) + self.config['priority_epsilon']
+            replay_priority_queue.put((inds, weights_update))
+            value_loss_1 = value_loss_1 * torch.tensor(weights).float().to(self.device)
+            value_loss_2 = value_loss_2 * torch.tensor(weights).float().to(self.device)
+
+        # Update step 1
+        value_loss_1 = value_loss_1.mean()
+        self.value_optimizer_1.zero_grad()
+        value_loss_1.backward()
+        self.value_optimizer_1.step()
+
+        # Update step
+        value_loss_2 = value_loss_2.mean()
+        self.value_optimizer_2.zero_grad()
+        value_loss_2.backward()
+        self.value_optimizer_2.step()
+
+        # -------- Update actor -----------
+        actions_pred, log_pis = self.policy_net.evaluate(state)
+        if not self.config['fixed_alpha']:
+            alpha = torch.exp(self.log_alpha)
+            # Compute alpha loss
+            alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy).detach()).mean()
+            self.alpha_optimizer.zero_grad()
+            alpha_loss.backward()
+            self.alpha_optimizer.step()
+
+            self.alpha = alpha
+            # Compute actor loss
+            if self._action_prior == "normal":
+                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size),
+                                                  scale_tril=torch.ones(self.action_size).unsqueeze(0))
+                policy_prior_log_probs = policy_prior.log_prob(actions_pred)
+            elif self._action_prior == "uniform":
+                policy_prior_log_probs = 0.0
+
+            actor_loss_1 = (alpha * log_pis.squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
+            actor_loss_2 = (alpha * log_pis.squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
+            policy_loss = torch.min(actor_loss_1, actor_loss_2)
+        else:
+            if self._action_prior == "normal":
+                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size),
+                                                  scale_tril=torch.ones(self.action_size).unsqueeze(0))
+                policy_prior_log_probs = policy_prior.log_prob(actions_pred)
+            elif self._action_prior == "uniform":
+                policy_prior_log_probs = 0.0
+
+            actor_loss_1 = (self.config['fixed_alpha'] * log_pis.squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
+            actor_loss_2 = (self.config['fixed_alpha'] * log_pis.squeeze(0) - self.value_net_2.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
+            policy_loss = torch.min(actor_loss_1, actor_loss_2)
+
+        policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
+        policy_loss = torch.sum(policy_loss, dim=1)
+        policy_loss = policy_loss.mean()
+
+        self.policy_optimizer.zero_grad()
+        policy_loss.backward()
+        self.policy_optimizer.step()
+
+        for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
+            target_param.data.copy_(
+                target_param.data * (1.0 - self.tau) + param.data * self.tau
+            )
+
+        for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
+            target_param.data.copy_(
+                target_param.data * (1.0 - self.tau) + param.data * self.tau
+            )
+
+        for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):
+            target_param.data.copy_(
+                target_param.data * (1.0 - self.tau) + param.data * self.tau
+            )
+
+        # Send updated learner to the queue
+        if update_step.value % 100 == 0:
+            try:
+                params = [p.data.cpu().detach().numpy() for p in self.policy_net.parameters()]
+                self.learner_w_queue.put(params)
+            except:
+                pass
+
+        # Logging
+        with logs.get_lock():
+            logs[3] = policy_loss.item()
+            logs[4] = value_loss.item()
+            logs[5] = time.time() - update_time
+
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
+        torch.set_num_threads(4)
+        while global_episode <= self.config['num_agents'] * self.config['num_episodes']:
+            try:
+                batch = batch_queue.get_nowait()
+            except queue.Empty:
+                continue
+
+            self._update_step(batch, replay_priority_queue, update_step, logs)
+            with update_step.get_lock():
+                update_step.value += 1
+
+            if update_step.value % 10000 == 0:
+                print("Training step ", update_step.value)
+
+        with training_on.get_lock():
+            training_on.value = 0
+
+        empty_torch_queue(self.learner_w_queue)
+        empty_torch_queue(replay_priority_queue)
+        print("Exit learner.")

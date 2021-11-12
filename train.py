@@ -17,9 +17,10 @@ try:
 except:
     pass
 from utils.utils import empty_torch_queue, create_replay_buffer
+from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork
+from models import PolicyNetwork, PolicyNetwork2
 from agent import Agent
 
 
@@ -45,33 +46,30 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             continue
 
         try:
-            # print('Try 1!!!!!!!!!!!!!!!!!!!!!!!!!!')
             inds, weights = replay_priorities_queue.get_nowait()
             replay_buffer.update_priorities(inds, weights)
         except queue.Empty:
-            print('Erro 1!!!!!!!!!!!!!!!!!!!!!!!!!')
+            print('Erro 1!')
             pass
 
         try:
-            # print('Try 2!!!!!!!!!!!!!!!!!!!!!!!!!!')
             batch = replay_buffer.sample(batch_size, beta=0.4)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
         except:
-            print('Erro 2!!!!!!!!!!!!!!!!!!!!!!!!')
+            print('Erro 2!')
             time.sleep(0.1)
             continue
 
         try:
-            # print('Try 3!!!!!!!!!!!!!!!!!!!!!!!!!!')
             # Log data structures sizes
             with logs.get_lock():
                 logs[0] = replay_queue.qsize()
                 logs[1] = batch_queue.qsize()
                 logs[2] = len(replay_buffer)
         except:
-            print('Erro 3!!!!!!!!!!!!!!!!!!!!!!!!')
+            print('Erro 3!')
 
     if config['save_buffer']:
         replay_buffer.dump(experiment_dir)
@@ -80,7 +78,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
     print("Stop sampler worker.")
 
 
-def logger(config, logs, training_on, update_step, global_episode):
+def logger(config, logs, training_on, update_step, global_episode, global_step, log_dir):
     # Initialize the SummaryWriter
     os.environ['COMET_API_KEY'] = config['api_key']
     comet_ml.init(project_name=config['project_name'])
@@ -96,12 +94,12 @@ def logger(config, logs, training_on, update_step, global_episode):
             if all(fake_data_struct != logs[:3]):
                 fake_data_struct[:] = logs[:3]
                 writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
-                                   "replay_queue": logs[0], "batch_queue": logs[1], "replay_buffer": logs[2]},
-                                   global_step=step)
+                                   "global_step": global_step, "replay_queue": logs[0], "batch_queue": logs[1],
+                                   "replay_buffer": logs[2]}, global_step=step)
             if fake_step != step:
                 fake_step = step
                 writer.add_scalars(main_tag="losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],
-                               "learner_update_timing": logs[5]}, global_step=step)
+                                   "learner_update_timing": logs[5]}, global_step=step)
             for agent in range(num_agents):
                 aux = 6 + agent * 3
                 if fake_local_eps[agent] != logs[aux + 2]:
@@ -111,20 +109,26 @@ def logger(config, logs, training_on, update_step, global_episode):
             time.sleep(0.05)
             writer.flush()
         except:
+            print('Error on Logger!')
             pass
+    process_dir = f"{log_dir}/{config['algorithm']}_{config['dense_size']}_A{config['num_agents']}"
+    writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
-                   update_step, logs, experiment_dir):
-    learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    learner.run(training_on, batch_queue, replay_priority_queue, update_step, logs)
+                   update_step, global_episode, logs, experiment_dir):
+    if config['algorithm'] == 'D4PG':
+        learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+    elif config['algorithm'] == 'DSAC':
+        learner = LearnerDSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+    learner.run(training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs)
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
-                 replay_queue, logs, update_step):
+                 replay_queue, logs, update_step, global_step):
     agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
-                  log_dir=experiment_dir)
+                  log_dir=experiment_dir, global_step=global_step)
     agent.run(training_on, replay_queue, learner_w_queue, update_step, logs)
 
 
@@ -162,12 +166,13 @@ if __name__ == "__main__":
     training_on = mp.Value('i', 1)
     update_step = mp.Value('i', 0)
     global_episode = mp.Value('i', 0)
+    global_step = mp.Value('i', 0)
     logs = mp.Array('d', np.zeros(6 + 3 * config['num_agents']))
     learner_w_queue = torch_mp.Queue(maxsize=config['num_agents'])
     replay_priorities_queue = mp.Queue(maxsize=config['replay_queue_size'])
 
     # Logger
-    p = torch_mp.Process(target=logger, args=(config, logs, training_on, update_step, global_episode))
+    p = torch_mp.Process(target=logger, args=(config, logs, training_on, update_step, global_episode, global_step, experiment_dir))
     processes.append(p)
 
     # Data sampler
@@ -177,12 +182,17 @@ if __name__ == "__main__":
     processes.append(p)
 
     # Learner (neural net training process)
-    target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                      device=config['device'])
-    policy_net = copy.deepcopy(target_policy_net)
-    policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                   device=config['device'])
-    target_policy_net.share_memory()
+    assert config['algorithm'] == 'D4PG' or config['algorithm'] == 'SAC'  # Only D4PG or DSAC algorithms
+    if config['algorithm'] == 'D4PG':
+        target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+        policy_net = copy.deepcopy(target_policy_net)
+        policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+        target_policy_net.share_memory()
+    elif config['algorithm'] == 'DSAC':
+        target_policy_net = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'], hidden_size=config['dense_size'], device=config['device'])
+        policy_net = copy.deepcopy(target_policy_net)
+        policy_net_cpu = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'], hidden_size=config['dense_size'], device=config['device'])
+        target_policy_net.share_memory()
 
     p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                          learner_w_queue, replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
@@ -197,7 +207,7 @@ if __name__ == "__main__":
     for i in range(1, config['num_agents']):
         p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
                              global_episode, i, "exploration", experiment_dir, training_on, replay_queue, logs,
-                             update_step))
+                             update_step, global_step))
         processes.append(p)
 
     for p in processes:

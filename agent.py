@@ -13,7 +13,7 @@ import os
 
 
 class Agent(object):
-    def __init__(self, config, policy, global_episode, n_agent=0, agent_type='exploration', log_dir=''):
+    def __init__(self, config, policy, global_episode, global_step, n_agent=0, agent_type='exploration', log_dir=''):
         print(f"Initializing agent {n_agent}...")
         self.config = config
         self.action_low = [-1.5, -0.1]
@@ -23,6 +23,7 @@ class Agent(object):
         self.max_steps = config['max_ep_length']  # maximum number of steps per episode
         self.num_episode_save = config['num_episode_save']
         self.global_episode = global_episode
+        self.global_step = global_step
         self.local_episode = 0
         self.log_dir = log_dir
         self.n_step_returns = config['n_step_return']  # number of future steps to collect experiences for N-step returns
@@ -62,7 +63,7 @@ class Agent(object):
 
         best_reward = -float("inf")
         rewards = []
-        while training_on.value:
+        while self.local_episode <= self.config['num_episodes']:
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
@@ -119,7 +120,8 @@ class Agent(object):
                                 pass
                     break
                 num_steps += 1
-                # time.sleep(0.1)
+                with self.global_step.lock():
+                    self.global_step += 1
 
             with self.global_episode.get_lock():
                 self.global_episode.value += 1
@@ -150,7 +152,7 @@ class Agent(object):
         print(f"Agent {self.n_agent} done.")
 
     def save(self, checkpoint_name):
-        process_dir = f"{self.log_dir}/agent_{self.n_agent}"
+        process_dir = f"{self.log_dir}/{self.config['algorithm']}_{self.config['dense_size']}_A{self.config['num_agents']}"
         if not os.path.exists(process_dir):
             os.makedirs(process_dir)
         model_fn = f"{process_dir}/{checkpoint_name}.pt"

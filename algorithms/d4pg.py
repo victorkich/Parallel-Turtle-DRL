@@ -1,6 +1,5 @@
 from utils.utils import OUNoise, empty_torch_queue
 from utils.l2_projection import _l2_project
-from tensorboardX import SummaryWriter
 from models import ValueNetwork
 import torch.optim as optim
 import torch.nn as nn
@@ -57,7 +56,6 @@ class LearnerD4PG(object):
 
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
-
         state, action, reward, next_state, done, gamma, weights, inds = batch
 
         state = np.asarray(state)
@@ -75,7 +73,6 @@ class LearnerD4PG(object):
         done = torch.from_numpy(done).float().to(self.device)
 
         # ------- Update critic -------
-
         # Predict next actions with target policy network
         next_action = self.target_policy_net(next_state)
 
@@ -101,9 +98,9 @@ class LearnerD4PG(object):
 
         # Update priorities in buffer
         td_error = value_loss.cpu().detach().numpy().flatten()
-        priority_epsilon = 1e-4
+
         if self.prioritized_replay:
-            weights_update = np.abs(td_error) + priority_epsilon
+            weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
             value_loss = value_loss * torch.tensor(weights).float().to(self.device)
 
@@ -114,7 +111,6 @@ class LearnerD4PG(object):
         self.value_optimizer.step()
 
         # -------- Update actor -----------
-
         policy_loss = self.value_net.get_probs(state, self.policy_net(state))
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
         policy_loss = torch.sum(policy_loss, dim=1)
@@ -148,9 +144,9 @@ class LearnerD4PG(object):
             logs[4] = value_loss.item()
             logs[5] = time.time() - update_time
 
-    def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
         torch.set_num_threads(4)
-        while update_step.value < self.num_train_steps:
+        while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
