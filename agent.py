@@ -120,7 +120,7 @@ class Agent(object):
                                 pass
                     break
                 num_steps += 1
-                with self.global_step.lock():
+                with self.global_step.get_lock():
                     self.global_step.value += 1
 
             with self.global_episode.get_lock():

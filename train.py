@@ -195,7 +195,8 @@ if __name__ == "__main__":
         target_policy_net.share_memory()
 
     p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
-                         learner_w_queue, replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
+                                                      learner_w_queue, replay_priorities_queue, batch_queue,
+                                                      update_step, global_episode, logs, experiment_dir))
     processes.append(p)
 
     # Single agent for exploitation
@@ -206,8 +207,8 @@ if __name__ == "__main__":
     # Agents (exploration processes)
     for i in range(1, config['num_agents']):
         p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
-                             global_episode, i, "exploration", experiment_dir, training_on, replay_queue, logs,
-                             update_step, global_step))
+                                                        global_episode, i, "exploration", experiment_dir, training_on,
+                                                        replay_queue, logs, update_step, global_step))
         processes.append(p)
 
     for p in processes:
