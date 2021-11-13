@@ -107,9 +107,9 @@ class LearnerDSAC(object):
 
         if not self.config['fixed_alpha']:
             # Compute Q targets for current states (y_i)
-            target_z_projected = target_z_projected - self.alpha * log_pis_next.squeeze(0)
+            target_z_projected = target_z_projected.sum() - self.alpha * log_pis_next.squeeze(0)
         else:
-            target_z_projected = target_z_projected - self.config['fixed_alpha'] * log_pis_next.squeeze(0)
+            target_z_projected = target_z_projected.sum() - self.config['fixed_alpha'] * log_pis_next.squeeze(0)
 
         critic_value_1 = self.value_net_1.get_probs(state, action)
         critic_value_1 = critic_value_1.to(self.device)
