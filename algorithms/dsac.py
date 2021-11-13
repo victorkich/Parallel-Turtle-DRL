@@ -116,15 +116,18 @@ class LearnerDSAC(object):
 
         value_loss_1 = self.value_criterion(critic_value_1, target_z_projected.detach())
         value_loss_1 = value_loss_1.mean(axis=1)
+        print('Value loss 1:', value_loss_1)
 
         critic_value_2 = self.value_net_2.get_probs(state, action)
         critic_value_2 = critic_value_2.to(self.device)
 
         value_loss_2 = self.value_criterion(critic_value_2, target_z_projected.detach())
         value_loss_2 = value_loss_2.mean(axis=1)
+        print('Value loss 2:', value_loss_2)
 
         # Update priorities in buffer 1
         value_loss = torch.min(value_loss_1, value_loss_2)
+        print('Value loss:', value_loss)
         td_error = value_loss.cpu().detach().numpy().flatten()
 
         if self.prioritized_replay:
@@ -135,12 +138,14 @@ class LearnerDSAC(object):
 
         # Update step 1
         value_loss_1 = value_loss_1.mean()
+        print('Value loss 1:', value_loss_1)
         self.value_optimizer_1.zero_grad()
         value_loss_1.backward()
         self.value_optimizer_1.step()
 
         # Update step
         value_loss_2 = value_loss_2.mean()
+        print('Value loss 2:', value_loss_2)
         self.value_optimizer_2.zero_grad()
         value_loss_2.backward()
         self.value_optimizer_2.step()
@@ -151,6 +156,7 @@ class LearnerDSAC(object):
             alpha = torch.exp(self.log_alpha)
             # Compute alpha loss
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy).detach()).mean()
+            print('Alpha loss:', alpha_loss)
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
@@ -184,6 +190,7 @@ class LearnerDSAC(object):
         policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
         # policy_loss = torch.sum(policy_loss)
         policy_loss = policy_loss.mean()
+        print('Policy loss:', policy_loss)
 
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
