@@ -9,7 +9,7 @@ import os
 path = os.path.dirname(os.path.abspath(__file__)) + '/saved_models/'
 list_dir = os.listdir(path)
 
-n = 50  # the larger n is, the smoother curve will be
+n = 75  # the larger n is, the smoother curve will be
 b = [1.0 / n] * n
 a = 1
 
@@ -23,17 +23,18 @@ for c, directory in tqdm(enumerate(list_dir), total=len(list_dir)):
     for i, key in enumerate(key_list):
         data[new_key_list[i]] = data.pop(key)
 
-    rewards = pd.DataFrame(data[new_key_list[0]]).iloc[:, 2].to_numpy()
+    rewards = pd.DataFrame(data['agent_0/reward']).iloc[:, 2].to_numpy()
+    rewards = np.array([200 if reward >= 200 else reward for reward in rewards])
     episodes = np.arange(len(rewards))
     mean = lfilter(b, a, rewards)
 
     plt.plot(episodes, mean, color=color[c], linestyle='-', linewidth=2, label=directory)
-    plt.plot(episodes, rewards, color=color[c], linestyle='-', linewidth=1, alpha=0.3)  # label='Real Rewards'
+    plt.plot(episodes, rewards, color=color[c], linestyle='-', linewidth=1, alpha=0.25)  # label='Real Rewards'
 
 plt.title('Reward per Episode', size=20)
 plt.legend(loc=0, prop={'size': 12})
 plt.xlabel('Episode')
 plt.ylabel('Reward')
 plt.xlim([0, 1000])
-plt.ylim([0, 200])
+plt.ylim([0, 201])
 plt.show()
