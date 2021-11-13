@@ -111,7 +111,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         except:
             print('Error on Logger!')
             pass
-    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}"
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
 

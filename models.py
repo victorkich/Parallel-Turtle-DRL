@@ -79,7 +79,7 @@ class PolicyNetwork(nn.Module):
 class PolicyNetwork2(nn.Module):
     """Actor for SAC - return action value given states. """
 
-    def __init__(self, state_size, action_size, seed, device, hidden_size=32, init_w=3e-3, log_std_min=-20, log_std_max=2):
+    def __init__(self, state_size, action_size, device, hidden_size=32, init_w=3e-3, log_std_min=-20, log_std_max=2):
         """Initialize parameters and build model.
         Params
         ======
@@ -91,7 +91,6 @@ class PolicyNetwork2(nn.Module):
         """
         super(PolicyNetwork2, self).__init__()
         self.init_w = init_w
-        # self.seed = torch.manual_seed(seed)
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.device = device
@@ -129,7 +128,6 @@ class PolicyNetwork2(nn.Module):
         e = dist.sample().to(self.device)
         action = torch.tanh(mu + e * std)
         log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - action.pow(2) + epsilon)
-        # action = torch.clamp(action*action_high, action_low, action_high)
         return action, log_prob
 
     def get_action(self, state):
