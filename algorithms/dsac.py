@@ -49,13 +49,13 @@ class LearnerDSAC(object):
         for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
             target_param.data.copy_(param.data)
         
-        #value 2 nets
+        # value 2 nets
         self.value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
         self.target_value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
         for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
             target_param.data.copy_(param.data)
         
-        #policy nets
+        # policy nets
         self.policy_net = policy_net
         self.target_policy_net = target_policy_net
         for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):

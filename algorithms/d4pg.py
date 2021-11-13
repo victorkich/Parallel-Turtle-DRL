@@ -55,6 +55,7 @@ class LearnerD4PG(object):
         self.value_criterion = nn.BCELoss(reduction='none')
 
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
+        print('Passou aqui!')
         update_time = time.time()
         state, action, reward, next_state, done, gamma, weights, inds = batch
 

@@ -2,7 +2,6 @@
 
 import rospy
 from utils.utils import OUNoise, empty_torch_queue
-from tensorboardX import SummaryWriter
 from collections import deque
 import gym_turtlebot3
 import numpy as np
