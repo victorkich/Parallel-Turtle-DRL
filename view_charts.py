@@ -6,7 +6,7 @@ import numpy as np
 import json
 import os
 
-path = os.path.dirname(os.path.abspath(__file__))+'/saved_models/'
+path = os.path.dirname(os.path.abspath(__file__)) + '/saved_models/'
 list_dir = os.listdir(path)
 
 n = 50  # the larger n is, the smoother curve will be
