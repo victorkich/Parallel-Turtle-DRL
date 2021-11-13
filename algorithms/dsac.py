@@ -164,8 +164,8 @@ class LearnerDSAC(object):
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            actor_loss_1 = (alpha * log_pis.squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
-            actor_loss_2 = (alpha * log_pis.squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
+            actor_loss_1 = (alpha * log_pis.mean().squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
+            actor_loss_2 = (alpha * log_pis.mean().squeeze(0) - self.value_net_2.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
         else:
             if self._action_prior == "normal":
@@ -175,10 +175,10 @@ class LearnerDSAC(object):
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            actor_loss_1 = (self.config['fixed_alpha'] * log_pis.squeeze(0) -
-                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
-            actor_loss_2 = (self.config['fixed_alpha'] * log_pis.squeeze(0) -
-                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs).mean()
+            actor_loss_1 = (self.config['fixed_alpha'] * log_pis.mean().squeeze(0) -
+                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
+            actor_loss_2 = (self.config['fixed_alpha'] * log_pis.mean().squeeze(0) -
+                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
 
         policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
