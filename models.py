@@ -143,4 +143,4 @@ class PolicyNetwork2(nn.Module):
         dist = Normal(0, 1)
         e = dist.sample().to(self.device)
         action = torch.tanh(mu + e * std).cpu()
-        return action[0]
+        return action[0].unsqueeze(0)
