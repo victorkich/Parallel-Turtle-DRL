@@ -76,7 +76,7 @@ class Agent(object):
                 action = self.actor.get_action(state)
                 if self.agent_type == "exploration":
                     action = self.ou_noise.get_action(action, num_steps)
-                    action = action.squeeze(0)
+                    action = action  #.squeeze(0)
                 else:
                     action = action.detach().cpu().numpy().flatten()
                     action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
