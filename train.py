@@ -190,11 +190,10 @@ if __name__ == "__main__":
         target_policy_net.share_memory()
     elif config['model'] == 'DSAC':
         target_policy_net = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'],
-                                           hidden_size=config['dense_size'], device=config['device'],
-                                           seed=config['seed'])
+                                           hidden_size=config['dense_size'], device=config['device'])
         policy_net = copy.deepcopy(target_policy_net)
         policy_net_cpu = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'],
-                                        hidden_size=config['dense_size'], device=config['device'], seed=config['seed'])
+                                        hidden_size=config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
 
     p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
