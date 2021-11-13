@@ -69,7 +69,6 @@ class PolicyNetwork(nn.Module):
 
     def to(self, device):
         super(PolicyNetwork, self).to(device)
-        self.device = device
 
     def get_action(self, state):
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
@@ -103,6 +102,8 @@ class PolicyNetwork2(nn.Module):
         self.mu = nn.Linear(hidden_size, action_size)
         self.log_std_linear = nn.Linear(hidden_size, action_size)
 
+        self.to(device)
+
     def reset_parameters(self):
         self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
         self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
@@ -120,7 +121,6 @@ class PolicyNetwork2(nn.Module):
 
     def to(self, device):
         super(PolicyNetwork2, self).to(device)
-        self.device = device
 
     def evaluate(self, state, epsilon=1e-6):
         mu, log_std = self.forward(state)
