@@ -32,9 +32,9 @@ for c, directory in tqdm(enumerate(list_dir), total=len(list_dir)):
     plt.plot(episodes, rewards, color=color[c], linestyle='-', linewidth=1, alpha=0.25)  # label='Real Rewards'
 
 plt.title('Reward per Episode', size=20)
-plt.legend(loc=0, prop={'size': 12})
+plt.legend(loc=0, prop={'size': 16})
 plt.xlabel('Episode')
 plt.ylabel('Reward')
 plt.xlim([0, 1000])
-plt.ylim([0, 201])
+plt.ylim([-20, 201])
 plt.show()
