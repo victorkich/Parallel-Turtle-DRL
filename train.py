@@ -46,8 +46,9 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             continue
 
         try:
-            inds, weights = replay_priorities_queue.get_nowait()
-            replay_buffer.update_priorities(inds, weights)
+            if config['replay_memory_prioritized']:
+                inds, weights = replay_priorities_queue.get_nowait()
+                replay_buffer.update_priorities(inds, weights)
         except queue.Empty:
             print('Erro 1!')
             pass
