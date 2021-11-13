@@ -91,7 +91,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     while training_on.value:
         try:
             step = update_step.value
-            if all(fake_data_struct != logs[:3]):
+            if any(fake_data_struct != logs[:3]):
                 fake_data_struct[:] = logs[:3]
                 writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
                                    "global_step": global_step.value, "replay_queue": logs[0], "batch_queue": logs[1],
@@ -111,7 +111,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         except:
             print('Error on Logger!')
             pass
-    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}"
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}"
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
 
@@ -135,7 +135,7 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 if __name__ == "__main__":
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
-    with open(path + '/configs/config.yml', 'r') as ymlfile:
+    with open(path + '/config.yml', 'r') as ymlfile:
         config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
     # Opening gazebo environments
