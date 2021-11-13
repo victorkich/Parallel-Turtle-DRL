@@ -91,7 +91,7 @@ class PolicyNetwork2(nn.Module):
         """
         super(PolicyNetwork2, self).__init__()
         self.init_w = init_w
-        self.seed = torch.manual_seed(seed)
+        # self.seed = torch.manual_seed(seed)
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.device = device
