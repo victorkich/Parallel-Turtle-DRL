@@ -158,7 +158,8 @@ class LearnerDSAC(object):
             self.alpha = alpha
             # Compute actor loss
             if self._action_prior == "normal":
-                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size), scale_tril=torch.eye(self.action_size))
+                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
+                                                  scale_tril=torch.eye(self.action_size).to(self.config['device']))
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred)
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
@@ -168,7 +169,8 @@ class LearnerDSAC(object):
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
         else:
             if self._action_prior == "normal":
-                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size), scale_tril=torch.eye(self.action_size))
+                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
+                                                  scale_tril=torch.eye(self.action_size).to(self.config['device']))
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred)
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
