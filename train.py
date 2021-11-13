@@ -182,7 +182,7 @@ if __name__ == "__main__":
     processes.append(p)
 
     # Learner (neural net training process)
-    assert config['model'] == 'D4PG' or config['model'] == 'SAC'  # Only D4PG or DSAC algorithms
+    assert config['model'] == 'D4PG' or config['model'] == 'DSAC'  # Only D4PG or DSAC algorithms
     if config['model'] == 'D4PG':
         target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         policy_net = copy.deepcopy(target_policy_net)
