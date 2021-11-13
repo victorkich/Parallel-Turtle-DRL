@@ -127,9 +127,9 @@ class Agent(object):
                 self.global_episode.value += 1
 
             # Log metrics
-            step = update_step.value
             episode_timing = time.time() - ep_start_time
-            print('Agent:', self.n_agent, 'Reward:', episode_reward, 'Step:', step, 'Episode Timing:', episode_timing)
+            print('Agent:', self.n_agent, 'Episode:', self.local_episode, 'Reward:', episode_reward,
+                  'Step:', self.global_step.value, 'Episode Timing:', episode_timing)
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 logs[aux] = episode_reward
