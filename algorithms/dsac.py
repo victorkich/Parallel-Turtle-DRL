@@ -99,17 +99,17 @@ class LearnerDSAC(object):
         # take the mean of both critics for updating
         target_value_next = torch.min(target_value_1, target_value_2)
 
+        if not self.config['fixed_alpha']:
+            # Compute Q targets for current states (y_i)
+            target_value_next = target_value_next - self.alpha * log_pis_next.squeeze(0)
+        else:
+            target_value_next = target_value_next - self.config['fixed_alpha'] * log_pis_next.squeeze(0)
+
         # Get projected distribution
         target_z_projected = _l2_project(next_distr_v=target_value_next, rewards_v=reward, dones_mask_t=done,
                                          gamma=self.gamma ** 5, n_atoms=self.num_atoms, v_min=self.v_min,
                                          v_max=self.v_max, delta_z=self.delta_z)
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
-
-        if not self.config['fixed_alpha']:
-            # Compute Q targets for current states (y_i)
-            target_z_projected = target_z_projected - self.alpha * log_pis_next.squeeze(0)
-        else:
-            target_z_projected = target_z_projected - self.config['fixed_alpha'] * log_pis_next.squeeze(0)
 
         critic_value_1 = self.value_net_1.get_probs(state, action)
         critic_value_1 = critic_value_1.to(self.device)
