@@ -182,7 +182,8 @@ class LearnerDSAC(object):
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
 
         policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        policy_loss = torch.sum(policy_loss, dim=1)
+        print(policy_loss.item())
+        policy_loss = torch.sum(policy_loss.squeeze(0))
         policy_loss = policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
