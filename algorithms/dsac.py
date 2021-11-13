@@ -13,7 +13,7 @@ from utils.l2_projection import _l2_project
 class LearnerDSAC(object):
     """Policy and value network update routine. """
 
-    def __init__(self, policy_net, target_policy_net, learner_w_queue, config, log_dir=''):
+    def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
         action_low = [-1.5, -0.1]
         action_high = [1.5, 0.12]
