@@ -34,7 +34,7 @@ class LearnerDSAC(object):
         self.learner_w_queue = learner_w_queue
         self.delta_z = (self.v_max - self.v_min) / (self.num_atoms - 1)
         self.alpha = 1
-        self.log_alpha = torch.tensor([0.0], requires_grad=True).to(config['device'])
+        self.log_alpha = torch.nn.Parameter(torch.tensor([0.0], requires_grad=True).to(config['device']))
         self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=config['actor_learning_rate'])
         self._action_prior = config['action_prior']
         self.target_entropy = -config['action_dim']
