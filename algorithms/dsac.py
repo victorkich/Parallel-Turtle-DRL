@@ -97,11 +97,12 @@ class LearnerDSAC(object):
         next_action, log_pis_next = self.target_policy_net.evaluate(next_state)
 
         # Predict Z distribution with target value network
-        target_value_1 = self.target_value_net_1.get_probs(next_state, next_action.detach())
-        target_value_2 = self.target_value_net_2.get_probs(next_state, next_action.detach())
+        target_value_1 = self.target_value_net_1.get_probs(next_state, next_action)
+        target_value_2 = self.target_value_net_2.get_probs(next_state, next_action)
 
         # take the mean of both critics for updating
-        target_value_next = torch.min(target_value_1, target_value_2)
+        target_value_next = torch.mean(target_value_1, target_value_2)
+        # target_value_next = torch.min(target_value_1, target_value_2)
 
         # Get projected distribution
         target_z_projected = _l2_project(next_distr_v=target_value_next, rewards_v=reward, dones_mask_t=done,
@@ -119,14 +120,12 @@ class LearnerDSAC(object):
         critic_value_1 = critic_value_1.to(self.device)
 
         value_loss_1 = 0.5 * self.value_criterion(critic_value_1, target_z_projected.detach())
-        # value_loss_1 = torch.sum(value_loss_1)
         value_loss_1 = value_loss_1.mean()
 
         critic_value_2 = self.value_net_2.get_probs(state, action)
         critic_value_2 = critic_value_2.to(self.device)
 
         value_loss_2 = 0.5 * self.value_criterion(critic_value_2, target_z_projected.detach())
-        # value_loss_2 = torch.sum(value_loss_2)
         value_loss_2 = value_loss_2.mean()
 
         # Update priorities in buffer 1
@@ -194,7 +193,6 @@ class LearnerDSAC(object):
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
 
         policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        # policy_loss = torch.sum(policy_loss)
         policy_loss = policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
@@ -202,19 +200,13 @@ class LearnerDSAC(object):
         self.policy_optimizer.step()
 
         for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
         for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
         for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
         # Send updated learner to the queue
         if update_step.value % 100 == 0:

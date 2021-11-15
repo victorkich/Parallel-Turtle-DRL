@@ -122,14 +122,10 @@ class LearnerD4PG(object):
         self.policy_optimizer.step()
 
         for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
         for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
         # Send updated learner to the queue
         if update_step.value % 100 == 0:
