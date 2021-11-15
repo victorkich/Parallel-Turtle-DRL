@@ -56,7 +56,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
 
         try:
             batch = replay_buffer.sample(batch_size, beta=0.4)
-            print('Batch:', batch)
+            print('Batch:', len(batch))
             batch_queue.put_nowait(batch)
             print('Batch Queue:', batch_queue.qsize())
             if len(replay_buffer) > config['replay_mem_size']:
