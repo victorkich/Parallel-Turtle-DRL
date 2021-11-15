@@ -39,7 +39,7 @@ class Agent(object):
         self.ou_noise.reset()
 
         self.actor = policy
-        print("Agent ", n_agent, self.actor.device)
+        print("Started agent", n_agent, "using", self.actor.device)
 
     def update_actor_learner(self, learner_w_queue, training_on):
         """Update local actor to the actor from learner. """
