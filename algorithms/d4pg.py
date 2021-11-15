@@ -150,6 +150,7 @@ class LearnerD4PG(object):
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
+                time.sleep(0.01)
                 continue
 
             self._update_step(batch, replay_priority_queue, update_step, logs)
