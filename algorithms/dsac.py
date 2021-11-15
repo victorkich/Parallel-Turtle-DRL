@@ -114,13 +114,15 @@ class LearnerDSAC(object):
         critic_value_1 = self.value_net_1.get_probs(state, action)
         critic_value_1 = critic_value_1.to(self.device)
 
-        value_loss_1 = self.value_criterion(critic_value_1, target_z_projected.detach())
+        value_loss_1 = 0.5 * self.value_criterion(critic_value_1, target_z_projected.detach())
+        value_loss_1 = torch.sum(value_loss_1)
         value_loss_1 = value_loss_1.mean()
 
         critic_value_2 = self.value_net_2.get_probs(state, action)
         critic_value_2 = critic_value_2.to(self.device)
 
-        value_loss_2 = self.value_criterion(critic_value_2, target_z_projected.detach())
+        value_loss_2 = 0.5 * self.value_criterion(critic_value_2, target_z_projected.detach())
+        value_loss_2 = torch.sum(value_loss_2)
         value_loss_2 = value_loss_2.mean()
 
         # Update priorities in buffer 1
