@@ -56,6 +56,7 @@ class LearnerD4PG(object):
 
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
+
         state, action, reward, next_state, done, gamma, weights, inds = batch
 
         state = np.asarray(state)
