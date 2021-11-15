@@ -44,14 +44,18 @@ class LearnerDSAC(object):
         self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
         # Value 1 nets
-        self.value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
-        self.target_value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
+        self.value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,
+                                        self.v_max, self.num_atoms, device=self.device)
+        self.target_value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                               self.v_min, self.v_max, self.num_atoms, device=self.device)
         for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
             target_param.data.copy_(param.data)
         
         # value 2 nets
-        self.value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
-        self.target_value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min, self.v_max, self.num_atoms, device=self.device)
+        self.value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,
+                                        self.v_max, self.num_atoms, device=self.device)
+        self.target_value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                               self.v_min, self.v_max, self.num_atoms, device=self.device)
         for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
             target_param.data.copy_(param.data)
         
@@ -166,8 +170,12 @@ class LearnerDSAC(object):
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            actor_loss_1 = (alpha * log_pis.mean().squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
-            actor_loss_2 = (alpha * log_pis.mean().squeeze(0) - self.value_net_2.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
+            actor_loss_1 = (alpha * log_pis.mean().squeeze(0) -
+                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
+                            policy_prior_log_probs.mean()).mean()
+            actor_loss_2 = (alpha * log_pis.mean().squeeze(0) -
+                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) -
+                            policy_prior_log_probs.mean()).mean()
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
         else:
             if self._action_prior == "normal":
@@ -178,13 +186,15 @@ class LearnerDSAC(object):
                 policy_prior_log_probs = 0.0
 
             actor_loss_1 = (self.config['fixed_alpha'] * log_pis.mean().squeeze(0) -
-                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
+                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
+                            policy_prior_log_probs.mean()).mean()
             actor_loss_2 = (self.config['fixed_alpha'] * log_pis.mean().squeeze(0) -
-                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) - policy_prior_log_probs.mean()).mean()
+                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) -
+                            policy_prior_log_probs.mean()).mean()
             policy_loss = torch.min(actor_loss_1, actor_loss_2)
 
         policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        policy_loss = torch.sum(policy_loss)
+        # policy_loss = torch.sum(policy_loss)
         policy_loss = policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
