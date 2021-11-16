@@ -30,8 +30,6 @@ class LearnerDSAC(object):
         self.prioritized_replay = config['replay_memory_prioritized']
         self.learner_w_queue = learner_w_queue
         self.delta_z = (self.v_max - self.v_min) / (self.num_atoms - 1)
-        self.log_alpha = torch.nn.Parameter(torch.tensor([0.0], requires_grad=True).to(config['device']))
-        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=config['actor_learning_rate'])
         self._action_prior = config['action_prior']
         self.target_entropy = -config['action_dim']
         self.action_size = config['action_dim']
@@ -171,7 +169,7 @@ class LearnerDSAC(object):
             q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=1, keepdim=True)
         q_new_actions = torch.min(q1_new_actions, q2_new_actions)
 
-        policy_loss = (self.alpha * log_pi - q_new_actions).mean()
+        policy_loss = (alpha * log_pi - q_new_actions).mean()
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
         policy_grad = fast_clip_grad_norm(self.policy_net.parameters(), self.clip_norm)
