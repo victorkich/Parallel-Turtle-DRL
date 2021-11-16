@@ -111,20 +111,24 @@ class LearnerDSAC(object):
 
         if not self.config['fixed_alpha']:
             # Compute Q targets for current states (y_i)
-            target_z_projected = target_z_projected - self.alpha * log_pis_next.mean().squeeze(0)
+            target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[0].squeeze(0)
+            target_z_projected_2 = target_z_projected - self.alpha * log_pis_next[1].squeeze(0)
         else:
-            target_z_projected = target_z_projected - self.config['fixed_alpha'] * log_pis_next.mean().squeeze(0)
+            target_z_projected_1 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[0].squeeze(0)
+            target_z_projected_2 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[1].squeeze(0)
 
         critic_value_1 = self.value_net_1.get_probs(state, action)
         critic_value_1 = critic_value_1.to(self.device)
 
-        value_loss_1 = 0.5 * self.value_criterion(critic_value_1, target_z_projected.detach())
+        value_loss_1 = 0.5 * (self.value_criterion(critic_value_1, target_z_projected_1.detach()) +
+                              self.value_criterion(critic_value_1, target_z_projected_2.detach()))
         value_loss_1 = value_loss_1.mean()
 
         critic_value_2 = self.value_net_2.get_probs(state, action)
         critic_value_2 = critic_value_2.to(self.device)
 
-        value_loss_2 = 0.5 * self.value_criterion(critic_value_2, target_z_projected.detach())
+        value_loss_2 = 0.5 * (self.value_criterion(critic_value_2, target_z_projected_1.detach()) +
+                              self.value_criterion(critic_value_2, target_z_projected_2.detach()))
         value_loss_2 = value_loss_2.mean()
 
         # Update priorities in buffer 1
@@ -163,36 +167,35 @@ class LearnerDSAC(object):
             # Compute actor loss
             if self._action_prior == "normal":
                 policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
-                                                  scale_tril=torch.eye(self.action_size).to(self.config['device']))
+                                                  scale_tril=torch.ones(self.action_size).unsqueeze(0).to(self.config['device']))
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred)
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            actor_loss_1 = (alpha * log_pis.mean().squeeze(0) -
-                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
-                            policy_prior_log_probs.mean()).mean()
-            actor_loss_2 = (alpha * log_pis.mean().squeeze(0) -
-                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) -
-                            policy_prior_log_probs.mean()).mean()
-            policy_loss = torch.min(actor_loss_1, actor_loss_2)
+            policy_loss_1 = (alpha * log_pis[0].squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0))
+                             - policy_prior_log_probs[0]).mean()
+            policy_loss_2 = (alpha * log_pis[1].squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0))
+                             - policy_prior_log_probs[1]).mean()
+            policy_loss = policy_loss_1 + policy_loss_2
         else:
             if self._action_prior == "normal":
                 policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
-                                                  scale_tril=torch.eye(self.action_size).to(self.config['device']))
+                                                  scale_tril=torch.ones(self.action_size).unsqueeze(0).to(self.config['device']))
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred)
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            actor_loss_1 = (self.config['fixed_alpha'] * log_pis.mean().squeeze(0) -
+            policy_loss_1 = (self.config['fixed_alpha'] * log_pis.squeeze(0)[0] -
                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
-                            policy_prior_log_probs.mean()).mean()
-            actor_loss_2 = (self.config['fixed_alpha'] * log_pis.mean().squeeze(0) -
-                            self.value_net_2.get_probs(state, actions_pred.squeeze(0)) -
-                            policy_prior_log_probs.mean()).mean()
-            policy_loss = torch.min(actor_loss_1, actor_loss_2)
+                            policy_prior_log_probs[0]).mean()
 
-        policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        policy_loss = policy_loss.mean()
+            policy_loss_2 = (self.config['fixed_alpha'] * log_pis.squeeze(0)[1] -
+                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
+                            policy_prior_log_probs[1]).mean()
+            policy_loss = policy_loss_1 + policy_loss_2
+
+        # policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
+        # policy_loss = policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
