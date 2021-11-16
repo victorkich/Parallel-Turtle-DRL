@@ -113,14 +113,15 @@ class LearnerDSAC(object):
         # ------- Update critic -------
 
         # Get predicted next-state actions and Q values from target models
-        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy(obs, reparameterize=True, return_log_prob=True)
+        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, reparameterize=True,
+                                                                               return_log_prob=True)
 
         print('------------------------------------------------------------------------------------------------------')
         """
         Update ZF
         """
         with torch.no_grad():
-            new_next_actions, _, _, new_log_pi, *_ = self.target_policy(next_obs, reparameterize=True,
+            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, reparameterize=True,
                                                                         return_log_prob=True)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
