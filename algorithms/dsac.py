@@ -96,6 +96,8 @@ class LearnerDSAC(object):
         # Get predicted next-state actions and Q values from target models
         next_action, log_pis_next = self.target_policy_net.evaluate(next_state)
 
+        print('------------------------------------------------------------------------------------------------------')
+
         # Predict Z distribution with target value network
         target_value_1 = self.target_value_net_1.get_probs(next_state, next_action)
         target_value_2 = self.target_value_net_2.get_probs(next_state, next_action)
