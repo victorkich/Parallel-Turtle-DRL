@@ -109,6 +109,9 @@ class LearnerDSAC(object):
                                          v_max=self.v_max, delta_z=self.delta_z)
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
 
+        print('Log pi next 1:', log_pis_next[:, 0].unsqueeze(1))
+        print('Log pi next 2:', log_pis_next[:, 1].unsqueeze(1))
+
         if not self.config['fixed_alpha']:
             # Compute Q targets for current states (y_i)
             target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[:, 0].unsqueeze(1)
@@ -119,46 +122,57 @@ class LearnerDSAC(object):
 
         critic_value_1 = self.value_net_1.get_probs(state, action)
         critic_value_1 = critic_value_1.to(self.device)
+        print('Critic value 1:', critic_value_1)
 
         value_loss_1 = 0.5 * (self.value_criterion(critic_value_1, target_z_projected_1.detach()) +
                               self.value_criterion(critic_value_1, target_z_projected_2.detach()))
         value_loss_1 = value_loss_1.mean()
+        print('Value loss 1:', value_loss_1)
 
         critic_value_2 = self.value_net_2.get_probs(state, action)
         critic_value_2 = critic_value_2.to(self.device)
+        print('Critic value 2:', critic_value_2)
 
         value_loss_2 = 0.5 * (self.value_criterion(critic_value_2, target_z_projected_1.detach()) +
                               self.value_criterion(critic_value_2, target_z_projected_2.detach()))
         value_loss_2 = value_loss_2.mean()
+        print('Print loss 2:', value_loss_2)
 
         # Update priorities in buffer 1
         value_loss = torch.min(value_loss_1, value_loss_2)
-        td_error = value_loss.cpu().detach().numpy().flatten()
+        print('Value loss:', value_loss)
 
         if self.prioritized_replay:
+            td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
             value_loss_1 = value_loss_1 * torch.tensor(weights).float().to(self.device)
             value_loss_2 = value_loss_2 * torch.tensor(weights).float().to(self.device)
+            value_loss_1 = value_loss_1.mean()
+            value_loss_2 = value_loss_2.mean()
+
+        print('Value loss 1:', value_loss_1)
+        print('Value loss 2:', value_loss_2)
 
         # Update step 1
-        value_loss_1 = value_loss_1.mean()
         self.value_optimizer_1.zero_grad()
         value_loss_1.backward()
         self.value_optimizer_1.step()
 
         # Update step
-        value_loss_2 = value_loss_2.mean()
         self.value_optimizer_2.zero_grad()
         value_loss_2.backward()
         self.value_optimizer_2.step()
 
         # -------- Update actor -----------
         actions_pred, log_pis = self.policy_net.evaluate(state)
+        print('Log pis:', log_pis)
         if not self.config['fixed_alpha']:
             alpha = torch.exp(self.log_alpha)
+            print('Alpha:', alpha)
             # Compute alpha loss
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy).detach()).mean()
+            print('Alpha loss:', alpha_loss)
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
@@ -169,8 +183,14 @@ class LearnerDSAC(object):
                 policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
                                                   scale_tril=torch.eye(self.action_size).to(self.config['device']))
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred)
+                print("Policy prior log probs:", policy_prior_log_probs)
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
+
+            print("log_pis[:, 0].unsqueeze(1):", log_pis[:, 0].unsqueeze(1))
+            print("policy_prior_log_probs.unsqueeze(1):", policy_prior_log_probs.unsqueeze(1))
+            print("self.value_net_1.get_probs(state, actions_pred.squeeze(0)):",
+                  self.value_net_1.get_probs(state, actions_pred.squeeze(0)))
 
             policy_loss_1 = (alpha * log_pis[:, 0].unsqueeze(1) -
                              self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
@@ -179,6 +199,7 @@ class LearnerDSAC(object):
                              self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
                              policy_prior_log_probs.unsqueeze(1)).mean()
             policy_loss = policy_loss_1 + policy_loss_2
+            print("Policy loss:", policy_loss)
         else:
             if self._action_prior == "normal":
                 policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
