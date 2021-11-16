@@ -63,8 +63,8 @@ class LearnerDSAC(object):
 
         self.use_automatic_entropy_tuning = config['use_automatic_entropy_tuning']
         if self.use_automatic_entropy_tuning:
-            self.target_entropy = -np.prod(config['action_dim']).item()  # heuristic value from Tuomas
-            self.log_alpha = torch.zeros(1, requires_grad=True)
+            self.target_entropy = -torch.tensor(np.prod(config['action_dim']).item()).to(self.device)  # heuristic value from Tuomas
+            self.log_alpha = torch.zeros(1, requires_grad=True).to(self.device)
             self.alpha_optimizer = optim.Adam([self.log_alpha], lr=policy_lr)
         else:
             self.alpha = config['alpha']
