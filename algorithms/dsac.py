@@ -217,8 +217,8 @@ class LearnerDSAC(object):
                             policy_prior_log_probs.unsqueeze(1)).mean()
             policy_loss = policy_loss_1 + policy_loss_2
 
-        policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        policy_loss = policy_loss.mean()
+        # policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
+        # policy_loss = policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
         policy_loss.backward()

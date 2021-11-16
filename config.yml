@@ -28,7 +28,7 @@ save_reward_threshold: 5
 replay_memory_prioritized: 0
 num_episode_save: 50
 device: cuda
-action_prior: normal
+action_prior: uniform
 fixed_alpha: 0
 
 # Network parameters
