@@ -82,7 +82,7 @@ class LearnerDSAC(object):
         self.reward_scale = config['reward_scale']
         self.clip_norm = config['clip_norm']
 
-    def get_tau(self, obs, actions):
+    def get_tau(self, actions):
         presum_tau = torch.zeros(len(actions), self.num_quantiles) + 1. / self.num_quantiles
         tau = torch.cumsum(presum_tau, dim=1)  # (N, T), note that they are tau1...tauN in the paper
         with torch.no_grad():
