@@ -112,11 +112,11 @@ class LearnerDSAC(object):
         print(log_pis_next)
         if not self.config['fixed_alpha']:
             # Compute Q targets for current states (y_i)
-            target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[0].squeeze(0)
-            target_z_projected_2 = target_z_projected - self.alpha * log_pis_next[1].squeeze(0)
+            target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[:, 0].unsqueeze(1)
+            target_z_projected_2 = target_z_projected - self.alpha * log_pis_next[:, 1].unsqueeze(1)
         else:
-            target_z_projected_1 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[0].squeeze(0)
-            target_z_projected_2 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[1].squeeze(0)
+            target_z_projected_1 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[:, 0].unsqueeze(1)
+            target_z_projected_2 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[:, 1].unsqueeze(1)
 
         critic_value_1 = self.value_net_1.get_probs(state, action)
         critic_value_1 = critic_value_1.to(self.device)
@@ -173,10 +173,12 @@ class LearnerDSAC(object):
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            policy_loss_1 = (alpha * log_pis[0].squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0))
-                             - policy_prior_log_probs[0]).mean()
-            policy_loss_2 = (alpha * log_pis[1].squeeze(0) - self.value_net_1.get_probs(state, actions_pred.squeeze(0))
-                             - policy_prior_log_probs[1]).mean()
+            policy_loss_1 = (alpha * log_pis[:, 0].unsqueeze(1) -
+                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
+                             policy_prior_log_probs[:, 0].unsqueeze(1)).mean()
+            policy_loss_2 = (alpha * log_pis[:, 1].unsqueeze(1) -
+                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
+                             policy_prior_log_probs[:, 1].unsqueeze(1)).mean()
             policy_loss = policy_loss_1 + policy_loss_2
         else:
             if self._action_prior == "normal":
@@ -186,11 +188,11 @@ class LearnerDSAC(object):
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
 
-            policy_loss_1 = (self.config['fixed_alpha'] * log_pis.squeeze(0)[0] -
+            policy_loss_1 = (self.config['fixed_alpha'] * log_pis[:, 0].unsqueeze(1) -
                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
                             policy_prior_log_probs[0]).mean()
 
-            policy_loss_2 = (self.config['fixed_alpha'] * log_pis.squeeze(0)[1] -
+            policy_loss_2 = (self.config['fixed_alpha'] * log_pis[:, 1].unsqueeze(1) -
                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
                             policy_prior_log_probs[1]).mean()
             policy_loss = policy_loss_1 + policy_loss_2
