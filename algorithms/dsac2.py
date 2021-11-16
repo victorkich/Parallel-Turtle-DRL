@@ -38,7 +38,6 @@ class LearnerDSAC(object):
         self.state_size = config['state_dim']
         self.soft_target_tau = config['tau']  # parameter for soft target network updates
         self.target_update_period = config['update_agent_ep']
-        self.tau_type = config['tau_type']
         self.num_quantiles = config['num_quantiles']
         M = config['dense_size']
 
