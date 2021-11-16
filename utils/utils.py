@@ -1,3 +1,6 @@
+from abc import ABC
+
+from torch.distributions import Distribution
 from torch.nn import functional as F
 import numpy as np
 import operator
@@ -418,7 +421,7 @@ def fast_clip_grad_norm(parameters, max_norm):
         return total_norm
 
 
-class TanhNormal(torch.distributions.Distribution):
+class TanhNormal(Distribution, ABC):
     """
     Represent distribution of X where
         X ~ tanh(Z)
