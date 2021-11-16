@@ -109,6 +109,7 @@ class LearnerDSAC(object):
                                          v_max=self.v_max, delta_z=self.delta_z)
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
 
+        print(log_pis_next)
         if not self.config['fixed_alpha']:
             # Compute Q targets for current states (y_i)
             target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[0].squeeze(0)
