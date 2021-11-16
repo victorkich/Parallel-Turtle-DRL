@@ -109,7 +109,6 @@ class LearnerDSAC(object):
                                          v_max=self.v_max, delta_z=self.delta_z)
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
 
-        print(log_pis_next)
         if not self.config['fixed_alpha']:
             # Compute Q targets for current states (y_i)
             target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[:, 0].unsqueeze(1)
@@ -172,8 +171,6 @@ class LearnerDSAC(object):
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred)
             elif self._action_prior == "uniform":
                 policy_prior_log_probs = 0.0
-
-            torch.tril()
 
             policy_loss_1 = (alpha * log_pis[:, 0].unsqueeze(1) -
                              self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
