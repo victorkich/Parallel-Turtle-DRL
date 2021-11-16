@@ -83,10 +83,10 @@ class LearnerDSAC(object):
         self.clip_norm = config['clip_norm']
 
     def get_tau(self, actions):
-        presum_tau = torch.zeros(len(actions), self.num_quantiles) + 1. / self.num_quantiles
+        presum_tau = torch.zeros(len(actions), self.num_quantiles).to(self.device) + 1. / self.num_quantiles
         tau = torch.cumsum(presum_tau, dim=1)  # (N, T), note that they are tau1...tauN in the paper
         with torch.no_grad():
-            tau_hat = torch.zeros_like(tau)
+            tau_hat = torch.zeros_like(tau).to(self.device)
             tau_hat[:, 0:1] = tau[:, 0:1] / 2.
             tau_hat[:, 1:] = (tau[:, 1:] + tau[:, :-1]) / 2.
         return tau, tau_hat, presum_tau
