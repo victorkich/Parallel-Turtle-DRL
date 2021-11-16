@@ -127,7 +127,8 @@ class LearnerDSAC(object):
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
             target_z_values = torch.min(target_z1_values, target_z2_values) - self.alpha * new_log_pi
-            z_target = self.reward_scale * rewards + (1. - terminals) * self.discount * target_z_values
+            z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * \
+                       self.discount * target_z_values
 
         tau, tau_hat, presum_tau = self.get_tau(actions)
         z1_pred = self.zf1(obs, actions, tau_hat)
