@@ -115,6 +115,16 @@ class LearnerDSAC(object):
         # Get predicted next-state actions and Q values from target models
         new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, reparameterize=True,
                                                                                return_log_prob=True)
+        if self.use_automatic_entropy_tuning:
+            alpha_loss = -(self.log_alpha.exp() * (log_pi + self.target_entropy).detach()).mean()
+            self.alpha_optimizer.zero_grad()
+            alpha_loss.backward()
+            self.alpha_optimizer.step()
+            alpha = self.log_alpha.exp()
+        else:
+            alpha_loss = 0
+            alpha = self.alpha
+
         print('------------------------------------------------------------------------------------------------------')
         """
         Update ZF
@@ -125,7 +135,7 @@ class LearnerDSAC(object):
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
-            target_z_values = torch.min(target_z1_values, target_z2_values) - self.alpha * new_log_pi
+            target_z_values = torch.min(target_z1_values, target_z2_values) - alpha * new_log_pi
             z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * \
                        self.discount * target_z_values
 
