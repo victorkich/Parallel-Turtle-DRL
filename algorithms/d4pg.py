@@ -73,6 +73,8 @@ class LearnerD4PG(object):
         reward = torch.from_numpy(reward).float().to(self.device)
         done = torch.from_numpy(done).float().to(self.device)
 
+        print("---------------------------------------------")
+
         # ------- Update critic -------
         # Predict next actions with target policy network
         next_action = self.target_policy_net(next_state)

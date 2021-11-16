@@ -34,7 +34,7 @@ alpha: 1.0
 reward_scale: 1.0
 clip_norm: 0.0
 use_automatic_entropy_tuning: 1
-num_quantiles: 32
+num_quantiles: 51
 
 # Network parameters
 critic_learning_rate: 0.0005
