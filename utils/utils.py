@@ -1,7 +1,9 @@
+from torch.nn import functional as F
 import numpy as np
 import operator
 import random
 import pickle
+import torch
 import os
 
 
@@ -352,3 +354,171 @@ def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
     lim = 1. / np.sqrt(fan_in)
     return -lim, lim
+
+
+def quantile_regression_loss(input, target, tau, weight):
+    """
+    input: (N, T)
+    target: (N, T)
+    tau: (N, T)
+    """
+    input = input.unsqueeze(-1)
+    target = target.detach().unsqueeze(-2)
+    tau = tau.detach().unsqueeze(-1)
+    weight = weight.detach().unsqueeze(-2)
+    expanded_input, expanded_target = torch.broadcast_tensors(input, target)
+    L = F.smooth_l1_loss(expanded_input, expanded_target, reduction="none")  # (N, T, T)
+    sign = torch.sign(expanded_input - expanded_target) / 2. + 0.5
+    rho = torch.abs(tau - sign) * L * weight
+    return rho.sum(dim=-1).mean()
+
+
+def soft_update_from_to(source, target, tau):
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
+
+def copy_model_params_from_to(source, target):
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(param.data)
+
+
+def fanin_init(tensor):
+    size = tensor.size()
+    if len(size) == 2:
+        fan_in = size[0]
+    elif len(size) > 2:
+        fan_in = np.prod(size[1:])
+    else:
+        raise Exception("Shape must be have dimension at least 2.")
+    bound = 1. / np.sqrt(fan_in)
+    return tensor.data.uniform_(-bound, bound)
+
+
+def fast_clip_grad_norm(parameters, max_norm):
+    r"""Clips gradient norm of an iterable of parameters.
+    Only support norm_type = 2
+    max_norm = 0, skip the total norm calculation and return 0
+    https://pytorch.org/docs/stable/_modules/torch/nn/utils/clip_grad.html#clip_grad_norm_
+    Returns:
+        Total norm of the parameters (viewed as a single vector).
+    """
+    max_norm = float(max_norm)
+    if abs(max_norm) < 1e-6:  # max_norm = 0
+        return 0
+    else:
+        if isinstance(parameters, torch.Tensor):
+            parameters = [parameters]
+        parameters = list(filter(lambda p: p.grad is not None, parameters))
+        total_norm = torch.stack([(p.grad.detach().pow(2)).sum() for p in parameters]).sum().sqrt().item()
+        clip_coef = max_norm / (total_norm + 1e-6)
+        if clip_coef < 1:
+            for p in parameters:
+                p.grad.detach().mul_(clip_coef)
+        return total_norm
+
+
+class TanhNormal(torch.distributions.Distribution):
+    """
+    Represent distribution of X where
+        X ~ tanh(Z)
+        Z ~ N(mean, std)
+
+    Note: this is not very numerically stable.
+    """
+    def __init__(self, normal_mean, normal_std, epsilon=1e-6):
+        """
+        :param normal_mean: Mean of the normal distribution
+        :param normal_std: Std of the normal distribution
+        :param epsilon: Numerical stability epsilon when computing log-prob.
+        """
+        super().__init__()
+        self.normal_mean = normal_mean
+        self.normal_std = normal_std
+        self.normal = torch.distributions.Normal(normal_mean, normal_std)
+        self.epsilon = epsilon
+
+    def sample_n(self, n, return_pre_tanh_value=False):
+        z = self.normal.sample_n(n)
+        if return_pre_tanh_value:
+            return torch.tanh(z), z
+        else:
+            return torch.tanh(z)
+
+    def log_prob(self, value, pre_tanh_value=None):
+        """
+        :param value: some value, x
+        :param pre_tanh_value: arctanh(x)
+        :return:
+        """
+        if pre_tanh_value is None:
+            pre_tanh_value = torch.log(
+                (1+value) / (1-value)
+            ) / 2
+        return self.normal.log_prob(pre_tanh_value) - torch.log(
+            1 - value * value + self.epsilon
+        )
+
+    def sample(self, return_pretanh_value=False):
+        """
+        Gradients will and should *not* pass through this operation.
+
+        See https://github.com/pytorch/pytorch/issues/4620 for discussion.
+        """
+        z = self.normal.sample().detach()
+
+        if return_pretanh_value:
+            return torch.tanh(z), z
+        else:
+            return torch.tanh(z)
+
+    def rsample(self, return_pretanh_value=False):
+        """
+        Sampling in the reparameterization case.
+        """
+        z = (
+            self.normal_mean +
+            self.normal_std *
+            torch.distributions.Normal(
+                torch.zeros(self.normal_mean.size()),
+                torch.ones(self.normal_std.size())
+            ).sample()
+        )
+        z.requires_grad_()
+
+        if return_pretanh_value:
+            return torch.tanh(z), z
+        else:
+            return torch.tanh(z)
+
+
+def torch_ify(np_array_or_other):
+    if isinstance(np_array_or_other, np.ndarray):
+        return torch.from_numpy(np_array_or_other).float()
+    else:
+        return np_array_or_other
+
+
+def np_ify(tensor_or_other):
+    if isinstance(tensor_or_other, torch.autograd.Variable):
+        return tensor_or_other.detach().numpy()
+    else:
+        return tensor_or_other
+
+
+def eval_np(module, *args, **kwargs):
+    """
+    Eval this module with a numpy interface
+
+    Same as a call to __call__ except all Variable input/outputs are
+    replaced with numpy equivalents.
+
+    Assumes the output is either a single object or a tuple of objects.
+    """
+    torch_args = tuple(torch_ify(x) for x in args)
+    torch_kwargs = {k: torch_ify(v) for k, v in kwargs.items()}
+    outputs = module(*torch_args, **torch_kwargs)
+    if isinstance(outputs, tuple):
+        return tuple(np_ify(x) for x in outputs)
+    else:
+        return np_ify(outputs)
