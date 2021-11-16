@@ -426,13 +426,14 @@ class TanhNormal(torch.distributions.Distribution):
 
     Note: this is not very numerically stable.
     """
-    def __init__(self, normal_mean, normal_std, epsilon=1e-6):
+    def __init__(self, normal_mean, normal_std, config, epsilon=1e-6):
         """
         :param normal_mean: Mean of the normal distribution
         :param normal_std: Std of the normal distribution
         :param epsilon: Numerical stability epsilon when computing log-prob.
         """
         super().__init__()
+        self.config = config
         self.normal_mean = normal_mean
         self.normal_std = normal_std
         self.normal = torch.distributions.Normal(normal_mean, normal_std)
@@ -482,7 +483,7 @@ class TanhNormal(torch.distributions.Distribution):
             torch.distributions.Normal(
                 torch.zeros(self.normal_mean.size()),
                 torch.ones(self.normal_std.size())
-            ).sample()
+            ).sample().to(self.config['device'])
         )
         z.requires_grad_()
 

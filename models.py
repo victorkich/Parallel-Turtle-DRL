@@ -1,4 +1,4 @@
-from utils.utils import hidden_init, TanhNormal, eval_np, fanin_init
+from utils.utils import hidden_init, TanhNormal, fanin_init
 from torch.distributions import Normal
 import torch.nn.functional as F
 import torch.nn as nn
@@ -358,7 +358,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         if deterministic:
             action = torch.tanh(mean)
         else:
-            tanh_normal = TanhNormal(mean, std)
+            tanh_normal = TanhNormal(mean, std, self.config)
             if return_log_prob:
                 if reparameterize is True:
                     action, pre_tanh_value = tanh_normal.rsample(return_pretanh_value=True)
