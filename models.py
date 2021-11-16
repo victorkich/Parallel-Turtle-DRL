@@ -308,6 +308,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
     def __init__(self, hidden_sizes, obs_dim, action_dim, config, std=None, init_w=1e-3, **kwargs):
         super().__init__(hidden_sizes, input_size=obs_dim, output_size=action_dim, init_w=init_w, **kwargs)
         self.config = config
+        self.device = config['device']
         self.log_std = None
         self.std = std
         if std is None:
