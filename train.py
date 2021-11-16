@@ -20,7 +20,7 @@ from utils.utils import empty_torch_queue, create_replay_buffer
 from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, PolicyNetwork2
+from models import PolicyNetwork, TanhGaussianPolicy
 from agent import Agent
 
 
@@ -194,12 +194,17 @@ if __name__ == "__main__":
                                            device=config['device'])
         target_policy_net.share_memory()
     elif config['model'] == 'DSAC':
-        target_policy_net = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'],
-                                           hidden_size=config['dense_size'], device=config['device'])
+        target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
+                                               hidden_sizes=[config['dense_size'], config['dense_size']])
+        # target_policy_net = TanhGaussianPolicy(state_size=config['state_dim'], action_size=config['action_dim'],
+        #                                   hidden_size=config['dense_size'], device=config['device'])
         policy_net = copy.deepcopy(target_policy_net)
         if not config['test']:
-            policy_net_cpu = PolicyNetwork2(state_size=config['state_dim'], action_size=config['action_dim'],
-                                            hidden_size=config['dense_size'], device=config['device'])
+            policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'],
+                                                action_dim=config['action_dim'],
+                                                hidden_sizes=[config['dense_size'], config['dense_size']])
+            # policy_net_cpu = TanhGaussianPolicy(state_size=config['state_dim'], action_size=config['action_dim'],
+            #                                     hidden_size=config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
 
     if not config['test']:
