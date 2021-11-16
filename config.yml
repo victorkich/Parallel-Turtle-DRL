@@ -30,6 +30,7 @@ num_episode_save: 50
 device: cuda
 action_prior: uniform
 fixed_alpha: 0
+alpha: 1.0
 reward_scale: 1.0
 clip_norm: 0.0
 use_automatic_entropy_tuning: 0
