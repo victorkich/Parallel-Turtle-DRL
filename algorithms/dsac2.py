@@ -115,7 +115,6 @@ class LearnerDSAC(object):
         # Get predicted next-state actions and Q values from target models
         new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, reparameterize=True,
                                                                                return_log_prob=True)
-
         print('------------------------------------------------------------------------------------------------------')
         """
         Update ZF
