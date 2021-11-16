@@ -139,10 +139,8 @@ class LearnerDSAC(object):
         print('Print loss 2:', value_loss_2)
 
         # Update priorities in buffer 1
-        value_loss = torch.min(value_loss_1, value_loss_2)
-        print('Value loss:', value_loss)
-
         if self.prioritized_replay:
+            value_loss = torch.min(value_loss_1, value_loss_2)
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
@@ -150,9 +148,6 @@ class LearnerDSAC(object):
             value_loss_2 = value_loss_2 * torch.tensor(weights).float().to(self.device)
             value_loss_1 = value_loss_1.mean()
             value_loss_2 = value_loss_2.mean()
-
-        print('Value loss 1:', value_loss_1)
-        print('Value loss 2:', value_loss_2)
 
         # Update step 1
         self.value_optimizer_1.zero_grad()
@@ -211,14 +206,13 @@ class LearnerDSAC(object):
             policy_loss_1 = (self.config['fixed_alpha'] * log_pis[:, 0].unsqueeze(1) -
                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
                             policy_prior_log_probs.unsqueeze(1)).mean()
-
             policy_loss_2 = (self.config['fixed_alpha'] * log_pis[:, 1].unsqueeze(1) -
                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
                             policy_prior_log_probs.unsqueeze(1)).mean()
             policy_loss = policy_loss_1 + policy_loss_2
 
-        # policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        # policy_loss = policy_loss.mean()
+        policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
+        policy_loss = policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
