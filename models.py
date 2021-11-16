@@ -186,7 +186,7 @@ class QuantileMlp(nn.Module):
             nn.ReLU(inplace=True),
         )
         self.last_fc = nn.Linear(hidden_sizes[-1], 1)
-        self.const_vec = torch.from_numpy(np.arange(1, 1 + self.embedding_size))
+        self.const_vec = torch.from_numpy(np.arange(1, 1 + self.embedding_size)).to(config['device'])
 
         self.to(config['device'])
 
