@@ -101,7 +101,11 @@ class LearnerDSAC(object):
         target_value_2 = self.target_value_net_2.get_probs(next_state, next_action)
 
         # take the mean of both critics for updating
-        target_value_next = torch.min(target_value_1, target_value_2)
+        # target_value_next = torch.min(target_value_1, target_value_2)
+        if target_value_1.mean() < target_value_2.mean():
+            target_value_next = target_value_1
+        else:
+            target_value_next = target_value_2
 
         # Get projected distribution
         target_z_projected = _l2_project(next_distr_v=target_value_next, rewards_v=reward, dones_mask_t=done,
