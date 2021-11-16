@@ -143,8 +143,8 @@ class LearnerDSAC(object):
         print('Print loss 2:', value_loss_2)
 
         # Update priorities in buffer 1
+        value_loss = torch.min(value_loss_1, value_loss_2)
         if self.prioritized_replay:
-            value_loss = torch.min(value_loss_1, value_loss_2)
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
