@@ -1,5 +1,5 @@
 from utils.utils import OUNoise, empty_torch_queue, fast_clip_grad_norm, quantile_regression_loss
-from models import QuantileMlp, TanhGaussianPolicy
+from models import QuantileMlp
 import torch.optim as optim
 import numpy as np
 import queue
@@ -45,10 +45,10 @@ class LearnerDSAC(object):
         self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
         # value nets
-        self.zf1 = QuantileMlp(input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
-        self.zf2 = QuantileMlp(input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
-        self.target_zf1 = QuantileMlp(input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
-        self.target_zf2 = QuantileMlp(input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.target_zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.target_zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
 
         # policy nets
         self.policy_net = policy_net

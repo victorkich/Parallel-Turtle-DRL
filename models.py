@@ -150,6 +150,7 @@ class QuantileMlp(nn.Module):
             self,
             hidden_sizes,
             output_size,
+            config,
             input_size,
             embedding_size=64,
             num_quantiles=32,
@@ -187,6 +188,11 @@ class QuantileMlp(nn.Module):
         self.last_fc = nn.Linear(hidden_sizes[-1], 1)
         self.const_vec = torch.from_numpy(np.arange(1, 1 + self.embedding_size))
 
+        self.to(config['device'])
+
+    def to(self, device):
+        super(QuantileMlp, self).to(device)
+
     def forward(self, state, action, tau):
         """
         Calculate Quantile Value in Batch
@@ -205,19 +211,9 @@ class QuantileMlp(nn.Module):
 
 
 class Mlp(nn.Module):
-    def __init__(
-            self,
-            hidden_sizes,
-            output_size,
-            input_size,
-            init_w=3e-3,
-            hidden_activation=F.relu,
-            output_activation=nn.Identity,
-            hidden_init=fanin_init,
-            b_init_value=0.1,
-            layer_norm=False,
-            layer_norm_kwargs=None,
-    ):
+    def __init__(self, hidden_sizes, output_size, input_size, config, init_w=3e-3, hidden_activation=F.relu,
+                 output_activation=nn.Identity, hidden_init=fanin_init, b_init_value=0.1, layer_norm=False,
+                 layer_norm_kwargs=None):
         super().__init__()
 
         if layer_norm_kwargs is None:
@@ -248,6 +244,11 @@ class Mlp(nn.Module):
         self.last_fc = nn.Linear(in_size, output_size)
         self.last_fc.weight.data.uniform_(-init_w, init_w)
         self.last_fc.bias.data.uniform_(-init_w, init_w)
+
+        self.to(config['device'])
+
+    def to(self, device):
+        super(Mlp, self).to(device)
 
     def forward(self, input, return_preactivations=False):
         h = input
@@ -306,7 +307,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
     """
 
     def __init__(self, hidden_sizes, obs_dim, action_dim, config, std=None, init_w=1e-3, **kwargs):
-        super().__init__(hidden_sizes, input_size=obs_dim, output_size=action_dim, init_w=init_w, **kwargs)
+        super().__init__(hidden_sizes, input_size=obs_dim, output_size=action_dim, config=config, init_w=init_w, **kwargs)
         self.config = config
         self.device = config['device']
         self.log_std = None
@@ -322,18 +323,17 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
             self.log_std = np.log(std)
             assert config['v_min'] <= self.log_std <= config['v_max']
 
+        self.to(config['device'])
+
+    def to(self, device):
+        super(TanhGaussianPolicy, self).to(device)
+
     @torch.no_grad()
     def get_action(self, obs_np, deterministic=False):
         action, _, _, _, _, _, _, _ = self.forward(obs_np)
         return action
 
-    def forward(
-            self,
-            obs,
-            reparameterize=True,
-            deterministic=False,
-            return_log_prob=False,
-    ):
+    def forward(self, obs, reparameterize=True, deterministic=False, return_log_prob=False):
         """
         :param obs: Observation
         :param deterministic: If True, do not sample
