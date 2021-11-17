@@ -75,8 +75,7 @@ class Agent(object):
                 self.ou_noise.reset()
             done = False
             while not done:
-                with torch.no_grad():
-                    action = self.actor.get_action(torch.Tensor(state).to(self.config['device']))
+                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']))
                 if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)

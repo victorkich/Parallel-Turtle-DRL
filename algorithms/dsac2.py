@@ -120,19 +120,17 @@ class LearnerDSAC(object):
             alpha_loss = 0
             alpha = self.alpha
 
-        print('------------------------------------------------------------------------------------------------------')
+        print('---------------------------------------------')
         """
         Update ZF
         """
         with torch.no_grad():
-            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, reparameterize=True,
-                                                                        return_log_prob=True)
+            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, reparameterize=True, return_log_prob=True)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
             target_z_values = torch.min(target_z1_values, target_z2_values) - alpha * new_log_pi
-            z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * \
-                       self.discount * target_z_values
+            z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * self.discount * target_z_values
 
         tau, tau_hat, presum_tau = self.get_tau(actions)
         z1_pred = self.zf1(obs, actions, tau_hat)
@@ -161,12 +159,14 @@ class LearnerDSAC(object):
         """
         Update Policy
         """
+
         with torch.no_grad():
             newtau, new_tau_hat, new_presum_tau = self.get_tau(new_actions)
-            z1_new_actions = self.zf1(obs, new_actions, new_tau_hat)
-            z2_new_actions = self.zf2(obs, new_actions, new_tau_hat)
-            q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=1, keepdim=True)
-            q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=1, keepdim=True)
+
+        z1_new_actions = self.zf1(obs, new_actions, new_tau_hat)
+        z2_new_actions = self.zf2(obs, new_actions, new_tau_hat)
+        q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=1, keepdim=True)
+        q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=1, keepdim=True)
         q_new_actions = torch.min(q1_new_actions, q2_new_actions)
 
         policy_loss = (alpha * log_pi - q_new_actions).mean()
