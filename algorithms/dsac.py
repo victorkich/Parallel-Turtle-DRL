@@ -1,13 +1,10 @@
-import time
-import numpy as np
-import torch
-import torch.nn as nn
+from utils.utils import OUNoise, empty_torch_queue, fast_clip_grad_norm, quantile_regression_loss
+from models import QuantileMlp
 import torch.optim as optim
+import numpy as np
 import queue
-from utils.utils import OUNoise, empty_torch_queue
-from torch.distributions import MultivariateNormal
-from models import ValueNetwork
-from utils.l2_projection import _l2_project
+import torch
+import time
 
 
 class LearnerDSAC(object):
@@ -27,211 +24,165 @@ class LearnerDSAC(object):
         self.max_steps = config['max_ep_length']  # maximum number of steps per episode
         self.num_train_steps = config['num_steps_train']  # number of episodes from all agents
         self.batch_size = config['batch_size']
-        self.tau = config['tau']  # parameter for soft target network updates
+        self.beta = config['tau']
         self.gamma = config['discount_rate']  # Discount rate (gamma) for future rewards
         self.log_dir = log_dir
         self.prioritized_replay = config['replay_memory_prioritized']
         self.learner_w_queue = learner_w_queue
         self.delta_z = (self.v_max - self.v_min) / (self.num_atoms - 1)
-        self.alpha = 1
-        self.log_alpha = torch.nn.Parameter(torch.tensor([0.0], requires_grad=True).to(config['device']))
-        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=config['actor_learning_rate'])
         self._action_prior = config['action_prior']
         self.target_entropy = -config['action_dim']
         self.action_size = config['action_dim']
+        self.state_size = config['state_dim']
+        self.soft_target_tau = config['tau']  # parameter for soft target network updates
+        self.target_update_period = config['update_agent_ep']
+        self.num_quantiles = config['num_quantiles']
+        M = config['dense_size']
 
         # Noise process
         self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
-        # Value 1 nets
-        self.value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,
-                                        self.v_max, self.num_atoms, device=self.device)
-        self.target_value_net_1 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                               self.v_min, self.v_max, self.num_atoms, device=self.device)
-        for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
-            target_param.data.copy_(param.data)
-        
-        # value 2 nets
-        self.value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,
-                                        self.v_max, self.num_atoms, device=self.device)
-        self.target_value_net_2 = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                               self.v_min, self.v_max, self.num_atoms, device=self.device)
-        for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
-            target_param.data.copy_(param.data)
-        
+        # value nets
+        self.zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.target_zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.target_zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+
         # policy nets
         self.policy_net = policy_net
         self.target_policy_net = target_policy_net
+
+        for target_param, param in zip(self.target_zf1.parameters(), self.zf1.parameters()):
+            target_param.data.copy_(param.data)
+        for target_param, param in zip(self.target_zf2.parameters(), self.zf2.parameters()):
+            target_param.data.copy_(param.data)
         for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):
             target_param.data.copy_(param.data)
-        
-        # optimizers
-        self.value_optimizer_1 = optim.Adam(self.value_net_1.parameters(), lr=value_lr)
-        self.value_optimizer_2 = optim.Adam(self.value_net_2.parameters(), lr=value_lr)
-        self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr=policy_lr)
 
-        self.value_criterion = nn.BCELoss(reduction='none')
+        self.use_automatic_entropy_tuning = config['use_automatic_entropy_tuning']
+        if self.use_automatic_entropy_tuning:
+            self.target_entropy = -torch.tensor(np.prod(config['action_dim']).item()).to(self.device)
+            self.log_alpha = torch.nn.Parameter(torch.tensor([0.0], requires_grad=True).to(self.device))
+            self.alpha_optimizer = optim.Adam([self.log_alpha], lr=policy_lr)
+        else:
+            self.alpha = config['alpha']
+
+        # optimizers
+        self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr=policy_lr)
+        self.zf1_optimizer = optim.Adam(self.zf1.parameters(), lr=value_lr)
+        self.zf2_optimizer = optim.Adam(self.zf2.parameters(), lr=value_lr)
+        self.zf_criterion = quantile_regression_loss
+
+        self.discount = config['discount_rate']
+        self.reward_scale = config['reward_scale']
+        self.clip_norm = config['clip_norm']
+
+    def get_tau(self, actions):
+        presum_tau = torch.zeros(len(actions), self.num_quantiles).to(self.device) + 1. / self.num_quantiles
+        tau = torch.cumsum(presum_tau, dim=1)  # (N, T), note that they are tau1...tauN in the paper
+        with torch.no_grad():
+            tau_hat = torch.zeros_like(tau).to(self.device)
+            tau_hat[:, 0:1] = tau[:, 0:1] / 2.
+            tau_hat[:, 1:] = (tau[:, 1:] + tau[:, :-1]) / 2.
+        return tau, tau_hat, presum_tau
 
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        state, action, reward, next_state, done, gamma, weights, inds = batch
+        obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
 
-        state = np.asarray(state)
-        action = np.asarray(action)
-        reward = np.asarray(reward)
-        next_state = np.asarray(next_state)
-        done = np.asarray(done)
+        obs = np.asarray(obs)
+        actions = np.asarray(actions)
+        rewards = np.asarray(rewards)
+        next_obs = np.asarray(next_obs)
+        terminals = np.asarray(terminals)
         weights = np.asarray(weights)
         inds = np.asarray(inds).flatten()
 
-        state = torch.from_numpy(state).float().to(self.device)
-        next_state = torch.from_numpy(next_state).float().to(self.device)
-        action = torch.from_numpy(action).float().to(self.device)
-        reward = torch.from_numpy(reward).float().to(self.device)
-        done = torch.from_numpy(done).float().to(self.device)
+        obs = torch.from_numpy(obs).float().to(self.device)
+        next_obs = torch.from_numpy(next_obs).float().to(self.device)
+        actions = torch.from_numpy(actions).float().to(self.device)
+        rewards = torch.from_numpy(rewards).float().to(self.device)
+        terminals = torch.from_numpy(terminals).float().to(self.device)
 
         # ------- Update critic -------
 
         # Get predicted next-state actions and Q values from target models
-        next_action, log_pis_next = self.target_policy_net.evaluate(next_state)
-
-        print('------------------------------------------------------------------------------------------------------')
-
-        # Predict Z distribution with target value network
-        target_value_1 = self.target_value_net_1.get_probs(next_state, next_action)
-        target_value_2 = self.target_value_net_2.get_probs(next_state, next_action)
-
-        # take the mean of both critics for updating
-        # target_value_next = torch.min(target_value_1, target_value_2)
-        if target_value_1.mean() < target_value_2.mean():
-            target_value_next = target_value_1
+        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, reparameterize=True,
+                                                                               return_log_prob=True)
+        if self.use_automatic_entropy_tuning:
+            alpha_loss = -(self.log_alpha.exp() * (log_pi + self.target_entropy).detach()).mean()
+            self.alpha_optimizer.zero_grad()
+            alpha_loss.backward()
+            self.alpha_optimizer.step()
+            alpha = self.log_alpha.exp()
         else:
-            target_value_next = target_value_2
+            alpha_loss = 0
+            alpha = self.alpha
 
-        # Get projected distribution
-        target_z_projected = _l2_project(next_distr_v=target_value_next, rewards_v=reward, dones_mask_t=done,
-                                         gamma=self.gamma ** 5, n_atoms=self.num_atoms, v_min=self.v_min,
-                                         v_max=self.v_max, delta_z=self.delta_z)
-        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
+        print('---------------------------------------------')
+        """
+        Update ZF
+        """
+        with torch.no_grad():
+            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, reparameterize=True, return_log_prob=True)
+            next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
+            target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
+            target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
+            target_z_values = torch.min(target_z1_values, target_z2_values) - alpha * new_log_pi
+            z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * self.discount * target_z_values
 
-        print('Log pi next 1:', log_pis_next[:, 0].unsqueeze(1))
-        print('Log pi next 2:', log_pis_next[:, 1].unsqueeze(1))
-
-        if not self.config['fixed_alpha']:
-            # Compute Q targets for current states (y_i)
-            target_z_projected_1 = target_z_projected - self.alpha * log_pis_next[:, 0].unsqueeze(1)
-            target_z_projected_2 = target_z_projected - self.alpha * log_pis_next[:, 1].unsqueeze(1)
-        else:
-            target_z_projected_1 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[:, 0].unsqueeze(1)
-            target_z_projected_2 = target_z_projected - self.config['fixed_alpha'] * log_pis_next[:, 1].unsqueeze(1)
-
-        critic_value_1 = self.value_net_1.get_probs(state, action)
-        critic_value_1 = critic_value_1.to(self.device)
-        print('Critic value 1:', critic_value_1)
-
-        value_loss_1 = 0.5 * (self.value_criterion(critic_value_1, target_z_projected_1.detach()) +
-                              self.value_criterion(critic_value_1, target_z_projected_2.detach()))
-        value_loss_1 = value_loss_1.mean()
-        print('Value loss 1:', value_loss_1)
-
-        critic_value_2 = self.value_net_2.get_probs(state, action)
-        critic_value_2 = critic_value_2.to(self.device)
-        print('Critic value 2:', critic_value_2)
-
-        value_loss_2 = 0.5 * (self.value_criterion(critic_value_2, target_z_projected_1.detach()) +
-                              self.value_criterion(critic_value_2, target_z_projected_2.detach()))
-        value_loss_2 = value_loss_2.mean()
-        print('Print loss 2:', value_loss_2)
+        tau, tau_hat, presum_tau = self.get_tau(actions)
+        z1_pred = self.zf1(obs, actions, tau_hat)
+        z2_pred = self.zf2(obs, actions, tau_hat)
+        zf1_loss = self.zf_criterion(z1_pred, z_target, tau_hat, next_presum_tau)
+        zf2_loss = self.zf_criterion(z2_pred, z_target, tau_hat, next_presum_tau)
 
         # Update priorities in buffer 1
-        value_loss = torch.min(value_loss_1, value_loss_2)
+        value_loss = torch.min(zf1_loss, zf2_loss)
         if self.prioritized_replay:
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
-            value_loss_1 = value_loss_1 * torch.tensor(weights).float().to(self.device)
-            value_loss_2 = value_loss_2 * torch.tensor(weights).float().to(self.device)
-            value_loss_1 = value_loss_1.mean()
-            value_loss_2 = value_loss_2.mean()
+            value_loss_1 = zf1_loss * torch.tensor(weights).float().to(self.device)
+            value_loss_2 = zf2_loss * torch.tensor(weights).float().to(self.device)
+            zf1_loss = value_loss_1.mean()
+            zf2_loss = value_loss_2.mean()
 
-        # Update step 1
-        self.value_optimizer_1.zero_grad()
-        value_loss_1.backward()
-        self.value_optimizer_1.step()
+        self.zf1_optimizer.zero_grad()
+        zf1_loss.backward()
+        self.zf1_optimizer.step()
+        self.zf2_optimizer.zero_grad()
+        zf2_loss.backward()
+        self.zf2_optimizer.step()
 
-        # Update step
-        self.value_optimizer_2.zero_grad()
-        value_loss_2.backward()
-        self.value_optimizer_2.step()
+        """
+        Update Policy
+        """
 
-        # -------- Update actor -----------
-        actions_pred, log_pis = self.policy_net.evaluate(state)
-        print('Log pis:', log_pis)
-        if not self.config['fixed_alpha']:
-            alpha = torch.exp(self.log_alpha)
-            print('Alpha:', alpha)
-            # Compute alpha loss
-            alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy).detach()).mean()
-            print('Alpha loss:', alpha_loss)
-            self.alpha_optimizer.zero_grad()
-            alpha_loss.backward()
-            self.alpha_optimizer.step()
+        with torch.no_grad():
+            newtau, new_tau_hat, new_presum_tau = self.get_tau(new_actions)
 
-            self.alpha = alpha
-            # Compute actor loss
-            if self._action_prior == "normal":
-                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
-                                                  scale_tril=torch.eye(self.action_size).to(self.config['device']))
-                policy_prior_log_probs = policy_prior.log_prob(actions_pred).unsqueeze(1)
-                print("Policy prior log probs:", policy_prior_log_probs)
-            elif self._action_prior == "uniform":
-                policy_prior_log_probs = 0.0
+        z1_new_actions = self.zf1(obs, new_actions, new_tau_hat)
+        z2_new_actions = self.zf2(obs, new_actions, new_tau_hat)
+        q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=1, keepdim=True)
+        q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=1, keepdim=True)
+        q_new_actions = torch.min(q1_new_actions, q2_new_actions)
 
-            print("log_pis[:, 0].unsqueeze(1):", log_pis[:, 0].unsqueeze(1))
-            print("policy_prior_log_probs.unsqueeze(1):", policy_prior_log_probs)
-            print("self.value_net_1.get_probs(state, actions_pred.squeeze(0)):",
-                  self.value_net_1.get_probs(state, actions_pred.squeeze(0)))
-
-            policy_loss_1 = (alpha * log_pis[:, 0].unsqueeze(1) -
-                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
-                             policy_prior_log_probs).mean()
-            policy_loss_2 = (alpha * log_pis[:, 1].unsqueeze(1) -
-                             self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
-                             policy_prior_log_probs).mean()
-            policy_loss = policy_loss_1 + policy_loss_2
-            print("Policy loss:", policy_loss)
-        else:
-            if self._action_prior == "normal":
-                policy_prior = MultivariateNormal(loc=torch.zeros(self.action_size).to(self.config['device']),
-                                                  scale_tril=torch.eye(self.action_size).to(self.config['device']))
-                policy_prior_log_probs = policy_prior.log_prob(actions_pred).unsqueeze(1)
-            elif self._action_prior == "uniform":
-                policy_prior_log_probs = 0.0
-
-            policy_loss_1 = (self.config['fixed_alpha'] * log_pis[:, 0].unsqueeze(1) -
-                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
-                            policy_prior_log_probs).mean()
-            policy_loss_2 = (self.config['fixed_alpha'] * log_pis[:, 1].unsqueeze(1) -
-                            self.value_net_1.get_probs(state, actions_pred.squeeze(0)) -
-                            policy_prior_log_probs).mean()
-            policy_loss = policy_loss_1 + policy_loss_2
-
-        # policy_loss = policy_loss * torch.from_numpy(self.value_net_1.z_atoms).float().to(self.device)
-        # policy_loss = policy_loss.mean()
-
+        policy_loss = (alpha * log_pi - q_new_actions).mean()
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
+        policy_grad = fast_clip_grad_norm(self.policy_net.parameters(), self.clip_norm)
         self.policy_optimizer.step()
 
-        for target_param, param in zip(self.target_value_net_1.parameters(), self.value_net_1.parameters()):
-            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
+        for target_param, param in zip(self.target_zf1.parameters(), self.zf1.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - self.beta) + param.data * self.beta)
 
-        for target_param, param in zip(self.target_value_net_2.parameters(), self.value_net_2.parameters()):
-            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
+        for target_param, param in zip(self.target_zf2.parameters(), self.zf2.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - self.beta) + param.data * self.beta)
 
         for target_param, param in zip(self.target_policy_net.parameters(), self.policy_net.parameters()):
-            target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
+            target_param.data.copy_(target_param.data * (1.0 - self.beta) + param.data * self.beta)
 
         # Send updated learner to the queue
         if update_step.value % 100 == 0:

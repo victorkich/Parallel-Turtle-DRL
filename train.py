@@ -17,8 +17,7 @@ try:
 except:
     pass
 from utils.utils import empty_torch_queue, create_replay_buffer
-# from algorithms.dsac import LearnerDSAC
-from algorithms.dsac2 import LearnerDSAC
+from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
 from tensorboardX import SummaryWriter
 from models import PolicyNetwork, TanhGaussianPolicy
