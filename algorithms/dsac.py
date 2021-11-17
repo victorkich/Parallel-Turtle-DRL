@@ -106,7 +106,6 @@ class LearnerDSAC(object):
         terminals = torch.from_numpy(terminals).float().to(self.device)
 
         # ------- Update critic -------
-
         # Get predicted next-state actions and Q values from target models
         new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, reparameterize=True,
                                                                                return_log_prob=True)
@@ -120,10 +119,7 @@ class LearnerDSAC(object):
             alpha_loss = 0
             alpha = self.alpha
 
-        print('---------------------------------------------')
-        """
-        Update ZF
-        """
+        # ------- Update ZF -------
         with torch.no_grad():
             new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, reparameterize=True, return_log_prob=True)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
@@ -156,10 +152,7 @@ class LearnerDSAC(object):
         zf2_loss.backward()
         self.zf2_optimizer.step()
 
-        """
-        Update Policy
-        """
-
+        # ------- Update Policy -------
         with torch.no_grad():
             newtau, new_tau_hat, new_presum_tau = self.get_tau(new_actions)
 
