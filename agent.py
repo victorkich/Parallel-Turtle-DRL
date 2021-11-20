@@ -61,7 +61,7 @@ class Agent(object):
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
         goal = None
         if self.config['test']:
-            goal = test_goals(self.local_episode)
+            goal = list(test_goals(self.local_episode))
         env = gym.make(self.config['env_name'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
 
@@ -74,7 +74,7 @@ class Agent(object):
             ep_start_time = time.time()
             goal = None
             if self.config['test']:
-                goal = test_goals(self.local_episode)
+                goal = list(test_goals(self.local_episode))
             state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
