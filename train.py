@@ -166,6 +166,9 @@ if __name__ == "__main__":
     experiment_dir = path + '/saved_models/'
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
+    results_dir = path + f"/{config['results']}/"
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
     if config['test']:
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
         path_model = f"{experiment_dir}/{model_name}/local_episode_1000_reward_200.000000.pt"
@@ -183,7 +186,7 @@ if __name__ == "__main__":
 
     # Logger
     p = torch_mp.Process(target=logger, args=(config, logs, training_on, update_step, global_episode, global_step,
-                                              experiment_dir))
+                                              experiment_dir if not config['test'] else results_dir))
     processes.append(p)
 
     # Data sampler
