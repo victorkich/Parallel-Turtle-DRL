@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 import rospy
-from utils.utils import OUNoise, empty_torch_queue
+from utils.utils import OUNoise, empty_torch_queue, test_goals
 from collections import deque
 import gym_turtlebot3
 import numpy as np
@@ -69,7 +69,10 @@ class Agent(object):
             num_steps = 0
             self.local_episode += 1
             ep_start_time = time.time()
-            state = env.reset(new_random_goals=True if not self.config['test'] else False)
+            goal = None
+            if self.config['test']:
+                goal = np.array(test_goals(self.local_episode))
+            state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
                 self.ou_noise.reset()

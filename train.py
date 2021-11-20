@@ -165,6 +165,9 @@ if __name__ == "__main__":
     experiment_dir = path + '/saved_models/'
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
+    if config['test']:
+        model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+        path_model = f"{experiment_dir}/{model_name}/local_episode_1000_reward_200.000000.pt"
 
     # Data structures
     processes = []
@@ -192,25 +195,26 @@ if __name__ == "__main__":
     # Learner (neural net training process)
     assert config['model'] == 'D4PG' or config['model'] == 'DSAC'  # Only D4PG or DSAC algorithms
     if config['model'] == 'D4PG':
-        target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                          device=config['device'])
-        policy_net = copy.deepcopy(target_policy_net)
-        if not config['test']:
-            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                           device=config['device'])
+        if config['test']:
+            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+            target_policy_net.load_state_dict(torch.load(path_model))
+            target_policy_net.eval()
+        else:
+            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+            policy_net = copy.deepcopy(target_policy_net)
+            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
     elif config['model'] == 'DSAC':
-        target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                               hidden_sizes=[config['dense_size'], config['dense_size']])
-        # target_policy_net = TanhGaussianPolicy(state_size=config['state_dim'], action_size=config['action_dim'],
-        #                                   hidden_size=config['dense_size'], device=config['device'])
-        policy_net = copy.deepcopy(target_policy_net)
-        if not config['test']:
+        if config['test']:
+            target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'], hidden_sizes=[config['dense_size'], config['dense_size']])
+            target_policy_net.load_state_dict(torch.load(path_model))
+            target_policy_net.eval()
+        else:
+            target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'], hidden_sizes=[config['dense_size'], config['dense_size']])
+            policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'],
                                                 action_dim=config['action_dim'],
                                                 hidden_sizes=[config['dense_size'], config['dense_size']])
-            # policy_net_cpu = TanhGaussianPolicy(state_size=config['state_dim'], action_size=config['action_dim'],
-            #                                     hidden_size=config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
 
     if not config['test']:

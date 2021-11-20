@@ -498,3 +498,14 @@ def eval_np(module, *args, **kwargs):
         return tuple(np_ify(x) for x in outputs)
     else:
         return np_ify(outputs)
+
+
+def test_goals(t):
+    if t < 25:
+        return [1.5, 1.5]
+    elif 25 <= t < 50:
+        return [-1.5, 1.5]
+    elif 50 <= t < 75:
+        return [-1.5, -1.5]
+    elif t >= 75:
+        return [1.5, -1.5]
