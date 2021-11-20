@@ -9,7 +9,6 @@ import abc
 
 class ValueNetwork(nn.Module):
     """Critic - return Q value from given states and actions. """
-
     def __init__(self, num_states, num_actions, hidden_size, v_min, v_max,
                  num_atoms, device='cuda'):
         """
@@ -159,35 +158,19 @@ class QuantileMlp(nn.Module):
     ):
         super().__init__()
         self.layer_norm = layer_norm
-        # hidden_sizes[:-2] MLP base
-        # hidden_sizes[-2] before merge
-        # hidden_sizes[-1] before output
 
         self.base_fc = []
         last_size = input_size
         for next_size in hidden_sizes[:-1]:
-            self.base_fc += [
-                nn.Linear(last_size, next_size),
-                nn.LayerNorm(next_size) if layer_norm else nn.Identity(),
-                nn.ReLU(inplace=True),
-            ]
+            self.base_fc += [nn.Linear(last_size, next_size), nn.LayerNorm(next_size) if layer_norm else nn.Identity(), nn.ReLU(inplace=True)]
             last_size = next_size
         self.base_fc = nn.Sequential(*self.base_fc)
         self.num_quantiles = num_quantiles
         self.embedding_size = embedding_size
-        self.tau_fc = nn.Sequential(
-            nn.Linear(embedding_size, last_size),
-            nn.LayerNorm(last_size) if layer_norm else nn.Identity(),
-            nn.Sigmoid(),
-        )
-        self.merge_fc = nn.Sequential(
-            nn.Linear(last_size, hidden_sizes[-1]),
-            nn.LayerNorm(hidden_sizes[-1]) if layer_norm else nn.Identity(),
-            nn.ReLU(inplace=True),
-        )
+        self.tau_fc = nn.Sequential(nn.Linear(embedding_size, last_size), nn.LayerNorm(last_size) if layer_norm else nn.Identity(), nn.Sigmoid())
+        self.merge_fc = nn.Sequential(nn.Linear(last_size, hidden_sizes[-1]), nn.LayerNorm(hidden_sizes[-1]) if layer_norm else nn.Identity(), nn.ReLU(inplace=True))
         self.last_fc = nn.Linear(hidden_sizes[-1], 1)
         self.const_vec = torch.from_numpy(np.arange(1, 1 + self.embedding_size)).to(config['device'])
-
         self.to(config['device'])
 
     def to(self, device):
@@ -272,7 +255,6 @@ class Policy(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_action(self, observation):
         """
-
         :param observation:
         :return: action, debug_dictionary
         """
@@ -290,7 +272,6 @@ class ExplorationPolicy(Policy, metaclass=abc.ABCMeta):
 class TanhGaussianPolicy(Mlp, ExplorationPolicy):
     """
     Usage:
-
     ```
     policy = TanhGaussianPolicy(...)
     action, mean, log_std, _ = policy(obs)
@@ -372,13 +353,4 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
                 else:
                     action = tanh_normal.sample()
 
-        return (
-            action,
-            mean,
-            log_std,
-            log_prob,
-            entropy,
-            std,
-            mean_action_log_prob,
-            pre_tanh_value,
-        )
+        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value

@@ -69,7 +69,7 @@ class Agent(object):
             num_steps = 0
             self.local_episode += 1
             ep_start_time = time.time()
-            state = env.reset(new_random_goals=True)
+            state = env.reset(new_random_goals=True if not self.config['test'] else False)
             if not self.config['test']:
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
@@ -129,6 +129,12 @@ class Agent(object):
                 with self.global_step.get_lock():
                     self.global_step.value += 1
 
+                if self.config['test']:
+                    position = env.get_position()  # Get x and y turtlebot position to compute test charts
+                    scan = env.get_scan()
+                    logs[3] = position
+                    logs[4] = scan
+
             with self.global_episode.get_lock():
                 self.global_episode.value += 1
 
@@ -138,9 +144,14 @@ class Agent(object):
                   'Step:', self.global_step.value, 'Episode Timing:', episode_timing)
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
-                logs[aux] = episode_reward
-                logs[aux + 1] = episode_timing
-                logs[aux + 2] = self.local_episode
+                if not self.config['test']:
+                    logs[aux] = episode_reward
+                    logs[aux + 1] = episode_timing
+                    logs[aux + 2] = self.local_episode
+                else:
+                    logs[0] = episode_reward
+                    logs[1] = episode_timing
+                    logs[2] = self.local_episode
 
             # Saving agent
             if not self.config['test']:

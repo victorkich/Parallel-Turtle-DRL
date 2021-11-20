@@ -1,4 +1,3 @@
-# from torch.distributions import Distribution
 from torch.nn import functional as F
 import numpy as np
 import operator
@@ -60,19 +59,12 @@ class SegmentTree(object):
         neutral_elements = [self.neutral_element for _ in range(num_items)]
         self._value += neutral_elements
         for idx in range(self._capacity - 1, 0, -1):
-            self._value[idx] = self._operation(
-                self._value[2 * idx],
-                self._value[2 * idx + 1]
-            )
+            self._value[idx] = self._operation(self._value[2 * idx], self._value[2 * idx + 1])
 
 
 class SumSegmentTree(SegmentTree):
     def __init__(self, capacity):
-        super(SumSegmentTree, self).__init__(
-            capacity=capacity,
-            operation=operator.add,
-            neutral_element=0.0
-        )
+        super(SumSegmentTree, self).__init__(capacity=capacity, operation=operator.add, neutral_element=0.0)
 
     def sum(self, start=0, end=None):
         return super(SumSegmentTree, self).reduce(start, end)
@@ -91,11 +83,7 @@ class SumSegmentTree(SegmentTree):
 
 class MinSegmentTree(SegmentTree):
     def __init__(self, capacity):
-        super(MinSegmentTree, self).__init__(
-            capacity=capacity,
-            operation=min,
-            neutral_element=float('inf')
-        )
+        super(MinSegmentTree, self).__init__(capacity=capacity, operation=min, neutral_element=float('inf'))
 
     def min(self, start=0, end=None):
         return super(MinSegmentTree, self).reduce(start, end)
@@ -156,9 +144,7 @@ class ReplayBuffer(object):
 
     def add(self, obs_t, action, reward, obs_tp1, done, gamma):
         data = (obs_t, action, reward, obs_tp1, done, gamma)
-
         self._storage.append(data)
-
         self._next_idx += 1
 
     def remove(self, num_samples):
@@ -229,7 +215,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         ReplayBuffer.__init__
         """
         super(PrioritizedReplayBuffer, self).__init__(size)
-        #assert alpha >= 0
+        assert alpha >= 0
         self._alpha = alpha
 
         self.it_capacity = 1
@@ -242,7 +228,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
     def add(self, *args, **kwargs):
         idx = self._next_idx
-        # assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
+        assert idx < self.it_capacity, "Number of samples in replay memory exceeds capacity of segment trees. Please increase capacity of segment trees or increase the frequency at which samples are removed from the replay memory"
 
         super().add(*args, **kwargs)
         self._it_sum[idx] = self._max_priority ** self._alpha
@@ -333,7 +319,6 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             idx = int(idx)
             self._it_sum[idx] = priority ** self._alpha
             self._it_min[idx] = priority ** self._alpha
-
             self._max_priority = max(self._max_priority, priority)
 
     def dump(self, save_dir):
@@ -454,12 +439,8 @@ class TanhNormal(object):
         :return:
         """
         if pre_tanh_value is None:
-            pre_tanh_value = torch.log(
-                (1+value) / (1-value)
-            ) / 2
-        return self.normal.log_prob(pre_tanh_value) - torch.log(
-            1 - value * value + self.epsilon
-        )
+            pre_tanh_value = torch.log((1+value) / (1-value)) / 2
+        return self.normal.log_prob(pre_tanh_value) - torch.log(1 - value * value + self.epsilon)
 
     def sample(self, return_pretanh_value=False):
         """
@@ -478,14 +459,7 @@ class TanhNormal(object):
         """
         Sampling in the reparameterization case.
         """
-        z = (
-            self.normal_mean +
-            self.normal_std *
-            torch.distributions.Normal(
-                torch.zeros(self.normal_mean.size()),
-                torch.ones(self.normal_std.size())
-            ).sample().to(self.config['device'])
-        )
+        z = (self.normal_mean + self.normal_std * torch.distributions.Normal(torch.zeros(self.normal_mean.size()), torch.ones(self.normal_std.size())).sample().to(self.config['device']))
         z.requires_grad_()
 
         if return_pretanh_value:
