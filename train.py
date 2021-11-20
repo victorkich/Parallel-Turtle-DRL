@@ -145,7 +145,7 @@ if __name__ == "__main__":
         config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
     # Opening gazebo environments
-    for i in range(config['num_agents']):
+    for i in range(config['num_agents'] if not config['test'] else 1):
         if not i:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
