@@ -67,7 +67,7 @@ class Agent(object):
 
         best_reward = -float("inf")
         rewards = []
-        while self.local_episode <= self.config['num_episodes']:
+        while self.local_episode <= self.config['num_episodes'] if self.config['test'] else 100:
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
@@ -81,7 +81,7 @@ class Agent(object):
                 self.ou_noise.reset()
             done = False
             while not done:
-                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if not self.config['test'] else state)
+                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if not self.config['test'] else np.array(state))
                 if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
