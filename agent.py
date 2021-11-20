@@ -71,7 +71,7 @@ class Agent(object):
             ep_start_time = time.time()
             goal = None
             if self.config['test']:
-                goal = np.array(test_goals(self.local_episode))
+                goal = test_goals(self.local_episode)
             state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
