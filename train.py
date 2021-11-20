@@ -109,8 +109,8 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
                                            "episode_timing": logs[aux + 1], "episode": logs[aux + 2]}, global_step=step)
             else:
                 writer.add_scalars(main_tag="agent_0", tag_scalar_dict={"reward": logs[0], "episode_timing": logs[1],
-                                                                        "episode": logs[2], "position": str(logs[3]),
-                                                                        "scan": str(logs[4])}, global_step=global_step.value)
+                                                                        "episode": logs[2], "position": logs[3],
+                                                                        "scan": logs[4]}, global_step=global_step.value)
 
             time.sleep(0.05)
             writer.flush()

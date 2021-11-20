@@ -138,8 +138,8 @@ class Agent(object):
                 if self.config['test']:
                     position = env.get_position()  # Get x and y turtlebot position to compute test charts
                     scan = env.get_scan()
-                    logs[3] = position
-                    logs[4] = scan
+                    logs[3] = str(position)
+                    logs[4] = str(scan)
 
             with self.global_episode.get_lock():
                 self.global_episode.value += 1
