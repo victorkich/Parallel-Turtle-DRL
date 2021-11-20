@@ -88,7 +88,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_data_struct = np.zeros(3)
     fake_step = 0
-    while training_on.value:
+    while training_on.value if not config['test'] else global_episode.value < 100:
         try:
             if not config['test']:
                 step = update_step.value
