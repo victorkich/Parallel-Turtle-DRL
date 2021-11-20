@@ -59,7 +59,10 @@ class Agent(object):
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
-        env = gym.make(self.config['env_name'], observation_mode=0, continuous=True)
+        goal = None
+        if self.config['test']:
+            goal = test_goals(self.local_episode)
+        env = gym.make(self.config['env_name'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
 
         best_reward = -float("inf")
@@ -78,7 +81,7 @@ class Agent(object):
                 self.ou_noise.reset()
             done = False
             while not done:
-                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']))
+                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if not self.config['test'] else state)
                 if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
