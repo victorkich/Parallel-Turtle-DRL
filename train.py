@@ -168,7 +168,7 @@ if __name__ == "__main__":
     experiment_dir = path + '/saved_models/'
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
-    results_dir = path + f"/{config['results']}/"
+    results_dir = path + f"/{config['results_path']}/"
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
     if config['test']:
