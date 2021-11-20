@@ -196,8 +196,7 @@ if __name__ == "__main__":
     assert config['model'] == 'D4PG' or config['model'] == 'DSAC'  # Only D4PG or DSAC algorithms
     if config['model'] == 'D4PG':
         if config['test']:
-            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
-            target_policy_net.load_state_dict(torch.load(path_model))
+            target_policy_net = torch.load(path_model)
             target_policy_net.eval()
         else:
             target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
@@ -206,8 +205,7 @@ if __name__ == "__main__":
         target_policy_net.share_memory()
     elif config['model'] == 'DSAC':
         if config['test']:
-            target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'], hidden_sizes=[config['dense_size'], config['dense_size']])
-            target_policy_net.load_state_dict(torch.load(path_model))
+            target_policy_net = torch.load(path_model)
             target_policy_net.eval()
         else:
             target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'], hidden_sizes=[config['dense_size'], config['dense_size']])
