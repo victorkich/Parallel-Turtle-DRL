@@ -75,6 +75,7 @@ class Agent(object):
             goal = None
             if self.config['test']:
                 goal = [test_goals(self.local_episode)]
+                print("New Goal:", goal)
             state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
