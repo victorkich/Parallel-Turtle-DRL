@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 import pandas as pd
-import numpy as np
 import json
 import os
 
@@ -23,8 +22,7 @@ print(new_key_list)
 for i, key in enumerate(key_list):
     data[new_key_list[i]] = data.pop(key)
 
-x = -pd.DataFrame(data['agent_0/x']).iloc[:, 2].to_numpy()
-x = x.tolist()
+x = pd.DataFrame(data['agent_0/x']).iloc[:, 2].to_numpy().tolist()
 y = pd.DataFrame(data['agent_0/y']).iloc[:, 2].to_numpy().tolist()
 
 new_x = []
@@ -37,7 +35,7 @@ for i in range(len(x)-1):
         last = i+1
 
 for x, y in zip(new_x, new_y):
-    plt.plot(x, y, color=color[0], linestyle='-', linewidth=1)  # label=list_dir[0]
+    plt.plot(y, x, color=color[0], linestyle='-', linewidth=1)  # label=list_dir[0]
     # plt.plot(episodes, rewards, color=color[0], linestyle='-', linewidth=1, alpha=0.25)
 
 plt.title('Path '+list_dir[0], size=20)
