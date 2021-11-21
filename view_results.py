@@ -7,10 +7,6 @@ import os
 path = os.path.dirname(os.path.abspath(__file__)) + '/results/'
 list_dir = os.listdir(path)
 
-n = 75  # the larger n is, the smoother curve will be
-b = [1.0 / n] * n
-a = 1
-
 color = {0: 'firebrick', 1: 'tomato', 2: 'peru', 3: 'gold', 4: 'dodgerblue', 5: 'springgreen', 6: 'indigo', 7: 'deeppink'}
 # for c, directory in tqdm(enumerate(list_dir), total=len(list_dir)):
 with open(path+list_dir[0]+'/writer_data.json') as f:
