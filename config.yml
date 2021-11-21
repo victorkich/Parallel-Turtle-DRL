@@ -1,6 +1,6 @@
 # Environment parameters
 env_name: TurtleBot3_Circuit_Simple-v0
-env_stage: 1  # gazebo turtlebot3 stage number
+env_stage: 2  # gazebo turtlebot3 stage number
 seed: 1
 random_seed: 2022
 num_agents: 5
@@ -9,7 +9,7 @@ action_dim: 2
 max_action: 1.5
 
 # Training parameters
-model: D4PG
+model: DSAC
 batch_size: 256
 num_episodes: 1000
 num_steps_train: 10000000  # number of episodes from all agents
