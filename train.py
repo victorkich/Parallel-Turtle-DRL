@@ -49,8 +49,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                 print('-------------------------')
                 print(len(inds))
                 print(len(weights))
-                print(inds)
-                print(weights)
                 print('///////////////////////////')
                 replay_buffer.update_priorities(inds, weights)
         except queue.Empty:
