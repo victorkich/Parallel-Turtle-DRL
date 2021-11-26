@@ -133,10 +133,10 @@ class LearnerDSAC(object):
         z2_pred = self.zf2(obs, actions, tau_hat)
         zf1_loss = self.zf_criterion(z1_pred, z_target, tau_hat, next_presum_tau)
         zf2_loss = self.zf_criterion(z2_pred, z_target, tau_hat, next_presum_tau)
+        zf1_loss = zf1_loss.mean(axis=1)
+        zf2_loss = zf2_loss.mean(axis=1)
 
         # Update priorities in buffer 1
-        print(zf1_loss)
-        print(zf2_loss)
         print(zf1_loss.shape)
         print(zf2_loss.shape)
         value_loss = torch.min(zf1_loss, zf2_loss)
@@ -148,6 +148,9 @@ class LearnerDSAC(object):
             value_loss_2 = zf2_loss * torch.tensor(weights).float().to(self.device)
             zf1_loss = value_loss_1.mean()
             zf2_loss = value_loss_2.mean()
+
+        zf1_loss = zf1_loss.mean()
+        zf2_loss = zf2_loss.mean()
 
         self.zf1_optimizer.zero_grad()
         zf1_loss.backward()
