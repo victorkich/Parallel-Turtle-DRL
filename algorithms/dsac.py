@@ -137,8 +137,6 @@ class LearnerDSAC(object):
         zf2_loss = zf2_loss.mean(axis=1)
 
         # Update priorities in buffer 1
-        print(zf1_loss.shape)
-        print(zf2_loss.shape)
         value_loss = torch.min(zf1_loss, zf2_loss)
         if self.prioritized_replay:
             td_error = value_loss.cpu().detach().numpy().flatten()
@@ -195,7 +193,7 @@ class LearnerDSAC(object):
         # Logging
         with logs.get_lock():
             logs[3] = policy_loss.item()
-            logs[4] = value_loss.item()
+            logs[4] = value_loss.mean().item()
             logs[5] = time.time() - update_time
 
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
