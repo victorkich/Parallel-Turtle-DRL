@@ -356,7 +356,7 @@ def quantile_regression_loss(input, target, tau, weight):
     L = F.smooth_l1_loss(expanded_input, expanded_target, reduction="none")  # (N, T, T)
     sign = torch.sign(expanded_input - expanded_target) / 2. + 0.5
     rho = torch.abs(tau - sign) * L * weight
-    return rho.sum(dim=-1).mean()
+    return rho.sum(dim=-1)
 
 
 def soft_update_from_to(source, target, tau):
