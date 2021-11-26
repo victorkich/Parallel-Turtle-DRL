@@ -501,7 +501,7 @@ def eval_np(module, *args, **kwargs):
 
 
 def test_goals(t):
-    if t < 1:
+    if t < 2:
         return [1.5, 1.5]
     elif 2 <= t < 3:
         return [-1.5, 1.5]
