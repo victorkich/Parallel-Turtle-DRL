@@ -249,7 +249,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             res.append(idx)
         return res
 
-    def sample(self, batch_size, beta=0.4):
+    def sample(self, batch_size, beta=0.6):
         """Sample a batch of experiences.
         compared to ReplayBuffer.sample
         it also returns importance weights and idxes
@@ -501,11 +501,12 @@ def eval_np(module, *args, **kwargs):
 
 
 def test_goals(t):
-    if t < 2:
+    if t < 25:
         return [1.5, 1.5]
-    elif 2 <= t < 3:
-        return [-1.5, 1.5]
-    elif 3 <= t < 4:
-        return [-1.5, -1.5]
-    elif t >= 4:
+    elif 25 <= t < 50:
         return [1.5, -1.5]
+    elif 50 <= t < 75:
+        return [-1.5, -1.5]
+    elif t >= 75:
+        return [-1.5, 1.5]
+

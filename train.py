@@ -24,7 +24,7 @@ from models import PolicyNetwork, TanhGaussianPolicy
 from agent import Agent
 
 
-def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir):
+def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, logs, experiment_dir):
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
@@ -52,7 +52,8 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             pass
 
         try:
-            batch = replay_buffer.sample(batch_size, beta=0.4)
+            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start'])*(global_episode.value/(config['num_episodes']*config['num_agents']))
+            batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         os.makedirs(results_dir)
     if config['test']:
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-        path_model = f"{experiment_dir}/{model_name}/local_episode_1000_reward_200.000000.pt"
+        path_model = f"{experiment_dir}/{model_name}/local_episode_1000_reward_400.000000.pt"
 
     # Data structures
     processes = []
@@ -195,7 +196,7 @@ if __name__ == "__main__":
     if not config['test']:
         batch_queue = mp.Queue(maxsize=config['batch_queue_size'])
         p = torch_mp.Process(target=sampler_worker, args=(config, replay_queue, batch_queue, replay_priorities_queue,
-                                                          training_on, logs, experiment_dir))
+                                                          training_on, global_episode, logs, experiment_dir))
         processes.append(p)
 
     # Learner (neural net training process)
