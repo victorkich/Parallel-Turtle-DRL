@@ -52,7 +52,11 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             pass
 
         try:
-            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start'])*(global_episode.value/(config['num_episodes']*config['num_agents']))
+            if global_episode.value >= (config['num_episodes']*config['num_agents'])/2:
+                aux = 1
+            else:
+                aux = global_episode.value/(config['num_episodes']*config['num_agents'])
+            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * aux
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
@@ -174,7 +178,7 @@ if __name__ == "__main__":
         os.makedirs(results_dir)
     if config['test']:
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-        path_model = f"{experiment_dir}/{model_name}/local_episode_1000_reward_400.000000.pt"
+        path_model = f"{experiment_dir}/{model_name}/local_episode_1000_reward_200.000000.pt"
 
     # Data structures
     processes = []
