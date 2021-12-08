@@ -16,6 +16,7 @@ for i in range(len(list_dir)):
     else:
         l2.append(list_dir[i])
 list_dir = l1 + l2
+list_dir = [list_dir[0], list_dir[2], list_dir[4], list_dir[6], list_dir[1], list_dir[3], list_dir[5], list_dir[7]]
 
 n = 75  # the larger n is, the smoother curve will be
 b = [1.0 / n] * n
@@ -45,6 +46,6 @@ for c, directory in tqdm(enumerate(list_dir), total=len(list_dir)):
         plt.legend(loc=4, prop={'size': 12})
         plt.xlabel('Episode')
         plt.ylabel('Reward')
-        plt.xlim([0, 400])
+        plt.xlim([0, 1000])
         plt.ylim([-21, 201])
         plt.show()
