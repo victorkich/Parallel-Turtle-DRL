@@ -354,3 +354,75 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
                     action = tanh_normal.sample()
 
         return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value
+
+
+class ActorSAC(nn.Module):
+    def __init__(self, state_dim, hidden, min_log_std=-20, max_log_std=2):
+        super(ActorSAC, self).__init__()
+        self.fc1 = nn.Linear(state_dim, hidden)
+        self.fc2 = nn.Linear(hidden, hidden)
+        self.mu_head = nn.Linear(hidden, 1)
+        self.log_std_head = nn.Linear(hidden, 1)
+
+        self.min_log_std = min_log_std
+        self.max_log_std = max_log_std
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        mu = self.mu_head(x)
+        log_std_head = F.relu(self.log_std_head(x))
+        log_std_head = torch.clamp(log_std_head, self.min_log_std, self.max_log_std)
+        return mu, log_std_head
+
+
+class ActorDDPG(nn.Module):
+    def __init__(self, state_dim, action_dim, max_action, hidden):
+        super(ActorDDPG, self).__init__()
+
+        self.l1 = nn.Linear(state_dim, hidden)
+        self.l2 = nn.Linear(hidden, hidden)
+        self.l3 = nn.Linear(hidden, action_dim)
+
+        self.max_action = max_action
+
+    def forward(self, x):
+        x = F.relu(self.l1(x))
+        x = F.relu(self.l2(x))
+        x = self.max_action * torch.tanh(self.l3(x))
+        return x
+        
+
+class Q(nn.Module):
+    def __init__(self, state_dim, action_dim, hidden):
+        super(Q, self).__init__()
+        self.fc1 = nn.Linear(state_dim + action_dim, hidden)
+        self.fc2 = nn.Linear(hidden, hidden)
+        self.fc3 = nn.Linear(hidden, 1)
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+
+    def forward(self, s, a):
+        s = s.reshape(-1, self.state_dim)
+        a = a.reshape(-1, self.action_dim)
+        x = torch.cat((s, a), -1)  # combination s and a
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+        
+
+class Critic(nn.Module):
+    def __init__(self, state_dim, action_dim, hidden):
+        super(Critic, self).__init__()
+
+        self.l1 = nn.Linear(state_dim + action_dim, hidden)
+        self.l2 = nn.Linear(hidden, hidden)
+        self.l3 = nn.Linear(hidden, 1)
+
+    def forward(self, x, u):
+        x = F.relu(self.l1(torch.cat([x, u], 1)))
+        x = F.relu(self.l2(x))
+        x = self.l3(x)
+        return x
+

@@ -48,21 +48,18 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                 inds, weights = replay_priorities_queue.get_nowait()
                 replay_buffer.update_priorities(inds, weights)
         except queue.Empty:
-            # print('Erro 1!')
             pass
 
         try:
-            if global_episode.value >= (config['num_episodes']*config['num_agents'])/2:
-                aux = 1
+            if logs[8].value >= config['num_episodes']:
+                beta = config['priority_beta_end']
             else:
-                aux = global_episode.value/(config['num_episodes']*config['num_agents'])
-            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * aux
+                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8].value / config['num_episodes'])
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
         except:
-            # print('Erro 2!')
             time.sleep(0.1)
             continue
 
@@ -219,10 +216,10 @@ if __name__ == "__main__":
             target_policy_net = torch.load(path_model)
             target_policy_net.eval()
         else:
-            target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'], hidden_sizes=[config['dense_size'], config['dense_size']])
+            target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
+                                                   hidden_sizes=[config['dense_size'], config['dense_size']])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'],
-                                                action_dim=config['action_dim'],
+            policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                 hidden_sizes=[config['dense_size'], config['dense_size']])
         target_policy_net.share_memory()
 

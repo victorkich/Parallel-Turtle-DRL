@@ -2,6 +2,7 @@
 
 import rospy
 from utils.utils import OUNoise, empty_torch_queue, test_goals
+from utils import range_finder as rf
 from collections import deque
 import gym_turtlebot3
 import numpy as np
@@ -62,12 +63,17 @@ class Agent(object):
         goal = None
         if self.config['test']:
             goal = [test_goals(self.local_episode)]
-        env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
+        env = gym.make(self.config['env_name'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
+
+        if self.config['test_real']:
+            real_ttb = rf.RealTtb(self.config, self.log_dir, output=(720, 480))
 
         best_reward = -float("inf")
         rewards = []
-        while self.local_episode <= self.config['num_episodes'] if self.config['test'] else 200:
+        while self.local_episode <= self.config['num_episodes'] if not self.config['test'] else self.config['test_trials']:
+            if self.config['test_real']:
+                input("Press Enter to continue to the next episode...")
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
@@ -82,6 +88,8 @@ class Agent(object):
                 self.ou_noise.reset()
             done = False
             while not done:
+                if self.config['test_real']:
+                    state = real_ttb.get_angle_distance(state, 1.5)
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config['test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else np.array(state))
                 if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
                     action = action.squeeze(0)
@@ -90,7 +98,7 @@ class Agent(object):
                     action = action.detach().cpu().numpy().flatten()
                     action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                     action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
-                next_state, reward, done, info = env.step(action)
+                next_state, reward, done, info = env.step(action, test_real=self.config['test_real'])
                 episode_reward += reward
 
                 if not self.config['test']:
@@ -137,18 +145,24 @@ class Agent(object):
                     self.global_step.value += 1
 
                 if self.config['test']:
-                    position = env.get_position()  # Get x and y turtlebot position to compute test charts
-                    # scan = env.get_scan()
-                    logs[3] = position[0]
-                    logs[4] = position[1]
+                    if self.config['real_test']:
+                        position = env.get_position()  # Get x and y turtlebot position to compute test charts
+                        # scan = env.get_scan()
+                        logs[3] = position[0]
+                        logs[4] = position[1]
+                    else:
+                        position = env.get_position()  # Get x and y turtlebot position to compute test charts
+                        # scan = env.get_scan()
+                        logs[3] = position[0]
+                        logs[4] = position[1]
 
             with self.global_episode.get_lock():
                 self.global_episode.value += 1
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print('Agent:', self.n_agent, 'Episode:', self.local_episode, 'Reward:', episode_reward,
-                  'Step:', self.global_step.value, 'Episode Timing:', episode_timing)
+            print(f"Agent: {self.n_agent} Episode: [{self.local_episode}/{self.config['test_trials']}] "
+                  f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:
