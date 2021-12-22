@@ -62,7 +62,7 @@ class Agent(object):
         goal = None
         if self.config['test']:
             goal = [test_goals(self.local_episode)]
-        env = gym.make(self.config['env_name'], observation_mode=0, continuous=True, goal_list=goal)
+        env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
 
         best_reward = -float("inf")
