@@ -63,7 +63,7 @@ class Agent(object):
         goal = None
         if self.config['test']:
             goal = [test_goals(self.local_episode)]
-        env = gym.make(self.config['env_name'], observation_mode=0, continuous=True, goal_list=goal)
+        env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
 
         if self.config['test_real']:
@@ -102,7 +102,7 @@ class Agent(object):
                     action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                     action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
-                next_state, reward, done, info = env.step(action)  # test_real=self.config['test_real']
+                next_state, reward, done, info = env.step(action, exploitation=True if self.agent_type == "exploitation" else False)  # test_real=self.config['test_real']
                 episode_reward += reward
 
                 if not self.config['test']:

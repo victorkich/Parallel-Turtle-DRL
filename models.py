@@ -70,7 +70,7 @@ class PolicyNetwork(nn.Module):
     def to(self, device):
         super(PolicyNetwork, self).to(device)
 
-    def get_action(self, state):
+    def get_action(self, state, exploitation=False):
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
         action = self.forward(state)
         return action
@@ -130,7 +130,7 @@ class PolicyNetwork2(nn.Module):
         log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - action.pow(2) + epsilon)
         return action, log_prob
 
-    def get_action(self, state):
+    def get_action(self, state, exploitation=False):
         """
         returns the action based on a squashed gaussian policy. That means the samples are obtained according to:
         a(s,e)= tanh(mu(s)+sigma(s)+e)
@@ -140,7 +140,10 @@ class PolicyNetwork2(nn.Module):
         std = log_std.exp()
         dist = Normal(0, 1)
         e = dist.sample().to(self.device)
-        action = torch.tanh(mu + e * std).cpu()
+        if not exploitation:
+            action = torch.tanh(mu + e * std).cpu()
+        else:
+            action = torch.tanh(mu).cpu()
         return action
 
 
