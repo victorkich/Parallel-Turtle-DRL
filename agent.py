@@ -82,7 +82,8 @@ class Agent(object):
             if self.config['test']:
                 goal = [test_goals(self.local_episode)]
                 print("New Goal:", goal)
-            state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
+            state = env.reset(new_random_goals=True if not self.config['test'] or self.config['env_stage'] == 'u' or
+                              self.config['env_stage'] == 'l' else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
@@ -90,7 +91,9 @@ class Agent(object):
             while not done:
                 if self.config['test_real']:
                     state = real_ttb.get_angle_distance(state, 1.5)
-                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config['test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else np.array(state))
+                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
+                    'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else np.array(
+                    state))
                 if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
@@ -162,8 +165,9 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(f"Agent: {self.n_agent} Episode: [{self.local_episode}/{self.config['test_trials']}] "
-                  f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
+            print(
+                f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/{self.config['test_trials']}] "
+                f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:
