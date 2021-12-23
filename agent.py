@@ -91,8 +91,8 @@ class Agent(object):
                 if self.config['test_real']:
                     state = real_ttb.get_angle_distance(state, 1.5)
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
-                    'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else np.array(
-                    state))
+                         'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else
+                         np.array(state), exploitation=True if self.agent_type == "exploitation" else False)
                 if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
@@ -101,7 +101,7 @@ class Agent(object):
                     action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                     action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
-                next_state, reward, done, info = env.step(action, exploitation=True if self.agent_type == "exploitation" else False)  # test_real=self.config['test_real']
+                next_state, reward, done, info = env.step(action)  # test_real=self.config['test_real']
                 episode_reward += reward
 
                 if not self.config['test']:
