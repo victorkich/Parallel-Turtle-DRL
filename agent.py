@@ -82,8 +82,8 @@ class Agent(object):
             if self.config['test']:
                 goal = [test_goals(self.local_episode)]
                 print("New Goal:", goal)
-            state = env.reset(new_random_goals=True if not self.config['test'] or self.config['env_stage'] == 'u' or
-                              self.config['env_stage'] == 'l' else False, goal=goal)
+            state = env.reset(new_random_goals=True if not self.config['test'] and not (self.config['env_stage'] == 'u' or
+                              self.config['env_stage'] == 'l') else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
