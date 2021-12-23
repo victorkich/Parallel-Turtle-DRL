@@ -17,7 +17,7 @@ max_ep_length: 500  # maximum number of steps per episode
 replay_mem_size: 100000  # maximum capacity of replay memory
 priority_alpha: 0.6  # 0.6 controls the randomness vs prioritisation of the prioritised sampling (0.0 = Uniform sampling, 1.0 = Greedy prioritisation)
 priority_beta_start: 0.4  # 0.4 starting value of beta - controls to what degree IS weights influence the gradient updates to correct for the bias introduces by priority sampling (0 - no correction, 1 - full correction)
-priority_beta_end: 1.0  # 1.0 beta will be linearly annelaed from its start value to this value thoughout training
+priority_beta_end: 0.9  # 1.0 beta will be linearly annelaed from its start value to this value thoughout training
 priority_epsilon: 0.0001
 discount_rate: 0.99  # Discount rate (gamma) for future rewards
 n_step_return: 5  # number of future steps to collect experiences for N-step returns
@@ -55,5 +55,5 @@ disabled: 0
 save_buffer: 0
 results_path: results
 test: 0
-real_ttb: 0
+test_real: 0
 test_trials: 100
