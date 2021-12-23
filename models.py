@@ -314,7 +314,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
 
     @torch.no_grad()
     def get_action(self, obs_np, exploitation=False):
-        action, _, _, _, _, _, _, _ = self.forward(obs_np, deterministic=exploitation)
+        action, _, _, _, _, _, _, _ = self.forward(obs_np, reparameterize=not exploitation)
         return action
 
     def forward(self, obs, reparameterize=True, deterministic=False, return_log_prob=False):
