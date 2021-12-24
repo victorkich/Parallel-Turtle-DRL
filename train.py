@@ -58,10 +58,11 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             pass
 
         try:
+            print(logs[8], type(logs[8]))
             if logs[8] >= config['num_episodes']:
                 beta = config['priority_beta_end']
             else:
-                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8].value / config['num_episodes'])
+                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
             print('Beta:', beta)
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
