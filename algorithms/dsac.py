@@ -141,7 +141,7 @@ class LearnerDSAC(object):
         if self.prioritized_replay:
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
-            replay_priority_queue.put((inds, weights_update))
+            replay_priority_queue.put_nowait((inds, weights_update))
             value_loss_1 = zf1_loss * torch.tensor(weights).float().to(self.device)
             value_loss_2 = zf2_loss * torch.tensor(weights).float().to(self.device)
             zf1_loss = value_loss_1.mean()
