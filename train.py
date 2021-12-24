@@ -58,6 +58,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             pass
 
         try:
+            print('--------------------------------------------')
             print('Logs[8].value:', logs[8].value)
             if logs[8].value >= config['num_episodes']:
                 beta = config['priority_beta_end']
