@@ -34,11 +34,13 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         # (1) Transfer replays to global buffer
         time.sleep(0.1)
         n = replay_queue.qsize()
+        print('Replay queue size:', replay_queue.qsize())
 
         for _ in range(n):
             replay = replay_queue.get()
             replay_buffer.add(*replay)
 
+        print('Replay buffer size:', len(replay_buffer))
         # (2) Transfer batch of replay from buffer to the batch_queue
         if len(replay_buffer) < batch_size:
             continue
