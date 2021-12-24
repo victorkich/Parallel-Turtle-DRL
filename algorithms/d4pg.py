@@ -100,11 +100,9 @@ class LearnerD4PG(object):
         # Update priorities in buffer
         td_error = value_loss.cpu().detach().numpy().flatten()
 
-        print('self.prioritized_replay:', self.prioritized_replay)
         if self.prioritized_replay:
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put_nowait((inds, weights_update))
-            print('D4PG Prioritized')
             value_loss = value_loss * torch.tensor(weights).float().to(self.device)
 
         # Update step
@@ -152,7 +150,6 @@ class LearnerD4PG(object):
                 time.sleep(0.01)
                 continue
 
-            print('Train')
             self._update_step(batch, replay_priority_queue, update_step, logs)
             with update_step.get_lock():
                 update_step.value += 1

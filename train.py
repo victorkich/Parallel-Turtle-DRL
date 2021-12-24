@@ -34,42 +34,32 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         # (1) Transfer replays to global buffer
         time.sleep(0.1)
         n = replay_queue.qsize()
-        print('Replay queue size:', replay_queue.qsize())
 
         for _ in range(n):
             replay = replay_queue.get()
             replay_buffer.add(*replay)
 
-        print('Replay buffer size:', len(replay_buffer))
         # (2) Transfer batch of replay from buffer to the batch_queue
         if len(replay_buffer) < batch_size:
             continue
 
         try:
             if config['replay_memory_prioritized']:
-                print('Step 1')
-                print('Replay priority queue size:', replay_priorities_queue.qsize())
                 inds, weights = replay_priorities_queue.get_nowait()
-                print('Step 2')
                 replay_buffer.update_priorities(inds, weights)
-                print('Step 3')
         except queue.Empty:
-            print('Erro 1')
             pass
 
         try:
-            print(logs[8], type(logs[8]))
             if logs[8] >= config['num_episodes']:
                 beta = config['priority_beta_end']
             else:
                 beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
-            print('Beta:', beta)
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
         except:
-            print('Erro 2')
             time.sleep(0.1)
             continue
 
@@ -80,7 +70,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                 logs[1] = batch_queue.qsize()
                 logs[2] = len(replay_buffer)
         except:
-            print('Erro 3!')
+            pass
 
     if config['save_buffer']:
         process_dir = f"{experiment_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}/"
