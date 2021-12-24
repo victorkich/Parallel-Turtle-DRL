@@ -50,9 +50,11 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                 inds, weights = replay_priorities_queue.get_nowait()
                 replay_buffer.update_priorities(inds, weights)
         except queue.Empty:
+            print('Erro 1')
             pass
 
         try:
+            print('Logs[8].value:', logs[8].value)
             if logs[8].value >= config['num_episodes']:
                 beta = config['priority_beta_end']
             else:
@@ -63,6 +65,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
         except:
+            print('Erro 2')
             time.sleep(0.1)
             continue
 
