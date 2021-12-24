@@ -102,7 +102,7 @@ class LearnerD4PG(object):
 
         if self.prioritized_replay:
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
-            replay_priority_queue.put_nowait((inds, weights_update))
+            replay_priority_queue.put((inds, weights_update))
             value_loss = value_loss * torch.tensor(weights).float().to(self.device)
 
         # Update step
