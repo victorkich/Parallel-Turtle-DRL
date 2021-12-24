@@ -147,7 +147,6 @@ class LearnerD4PG(object):
         torch.set_num_threads(4)
         while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
             try:
-                print('Gameplay')
                 batch = batch_queue.get_nowait()
             except queue.Empty:
                 time.sleep(0.01)
