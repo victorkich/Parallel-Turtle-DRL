@@ -70,7 +70,7 @@ class PolicyNetwork(nn.Module):
     def to(self, device):
         super(PolicyNetwork, self).to(device)
 
-    def get_action(self, state, exploitation=False):
+    def get_action(self, state):
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
         action = self.forward(state)
         return action
@@ -313,8 +313,8 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         super(TanhGaussianPolicy, self).to(device)
 
     @torch.no_grad()
-    def get_action(self, obs_np, exploitation=False):
-        action, _, _, _, _, _, _, _ = self.forward(obs_np, reparameterize=not exploitation)
+    def get_action(self, obs_np):
+        action, _, _, _, _, _, _, _ = self.forward(obs_np)
         return action
 
     def forward(self, obs, reparameterize=True, deterministic=False, return_log_prob=False):
