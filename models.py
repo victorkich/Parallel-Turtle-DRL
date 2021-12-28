@@ -360,12 +360,12 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
 
 
 class ActorSAC(nn.Module):
-    def __init__(self, state_dim, hidden, min_log_std=-20, max_log_std=2):
+    def __init__(self, state_dim, action_dim, hidden, min_log_std=-20, max_log_std=2):
         super(ActorSAC, self).__init__()
         self.fc1 = nn.Linear(state_dim, hidden)
         self.fc2 = nn.Linear(hidden, hidden)
-        self.mu_head = nn.Linear(hidden, 1)
-        self.log_std_head = nn.Linear(hidden, 1)
+        self.mu_head = nn.Linear(hidden, action_dim)
+        self.log_std_head = nn.Linear(hidden, action_dim)
 
         self.min_log_std = min_log_std
         self.max_log_std = max_log_std

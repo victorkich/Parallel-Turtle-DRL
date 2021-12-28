@@ -8,7 +8,7 @@ import time
 
 
 class LearnerDDPG(object):
-    def __init__(self, config, learner_w_queue, log_dir=''):
+    def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
         self.update_iteration = config['update_agent_ep']
         self.batch_size = config['batch_size']
@@ -19,9 +19,8 @@ class LearnerDDPG(object):
         self.learner_w_queue = learner_w_queue
         self.action_high = [1.5, 0.12]
 
-        self.actor = ActorDDPG(config['state_dim'], config['action_dim'], self.action_high, config['dense_size']).to(self.device)
-        self.actor_target = ActorDDPG(config['state_dim'], config['action_dim'], self.action_high, config['dense_size']).to(self.device)
-        self.actor_target.load_state_dict(self.actor.state_dict())
+        self.actor = policy_net
+        self.actor_target = target_policy_net
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config['actor_learning_rate'])
 
         self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)

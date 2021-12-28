@@ -1,5 +1,5 @@
-from utils.utils import OUNoise, empty_torch_queue
 from utils.l2_projection import _l2_project
+from utils.utils import empty_torch_queue
 from models import ValueNetwork
 import torch.optim as optim
 import torch.nn as nn
@@ -31,9 +31,6 @@ class LearnerD4PG(object):
         self.prioritized_replay = config['replay_memory_prioritized']
         self.learner_w_queue = learner_w_queue
         self.delta_z = (self.v_max - self.v_min) / (self.num_atoms - 1)
-
-        # Noise process
-        self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
         # Value and policy nets
         self.value_net = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,

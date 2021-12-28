@@ -19,8 +19,10 @@ except:
 from utils.utils import empty_torch_queue, create_replay_buffer
 from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
+from algorithms.ddpg import LearnerDDPG
+from algorithms.sac import LearnerSAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy
+from models import PolicyNetwork, TanhGaussianPolicy, ActorDDPG, ActorSAC, Critic, Q
 from agent import Agent
 
 
@@ -134,6 +136,10 @@ def learner_worker(config, training_on, policy, target_policy_net, learner_w_que
         learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     elif config['model'] == 'DSAC':
         learner = LearnerDSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+    elif config['model'] == 'DDPG':
+        learner = LearnerDDPG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+    elif config['model'] == 'SAC':
+        learner = LearnerSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     learner.run(training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs)
 
 
@@ -202,7 +208,7 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Learner (neural net training process)
-    assert config['model'] == 'D4PG' or config['model'] == 'DSAC'  # Only D4PG or DSAC algorithms
+    assert any(config['model'] == np.array(['D4PG', 'DSAC', 'DDPG', 'SAC']))  # Only D4PG, DSAC, DDPG, and SAC
     if config['model'] == 'D4PG':
         if config['test']:
             target_policy_net = torch.load(path_model)
@@ -223,6 +229,23 @@ if __name__ == "__main__":
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                 hidden_sizes=[config['dense_size'], config['dense_size']])
         target_policy_net.share_memory()
+    elif config['model'] == 'DDPG':
+        if config['test']:
+            target_policy_net = torch.load(path_model)
+            target_policy_net.eval()
+        else:
+            action_high = [1.5, 0.12]
+            target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size']).to(config['device'])
+            policy_net = copy.deepcopy(target_policy_net)
+            policy_net_cpu = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size']).to(config['device'])
+    elif config['model'] == 'SAC':
+        if config['test']:
+            target_policy_net = torch.load(path_model)
+            target_policy_net.eval()
+        else:
+            target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(config['device'])
+            policy_net = copy.deepcopy(target_policy_net)
+            policy_net_cpu = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(config['device'])
 
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,

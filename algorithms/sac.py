@@ -9,7 +9,7 @@ import time
 
 
 class LearnerSAC(object):
-    def __init__(self, config, learner_w_queue, log_dir=''):
+    def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
         self.update_iteration = config['update_agent_ep']
         self.batch_size = config['batch_size']
@@ -19,7 +19,7 @@ class LearnerSAC(object):
         self.save_dir = log_dir
         self.learner_w_queue = learner_w_queue
 
-        self.actor = ActorSAC(config['state_dim'], hidden=config['dense_size']).to(self.device)
+        self.actor = policy_net
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config['actor_learning_rate'])
         self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
@@ -33,6 +33,8 @@ class LearnerSAC(object):
         self.num_training = 0
 
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
+            target_param.data.copy_(param.data)
+        for target_param, param in zip(self.target_policy_net.parameters(), self.actor.parameters()):
             target_param.data.copy_(param.data)
 
     def select_action(self, state):
@@ -115,6 +117,9 @@ class LearnerSAC(object):
 
         # soft update
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
+            target_param.data.copy_(target_param * (1 - self.config['tau']) + param * self.config['tau'])
+
+        for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
             target_param.data.copy_(target_param * (1 - self.config['tau']) + param * self.config['tau'])
 
         # Send updated learner to the queue
