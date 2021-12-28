@@ -1,29 +1,33 @@
-from tensorboardX import SummaryWriter
+from utils.utils import empty_torch_queue
 from models import ActorDDPG, Critic
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
+import queue
+import time
 
 
-class DDPG(object):
-    def __init__(self, state_dim, action_dim, max_action, config, save_dir):
+class LearnerDDPG(object):
+    def __init__(self, config, learner_w_queue, log_dir=''):
+        self.config = config
         self.update_iteration = config['update_agent_ep']
         self.batch_size = config['batch_size']
         self.gamma = config['discount_rate']
         self.tau = config['tau']
         self.device = config['device']
-        self.save_dir = save_dir
+        self.save_dir = log_dir
+        self.learner_w_queue = learner_w_queue
+        self.action_high = [1.5, 0.12]
 
-        self.actor = ActorDDPG(state_dim, action_dim, max_action, config['dense_size']).to(self.device)
-        self.actor_target = ActorDDPG(state_dim, action_dim, max_action, config['dense_size']).to(self.device)
+        self.actor = ActorDDPG(config['state_dim'], config['action_dim'], self.action_high, config['dense_size']).to(self.device)
+        self.actor_target = ActorDDPG(config['state_dim'], config['action_dim'], self.action_high, config['dense_size']).to(self.device)
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config['actor_learning_rate'])
 
-        self.critic = Critic(state_dim, action_dim, config['dense_size']).to(self.device)
-        self.critic_target = Critic(state_dim, action_dim, config['dense_size']).to(self.device)
+        self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
+        self.critic_target = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
-        self.writer = SummaryWriter(self.save_dir)
 
         self.num_critic_update_iteration = 0
         self.num_actor_update_iteration = 0
@@ -33,57 +37,82 @@ class DDPG(object):
         state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
         return self.actor(state).cpu().data.numpy().flatten()
 
-    def update(self, replay_buffer):
-        for it in range(self.update_iteration):
-            # Sample replay buffer
-            x, u, r, y, d, _ = replay_buffer.sample(self.batch_size)
-            state = torch.FloatTensor(x).to(self.device)
-            action = torch.FloatTensor(u).to(self.device)
-            next_state = torch.FloatTensor(y).to(self.device)
-            done = torch.FloatTensor(1-d).to(self.device)
-            reward = torch.FloatTensor(r).to(self.device)
+    def _update_step(self, replay_buffer, update_step, logs):
+        update_time = time.time()
 
-            # Compute the target Q value
-            target_Q = self.critic_target(next_state, self.actor_target(next_state))
-            target_Q = reward + (done * self.gamma * target_Q).detach()
+        # Sample replay buffer
+        x, u, r, y, d, _ = replay_buffer.sample(self.batch_size)
+        state = torch.FloatTensor(x).to(self.device)
+        action = torch.FloatTensor(u).to(self.device)
+        next_state = torch.FloatTensor(y).to(self.device)
+        done = torch.FloatTensor(1-d).to(self.device)
+        reward = torch.FloatTensor(r).to(self.device)
 
-            # Get current Q estimate
-            current_Q = self.critic(state, action)
+        # Compute the target Q value
+        target_Q = self.critic_target(next_state, self.actor_target(next_state))
+        target_Q = reward + (done * self.gamma * target_Q).detach()
 
-            # Compute critic loss
-            critic_loss = F.mse_loss(current_Q, target_Q)
-            self.writer.add_scalar('Loss/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
-            # Optimize the critic
-            self.critic_optimizer.zero_grad()
-            critic_loss.backward()
-            self.critic_optimizer.step()
+        # Get current Q estimate
+        current_Q = self.critic(state, action)
 
-            # Compute actor loss
-            actor_loss = -self.critic(state, self.actor(state)).mean()
-            self.writer.add_scalar('Loss/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
+        # Compute critic loss
+        critic_loss = F.mse_loss(current_Q, target_Q)
+        # Optimize the critic
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
 
-            # Optimize the actor
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor_optimizer.step()
+        # Compute actor loss
+        actor_loss = -self.critic(state, self.actor(state)).mean()
 
-            # Update the frozen target models
-            for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
-                target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+        # Optimize the actor
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
 
-            for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
-                target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+        # Update the frozen target models
+        for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
+            target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
-            self.num_actor_update_iteration += 1
-            self.num_critic_update_iteration += 1
-            return F.mse_loss(current_Q, target_Q)
+        for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
+            target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
-    def save(self):
-        torch.save(self.actor.state_dict(), self.save_dir + 'DDPG_actor%d.pth' % self.num_actor_update_iteration)
-        torch.save(self.critic.state_dict(), self.save_dir + 'DDPG_critic%d.pth' % self.num_critic_update_iteration)
-        print("===================================\nDDPG model has been saved...\n===================================")
+        self.num_actor_update_iteration += 1
+        self.num_critic_update_iteration += 1
 
-    def load(self):
-        self.actor.load_state_dict(torch.load(self.save_dir + 'DDPG_actor.pth'))
-        self.critic.load_state_dict(torch.load(self.save_dir + 'DDPG_critic.pth'))
-        print("===================================\nDDPG model has been loaded...\n===================================")
+        # Send updated learner to the queue
+        if update_step.value % 100 == 0:
+            try:
+                params = [p.data.cpu().detach().numpy() for p in self.actor.parameters()]
+                self.learner_w_queue.put(params)
+            except:
+                pass
+
+        # Logging
+        with logs.get_lock():
+            logs[3] = critic_loss
+            logs[4] = actor_loss
+            logs[5] = time.time() - update_time
+
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
+        torch.set_num_threads(4)
+        while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
+            try:
+                batch = batch_queue.get_nowait()
+            except queue.Empty:
+                time.sleep(0.01)
+                continue
+
+            self._update_step(batch, update_step, logs)
+            with update_step.get_lock():
+                update_step.value += 1
+
+            if update_step.value % 10000 == 0:
+                print("Training step ", update_step.value)
+
+        with training_on.get_lock():
+            training_on.value = 0
+
+        empty_torch_queue(self.learner_w_queue)
+        empty_torch_queue(replay_priority_queue)
+        print("Exit learner.")

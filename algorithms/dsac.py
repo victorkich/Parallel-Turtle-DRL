@@ -1,4 +1,4 @@
-from utils.utils import OUNoise, empty_torch_queue, fast_clip_grad_norm, quantile_regression_loss
+from utils.utils import empty_torch_queue, fast_clip_grad_norm, quantile_regression_loss
 from models import QuantileMlp
 import torch.optim as optim
 import numpy as np
@@ -12,8 +12,6 @@ class LearnerDSAC(object):
 
     def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
-        action_low = [-1.5, -0.1]
-        action_high = [1.5, 0.12]
         value_lr = config['critic_learning_rate']
         policy_lr = config['actor_learning_rate']
         self.n_step_return = config['n_step_return']
@@ -38,9 +36,6 @@ class LearnerDSAC(object):
         self.target_update_period = config['update_agent_ep']
         self.num_quantiles = config['num_quantiles']
         M = config['dense_size']
-
-        # Noise process
-        self.ou_noise = OUNoise(dim=config['action_dim'], low=action_low, high=action_high)
 
         # value nets
         self.zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])

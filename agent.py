@@ -66,14 +66,9 @@ class Agent(object):
         env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
 
-        if self.config['test_real']:
-            real_ttb = rf.RealTtb(self.config, self.log_dir, output=(720, 480))
-
         best_reward = -float("inf")
         rewards = []
         while self.local_episode <= self.config['num_episodes'] if not self.config['test'] else self.config['test_trials']:
-            if self.config['test_real']:
-                input("Press Enter to continue to the next episode...")
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
@@ -88,8 +83,6 @@ class Agent(object):
                 self.ou_noise.reset()
             done = False
             while not done:
-                if self.config['test_real']:
-                    state = real_ttb.get_angle_distance(state, 1.5)
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
                          'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else
                          np.array(state))
@@ -148,31 +141,24 @@ class Agent(object):
                     self.global_step.value += 1
 
                 if self.config['test']:
-                    if self.config['test_real']:
-                        position = env.get_position()  # Get x and y turtlebot position to compute test charts
-                        # scan = env.get_scan()
-                        logs[3] = position[0]
-                        logs[4] = position[1]
-                    else:
-                        position = env.get_position()  # Get x and y turtlebot position to compute test charts
-                        # scan = env.get_scan()
-                        logs[3] = position[0]
-                        logs[4] = position[1]
+                    position = env.get_position()  # Get x and y turtlebot position to compute test charts
+                    # scan = env.get_scan()
+                    logs[3] = position[0]
+                    logs[4] = position[1]
 
             with self.global_episode.get_lock():
                 self.global_episode.value += 1
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(
-                f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/{self.config['test_trials']}] "
-                f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
+            print(f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/{self.config['test_trials']}] "
+                  f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:
                     logs[aux] = episode_reward
-                    logs[aux + 1] = episode_timing
-                    logs[aux + 2] = self.local_episode
+                    logs[aux+1] = episode_timing
+                    logs[aux+2] = self.local_episode
                 else:
                     logs[0] = episode_reward
                     logs[1] = episode_timing
@@ -200,4 +186,4 @@ class Agent(object):
         if not os.path.exists(process_dir):
             os.makedirs(process_dir)
         model_fn = f"{process_dir}/{checkpoint_name}.pt"
-        torch.save(self.actor, model_fn)
+        torch.save(self.actor.state_dict(), model_fn)
