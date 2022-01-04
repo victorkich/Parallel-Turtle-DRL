@@ -25,7 +25,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-env = input('Which environment you are running? [1 | 2 | l | u]')
+env = input('Which environment are you running? [1 | 2 | l | u]')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1280, 720))
