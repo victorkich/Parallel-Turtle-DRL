@@ -36,7 +36,7 @@ a = 1
 
 color = {'D4PG-N': 'dodgerblue', 'DSAC-N': 'springgreen', 'D4PG-P': 'indigo', 'DSAC-P': 'deeppink'}
 label = {'D4PG-N': 'PDDRL', 'DSAC-N': 'PDSRL', 'D4PG-P': 'PDDRL-P', 'DSAC-P': 'PDSRL-P'}
-x_lim = {'S1': 150, 'S2': 1000, 'Sl': 1500, 'Su': 2000}
+x_lim = {'S1': 150, 'S2': 1000, 'Sl': 3000, 'Su': 3000}
 fig, ax = plt.subplots()
 
 print('Generating charts...')
@@ -68,6 +68,7 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
         ax.set_xlim([0, x_lim[directory[3]]])
         ax.set_ylim([-21, 201])
         ax.grid()
+        plt.savefig("{}.pdf".format(x_lim[directory[3]]), format="pdf", bbox_inches="tight")
         plt.show()
         fig, ax = plt.subplots()
 

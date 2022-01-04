@@ -151,7 +151,8 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/{self.config['test_trials']}] "
+            print(f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
+                  f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] "
                   f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():

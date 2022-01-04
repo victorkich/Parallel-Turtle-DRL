@@ -90,17 +90,14 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     writer.add_hparams(hparam_dict=config, metric_dict={})
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
-    fake_data_struct = np.zeros(3)
     fake_step = 0
     while training_on.value if not config['test'] else global_episode.value < 100:
         try:
             if not config['test']:
                 step = update_step.value
-                if any(fake_data_struct != logs[:3]):
-                    fake_data_struct[:] = logs[:3]
-                    writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
-                                       "global_step": global_step.value, "replay_queue": logs[0], "batch_queue": logs[1],
-                                       "replay_buffer": logs[2]}, global_step=step)
+                writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
+                                   "global_step": global_step.value, "replay_queue": logs[0], "batch_queue": logs[1],
+                                   "replay_buffer": logs[2]}, global_step=step)
                 if fake_step != step:
                     fake_step = step
                     writer.add_scalars(main_tag="losses", tag_scalar_dict={"policy_loss": logs[3], "value_loss": logs[4],

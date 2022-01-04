@@ -78,13 +78,14 @@ while True:
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2]]):
-            # target_policy_net = torch.load(model_fn)
             actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         elif any(algorithm == algorithms_sel[[1, 3]]):
-            # target_policy_net = torch.load(model_fn)
             actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                    hidden_sizes=[config['dense_size'], config['dense_size']])
-        actor.load_state_dict(torch.load(model_fn))
+        try:
+            actor.load_state_dict(torch.load(model_fn))
+        except:
+            actor = torch.load(model_fn)
         actor.eval()
     else:
         vf = VectorField()
