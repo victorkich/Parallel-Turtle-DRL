@@ -142,7 +142,6 @@ class Agent(object):
 
                 if self.config['test']:
                     position = env.get_position()  # Get x and y turtlebot position to compute test charts
-                    # scan = env.get_scan()
                     logs[3] = position[0]
                     logs[4] = position[1]
 
@@ -151,8 +150,9 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/{self.config['test_trials']}] "
-                  f"Reward: [{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
+            print(f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
+                  f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
+                  f"[{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:

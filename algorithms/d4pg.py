@@ -13,8 +13,6 @@ class LearnerD4PG(object):
     """Policy and value network update routine. """
     def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
-        action_low = [-1.5, -0.1]
-        action_high = [1.5, 0.12]
         value_lr = config['critic_learning_rate']
         policy_lr = config['actor_learning_rate']
         self.n_step_return = config['n_step_return']

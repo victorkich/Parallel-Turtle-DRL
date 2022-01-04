@@ -11,6 +11,8 @@ list_dir = os.listdir(path + '/results/')
 
 stage1 = mpimg.imread(path+'/media/stage_1.png')
 stage2 = mpimg.imread(path+'/media/stage_2.png')
+# stage3 = mpimg.imread(path+'/media/stage_3.png')
+# stage4 = mpimg.imread(path+'/media/stage_4.png')
 
 plot = False
 order = [True, False, True, True, False, True, False, False]
@@ -76,4 +78,5 @@ for c, directory in tqdm(enumerate(list_dir), total=len(list_dir)):
         plt.ylabel('Meters')
         plt.xlim([-2.1, 2.1])
         plt.ylim([-2.1, 2.1])
+        plt.savefig("{}.pdf".format(directory), format="pdf", bbox_inches="tight")
         plt.show()

@@ -25,7 +25,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-env = input('Which environment you are running? [1 | 2 | l | u]')
+env = input('Which environment are you running? [1 | 2 | l | u]')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1280, 720))
@@ -50,7 +50,8 @@ algorithm = None
 while True:
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
-        algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->Vector Field | e->exit | r->reset')
+        algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->Vector Field | '
+                          'e->exit | r->reset')
     if algorithm.lower() == 's':
         break
     if algorithm.lower() == 'r':
@@ -78,13 +79,14 @@ while True:
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2]]):
-            # target_policy_net = torch.load(model_fn)
             actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         elif any(algorithm == algorithms_sel[[1, 3]]):
-            # target_policy_net = torch.load(model_fn)
             actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                   hidden_sizes=[config['dense_size'], config['dense_size']])
-        actor.load_state_dict(torch.load(model_fn))
+                                       hidden_sizes=[config['dense_size'], config['dense_size']])
+        try:
+            actor.load_state_dict(torch.load(model_fn))
+        except:
+            actor = torch.load(model_fn)
         actor.eval()
     else:
         vf = VectorField()
