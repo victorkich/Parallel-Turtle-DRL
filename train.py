@@ -22,7 +22,7 @@ from algorithms.d4pg import LearnerD4PG
 from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy, ActorDDPG, ActorSAC, Critic, Q
+from models import PolicyNetwork, TanhGaussianPolicy, ActorDDPG, ActorSAC
 from agent import Agent
 
 
