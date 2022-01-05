@@ -21,6 +21,7 @@ tbt = TbtImage()
 defisheye = Defisheye(dtype=dtype, format=format, fov=fov, pfov=pfov)
 
 while True:
+    print(tbt.image)
     if tbt.image is not None:
         frame = defisheye.convert(tbt.image)
         # Display the resulting frame
