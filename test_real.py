@@ -5,7 +5,6 @@ from utils import range_finder as rf
 import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
 from algorithms.vector_field import VectorField
-from utils import unfish
 from math import isnan
 import pandas as pd
 import numpy as np

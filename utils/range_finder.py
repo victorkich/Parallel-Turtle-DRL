@@ -1,6 +1,6 @@
+from defisheye import Defisheye
 import numpy as np
 import imutils
-import unfish
 import cv2
 import os
 
@@ -90,6 +90,7 @@ class RealTtb:
         self.out = cv2.VideoWriter(data_dir+archive+'.mp4', fourcc, 24.0, output, True)
         self.output = output
         self.pts = []
+        self.defisheye = Defisheye(dtype='linear', format='fullframe', fov=160, pfov=130)
 
     def setCamSettings(self, camera_matrix, coeffs):
         self.camera_matrix = camera_matrix
@@ -107,7 +108,8 @@ class RealTtb:
     def get_angle_distance(self, state, green_magnitude=1.0):
         # lidar = state[0]
         frame = state[1]
-        frame = unfish.apply(frame, camera_matrix=self.camera_matrix, coeffs=self.coeffs)
+        frame = frame[:, 0:round(frame.shape[1] * 0.9)]
+        frame = self.defisheye.convert(frame)
 
         # resize the frame, blur it, and convert it to the HSV color space
         blurred = cv2.GaussianBlur(frame, (11, 11), 0)
