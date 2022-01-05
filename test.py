@@ -13,7 +13,7 @@ def getImage(im):
     img = im.data
 
 
-sub_image = rospy.Subscriber('usb_cam/image_raw', Image, getImage, queue_size=1)
+sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
 
 dtype = 'linear'
 format = 'fullframe'
