@@ -205,5 +205,7 @@ class RealTtb:
 
             cv2.line(frame, green1, green2, (0, 250, 0), thickness=1, lineType=8, shift=0)
             resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
+            cv2.imshow('Frame', resized)
+            cv2.waitKey(1)
             self.out.write(resized)
             return angle1, distance
