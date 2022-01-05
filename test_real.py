@@ -47,7 +47,7 @@ time.sleep(1)
 translator = {1: ['PDDRL', 'N'], 2: ['PDSRL', 'N'], 3: ['PDDRL', 'P'], 4: ['PDSRL', 'P'], 5: ['DDPG', 'N'],
               6: ['SAC', 'N'], 7: ['Vector_Field', 'N']}
 algorithms_sel = np.array(['1', '2', '3', '4', '5', '6', '7', 'e', 'r'])
-algorithm = None
+algorithm = ""
 while True:
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
