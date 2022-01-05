@@ -23,7 +23,7 @@ bridge = CvBridge()
 while True:
     if img is not None:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
-        frame = frame[:, 0:round(frame.shape[1]*0.8)]
+        frame = frame[:, 0:round(frame.shape[1]*0.9)]
         frame = defisheye.convert(frame)
         # Display the resulting frame
         cv2.imshow('frame', frame)
