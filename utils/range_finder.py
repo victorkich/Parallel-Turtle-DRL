@@ -1,5 +1,6 @@
 import numpy as np
 import imutils
+import unfish
 import cv2
 import os
 
@@ -90,6 +91,10 @@ class RealTtb:
         self.output = output
         self.pts = []
 
+    def setCamSettings(self, camera_matrix, coeffs):
+        self.camera_matrix = camera_matrix
+        self.coeffs = coeffs
+
     def point(self, cnts):
         # find the largest contour in the mask, then use it to compute the minimum enclosing circle and centroid
         if len(cnts) > 0:
@@ -100,8 +105,10 @@ class RealTtb:
         return None
 
     def get_angle_distance(self, state, green_magnitude=1.0):
-        lidar = state[0]
+        # lidar = state[0]
         frame = state[1]
+        frame = unfish.apply(frame, camera_matrix=self.camera_matrix, coeffs=self.coeffs)
+
         # resize the frame, blur it, and convert it to the HSV color space
         blurred = cv2.GaussianBlur(frame, (11, 11), 0)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)

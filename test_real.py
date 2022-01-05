@@ -5,6 +5,7 @@ from utils import range_finder as rf
 import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
 from algorithms.vector_field import VectorField
+from utils import unfish
 from math import isnan
 import pandas as pd
 import numpy as np
@@ -30,6 +31,9 @@ env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1280, 720))
+state = env_real.reset(test_real=True)
+camera_matrix, coeffs = unfish.calibrate(state[1])
+rf.setCamSettings(camera_matrix=camera_matrix, coeffs=coeffs)
 
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
