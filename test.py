@@ -21,11 +21,12 @@ defisheye = Defisheye(dtype='linear', format='fullframe', fov=160, pfov=130)
 
 
 while True:
+    print(img)
     if img is not None:
-        frame = cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+        frame = np.frombuffer(img, np.uint8)
         frame = defisheye.convert(frame)
         # Display the resulting frame
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    time.sleep(0.05)
+    time.sleep(0.1)
