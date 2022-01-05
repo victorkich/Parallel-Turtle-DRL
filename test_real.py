@@ -32,8 +32,6 @@ rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1280, 720))
 state = env_real.reset(test_real=True)
-camera_matrix, coeffs = unfish.calibrate(state[1])
-rf.setCamSettings(camera_matrix=camera_matrix, coeffs=coeffs)
 
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
