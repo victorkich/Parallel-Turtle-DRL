@@ -28,7 +28,7 @@ with open(path + '/config.yml', 'r') as ymlfile:
 env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 # os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
-env = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
+env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1280, 720))
 
 path_results = path + '/real_results'
@@ -107,7 +107,7 @@ while True:
         num_steps = 0
         local_episode += 1
         ep_start_time = time.time()
-        state = env.reset(test_real=True)
+        state = env_real.reset(test_real=True)
         done = False
         while True:
             state = real_ttb.get_angle_distance(state, 1.0)
@@ -122,13 +122,13 @@ while True:
             else:
                 action = vf.get_action(state)
 
-            next_state = env.step(action, test_real=True)
-            reward, done = env.get_done_reward()
+            next_state = env_real.step(action, test_real=True)
+            reward, done = env_real.get_done_reward()
             episode_reward += reward
             state = next_state
 
-            position = env.get_position()  # Get x and y turtlebot position to compute test charts
-            scan = env.get_scan()
+            position = env_real.get_position()  # Get x and y turtlebot position to compute test charts
+            scan = env_real.get_scan()
             xy.append(position)
             lidar.append(scan)
 
