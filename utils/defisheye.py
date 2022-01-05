@@ -23,9 +23,8 @@ Copyright [2019] [E. S. Pereira]
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import cv2
-from numpy import arange, sqrt, arctan, sin, tan, zeros, array, meshgrid, pi
-from numpy import argwhere, hypot
+from numpy import arange, sqrt, arctan, sin, tan, meshgrid, pi
+from numpy import hypot
 
 
 class Defisheye:
