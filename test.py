@@ -5,7 +5,7 @@ import cv2
 from sensor_msgs.msg import Image
 from utils.defisheye import Defisheye
 
-image = None
+img = None
 
 
 def getImage(im):
