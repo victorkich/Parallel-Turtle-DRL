@@ -8,13 +8,11 @@ import cv2
 
 class TbtImage:
     def __init__(self):
-        sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, self.getImage, queue_size=1)
+        self.sub_image = rospy.Subscriber('usb_cam/image_raw', Image, self.getImage, queue_size=1)
         self.image = None
 
     def getImage(self, img):
-        print('Atualizado')
         self.image = img.data
-        print('Atualizado2')
 
 
 dtype = 'linear'
@@ -25,7 +23,6 @@ tbt = TbtImage()
 defisheye = Defisheye(dtype=dtype, format=format, fov=fov, pfov=pfov)
 
 while True:
-    # print(tbt.image)
     if tbt.image is not None:
         frame = defisheye.convert(tbt.image)
         # Display the resulting frame
