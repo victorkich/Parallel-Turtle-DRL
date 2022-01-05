@@ -26,7 +26,7 @@ with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 env = input('Which environment are you running? [1 | 2 | l | u]')
-os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
+# os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1280, 720))
@@ -110,7 +110,7 @@ while True:
         state = env.reset(test_real=True)
         done = False
         while True:
-            state = real_ttb.get_angle_distance(state, 1.5)
+            state = real_ttb.get_angle_distance(state, 1.0)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if config['model'] == 'DSAC' else np.array(state))
                 if not config['model'] == 'DSAC':
@@ -122,7 +122,8 @@ while True:
             else:
                 action = vf.get_action(state)
 
-            next_state, reward, done, info = env.step(action)
+            next_state = env.step(action, test_real=True)
+            reward, done = env.get_done_reward()
             episode_reward += reward
             state = next_state
 
