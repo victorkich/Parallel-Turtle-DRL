@@ -4,7 +4,7 @@ import rospy
 from utils import range_finder as rf
 import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
-from algorithms.vector_field import VectorField
+from algorithms.bug2 import Bug2
 from math import isnan
 import pandas as pd
 import numpy as np
@@ -29,7 +29,7 @@ env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 # os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
-real_ttb = rf.RealTtb(config, path, output=(1280, 720))
+real_ttb = rf.RealTtb(config, path, output=(800, 800))
 state = env_real.reset(test_real=True)
 
 path_results = path + '/real_results'
@@ -46,7 +46,7 @@ data = df.to_dict()
 
 time.sleep(1)
 translator = {1: ['PDDRL', 'N'], 2: ['PDSRL', 'N'], 3: ['PDDRL', 'P'], 4: ['PDSRL', 'P'], 5: ['DDPG', 'N'],
-              6: ['SAC', 'N'], 7: ['Vector_Field', 'N']}
+              6: ['SAC', 'N'], 7: ['BUG2', 'N']}
 algorithms_sel = np.array(['1', '2', '3', '4', '5', '6', '7', 'e', 'r'])
 algorithm = ""
 while True:
@@ -91,7 +91,7 @@ while True:
             actor = torch.load(model_fn)
         actor.eval()
     else:
-        vf = VectorField()
+        b2 = Bug2()
 
     local_episode = len(data[list(data.keys())[int(algorithm) - 1]])
     while local_episode <= episodes:
@@ -122,7 +122,7 @@ while True:
                 action[0] = np.clip(action[0], action_low[0], action_high[0])
                 action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
-                action = vf.get_action(state)
+                action = b2.get_action(state)
 
             next_state = env_real.step(action, test_real=True)
             reward, done = env_real.get_done_reward()
