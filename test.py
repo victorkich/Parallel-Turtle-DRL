@@ -14,8 +14,10 @@ def getImage(im):
     img = im.data
 
 
+rospy.init_node('test')
 sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=160, pfov=130)
+
 
 while True:
     print(img)
