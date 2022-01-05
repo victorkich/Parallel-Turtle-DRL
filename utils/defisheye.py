@@ -142,7 +142,6 @@ class Defisheye:
         img = self._image.copy()
 
         img[i, j, :] = self._image[xs, ys, :]
-        # cv2.imwrite(outfile, img)
         return img
 
     def _start_att(self, vkwargs, kwargs):
