@@ -4,6 +4,7 @@ import rospy
 import cv2
 from sensor_msgs.msg import Image
 from utils.defisheye import Defisheye
+import numpy as np
 import time
 
 img = None
@@ -20,9 +21,9 @@ defisheye = Defisheye(dtype='linear', format='fullframe', fov=160, pfov=130)
 
 
 while True:
-    print(img)
     if img is not None:
-        frame = defisheye.convert(img)
+        frame = cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+        frame = defisheye.convert(frame)
         # Display the resulting frame
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
