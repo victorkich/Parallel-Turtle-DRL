@@ -25,7 +25,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-env = input('Which environment are you running? [1 | 2 | l | u]')
+env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 # os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
@@ -52,13 +52,13 @@ while True:
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
         algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->Vector Field | '
-                          'e->exit | r->reset')
+                          'e->exit | r->reset\n')
     if algorithm.lower() == 's':
         break
     if algorithm.lower() == 'r':
-        reset = input('Do you want to reset any test results? [y/n]')
+        reset = input('Do you want to reset any test results? [y/n]\n')
         if reset.lower() == 'y':
-            reset = input('Do you want to reset all the test results? [y/n]')
+            reset = input('Do you want to reset all the test results? [y/n]\n')
             if reset.lower() == 'y':
                 df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'Vector Field': []})
                 df.to_csv(path_results + '/real_results.csv')
@@ -66,7 +66,7 @@ while True:
                 column = None
                 while not any(column == np.arange(7)+1):
                     print('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->Vector Field')
-                    column = input('Which columns do you want reset?')
+                    column = input('Which columns do you want reset?\n')
                 data[list(data.keys())[int(column) - 1]] = []
                 df = pd.DataFrame.from_dict(data, orient='index').T
                 df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
