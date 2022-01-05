@@ -74,7 +74,7 @@ while True:
             continue
 
     if algorithm != '7':
-        process_dir = f"{path}/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+        process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
         model_fn = f"{process_dir}/{list_dir[-2]}"
 
