@@ -22,7 +22,8 @@ pfov = 130
 defisheye = Defisheye(dtype=dtype, format=format, fov=fov, pfov=pfov)
 
 while True:
-    if image is not None:
+    print(img)
+    if img is not None:
         frame = defisheye.convert(img)
         # Display the resulting frame
         cv2.imshow('frame', frame)
