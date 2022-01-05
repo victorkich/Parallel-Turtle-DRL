@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import rospy
 from utils.defisheye import Defisheye
 from sensor_msgs.msg import Image
