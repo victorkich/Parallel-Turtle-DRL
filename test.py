@@ -33,8 +33,11 @@ while True:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = frame[:, 0:round(frame.shape[1]*0.9)]
         frame = defisheye.convert(frame)
-        angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
-        print('Angle:', angle, 'Distance:', distance)
+        try:
+            angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
+            print('Angle:', angle, 'Distance:', distance)
+        except:
+            pass
         # Display the resulting frame
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
