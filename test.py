@@ -33,6 +33,7 @@ while True:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = frame[:, 0:round(frame.shape[1]*0.9)]
         frame = defisheye.convert(frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         try:
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
             print('Angle:', angle, 'Distance:', distance)
