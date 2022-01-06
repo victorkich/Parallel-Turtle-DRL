@@ -58,7 +58,7 @@ def Nmaxelements(list1, N):
 
 
 class RealTtb:
-    def __init__(self, config, dir, output=(720, 480)):
+    def __init__(self, config, dir=None, output=(720, 480)):
         # Create directory for store data
         data_dir = dir + '/results/data/'
         archive = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
@@ -107,7 +107,8 @@ class RealTtb:
 
     def get_angle_distance(self, state, green_magnitude=1.0):
         # lidar = state[0]
-        frame = state[1]
+        # frame = state[1]
+        frame = state
         frame = frame[:, 0:round(frame.shape[1] * 0.9)]
         frame = self.defisheye.convert(frame)
 
@@ -214,7 +215,7 @@ class RealTtb:
 
             cv2.line(frame, green1, green2, (0, 250, 0), thickness=1, lineType=8, shift=0)
             resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
-            cv2.imshow('Frame', resized)
-            cv2.waitKey(1)
-            self.out.write(resized)
-            return angle1, distance
+            # cv2.imshow('Frame', resized)
+            # cv2.waitKey(1)
+            # self.out.write(resized)
+            return angle1, distance, resized
