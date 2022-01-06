@@ -58,7 +58,7 @@ def Nmaxelements(list1, N):
 
 
 class RealTtb:
-    def __init__(self, config, dir=None, output=(720, 480)):
+    def __init__(self, config, dir='', output=(720, 480)):
         # Create directory for store data
         data_dir = dir + '/results/data/'
         archive = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
