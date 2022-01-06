@@ -26,7 +26,7 @@ bridge = CvBridge()
 path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
-real_ttb = rf.RealTtb(config, output=(800, 800))
+real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
 
 while True:
     if img is not None:
