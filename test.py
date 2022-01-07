@@ -31,7 +31,7 @@ real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
 while True:
     if img is not None:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
-        frame = defisheye.convert(frame)
+        # frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
