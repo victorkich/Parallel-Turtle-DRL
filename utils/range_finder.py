@@ -161,6 +161,19 @@ class RealTtb:
             M = cv2.moments(cnts[1])
             green2 = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
+        # desenhando os pontos e as linhas
+        if leftPoint:
+            cv2.circle(frame, leftPoint, 5, (0, 0, 204), -1)
+        if rightPoint:
+            cv2.circle(frame, rightPoint, 5, (204, 0, 0), -1)
+        if aimPoint:
+            cv2.circle(frame, aimPoint, 5, (0, 150, 254), -1)
+        if green1:
+            cv2.circle(frame, green1, 5, (0, 255, 0), -1)
+        if green2:
+            cv2.circle(frame, green2, 5, (0, 255, 0), -1)
+
+
         if leftPoint and rightPoint and aimPoint and green1 and green2:
             midPoint = mid_point(rightPoint, leftPoint)
             vectorTurtle = np.array(vector(leftPoint, rightPoint))
