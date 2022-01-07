@@ -169,7 +169,6 @@ class RealTtb:
         if green2:
             cv2.circle(frame, green2, 5, (0, 255, 0), -1)
 
-
         if leftPoint and rightPoint and aimPoint and green1 and green2:
             midPoint = mid_point(rightPoint, leftPoint)
             vectorTurtle = np.array(vector(leftPoint, rightPoint))
@@ -228,3 +227,6 @@ class RealTtb:
             # cv2.waitKey(1)
             # self.out.write(resized)
             return angle1, distance, resized
+
+        resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
+        return None, None, resized
