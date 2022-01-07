@@ -21,9 +21,7 @@ def getImage(im):
 
 rospy.init_node('test')
 sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
-fov = input('FOV: ')
-pfov = input('PFOV: ')
-defisheye = Defisheye(dtype='linear', format='fullframe', fov=int(fov), pfov=int(pfov))
+defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 bridge = CvBridge()
 # Loading configs from config.yaml
 path = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +34,7 @@ while True:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = defisheye.convert(frame)
         frame = imutils.rotate(frame, -4)
-        frame = frame[25:-25, 25:-25]
+        frame = frame[30:-30, 30:-30]
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
