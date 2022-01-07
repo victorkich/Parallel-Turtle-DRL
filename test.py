@@ -33,7 +33,7 @@ while True:
     if img is not None:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = defisheye.convert(frame)
-        frame = imutils.rotate_bound(frame, -4)
+        frame = imutils.rotate_bound(frame, 4)
         # frame = frame[30:-30, 30:-30]
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
