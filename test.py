@@ -35,7 +35,8 @@ while True:
     if img is not None:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = defisheye.convert(frame)
-        frame = imutils.rotate(frame, 5)
+        frame = imutils.rotate(frame, -5)
+        frame = frame[10:-10, 10:-10]
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
