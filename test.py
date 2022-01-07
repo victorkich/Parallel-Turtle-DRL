@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from utils.defisheye import Defisheye
 from utils import range_finder as rf
 from cv_bridge import CvBridge
+import numpy as np
 import time
 import yaml
 import os
