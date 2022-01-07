@@ -26,13 +26,12 @@ bridge = CvBridge()
 path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
-real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
+real_ttb = rf.RealTtb(config, dir=path, output=(1280, 1280))
 
 while True:
     if img is not None:
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
-        frame = frame[:, 0:round(frame.shape[1]*0.9)]
-        frame = defisheye.convert(frame)
+        # frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         try:
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
