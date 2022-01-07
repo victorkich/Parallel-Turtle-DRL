@@ -22,7 +22,7 @@ rospy.init_node('test')
 sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
 fov = input('FOV: ')
 pfov = input('PFOV: ')
-defisheye = Defisheye(dtype='linear', format='fullframe', fov=fov, pfov=pfov)
+defisheye = Defisheye(dtype='linear', format='fullframe', fov=int(fov), pfov=int(pfov))
 bridge = CvBridge()
 # Loading configs from config.yaml
 path = os.path.dirname(os.path.abspath(__file__))
