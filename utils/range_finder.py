@@ -82,7 +82,7 @@ class RealTtb:
         self.greenUpper = (130, 255, 255)  # (128, 255, 203)
         self.redLower = (141, 50, 90)  # (141, 50, 90)
         self.redUpper = (220, 255, 255)  # (220, 255, 255)
-        self.yellowLower = (58, 108, 140)
+        self.yellowLower = (58, 88, 110)
         self.yellowUpper = (136, 255, 255)
 
         fourcc = cv2.VideoWriter_fourcc(*'MP4V')
