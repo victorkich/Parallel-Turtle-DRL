@@ -76,8 +76,8 @@ class RealTtb:
         filename2.close()
 
         # Colors to base in
-        self.blueLower = (26, 200, 40)  # (58, 108, 199)
-        self.blueUpper = (128, 255, 203)  # (136, 255, 255)
+        self.blueLower = (26, 200, 100)  # (58, 108, 199)
+        self.blueUpper = (128, 255, 255)  # (136, 255, 255)
         self.greenLower = (0, 50, 153)  # (26, 200, 40)
         self.greenUpper = (130, 255, 255)  # (128, 255, 203)
         self.redLower = (141, 50, 90)  # (141, 50, 90)
