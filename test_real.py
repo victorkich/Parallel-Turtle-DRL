@@ -117,7 +117,7 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            lidar = np.array([min(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+            lidar = np.array([state[0][i] for i in range(15, 361, 15)]).squeeze()
             print('Lidar:', lidar)
             angle = distance = None
             while angle is None and distance is None:
