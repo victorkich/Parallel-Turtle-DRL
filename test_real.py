@@ -117,12 +117,12 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            print('State[1]:', state[1])
             frame = imutils.rotate_bound(state[1], 2)
             frame = defisheye.convert(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
-            state = np.array([state[0], angle, distance])
+            distances = [min(state[i-15:i] for i in range(15, 361, 15))]
+            state = np.array([distances, angle, distance])
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if config['model'] == 'DSAC' else np.array(state))
