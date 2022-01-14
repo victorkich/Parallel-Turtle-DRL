@@ -129,9 +129,9 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
                    update_step, global_episode, logs, experiment_dir):
-    if config['model'] == 'D4PG':
+    if config['model'] == 'PDDRL':
         learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    elif config['model'] == 'DSAC':
+    elif config['model'] == 'PDSRL':
         learner = LearnerDSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     elif config['model'] == 'DDPG':
         learner = LearnerDDPG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
@@ -205,8 +205,8 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Learner (neural net training process)
-    assert any(config['model'] == np.array(['D4PG', 'DSAC', 'DDPG', 'SAC']))  # Only D4PG, DSAC, DDPG, and SAC
-    if config['model'] == 'D4PG':
+    assert any(config['model'] == np.array(['PDDRL', 'PDSRL', 'DDPG', 'SAC']))  # Only D4PG, DSAC, DDPG, and SAC
+    if config['model'] == 'PDDRL':
         if config['test']:
             target_policy_net = torch.load(path_model)
             target_policy_net.eval()
@@ -215,7 +215,7 @@ if __name__ == "__main__":
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
-    elif config['model'] == 'DSAC':
+    elif config['model'] == 'PDSRL':
         if config['test']:
             target_policy_net = torch.load(path_model)
             target_policy_net.eval()
