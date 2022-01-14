@@ -121,6 +121,7 @@ while True:
             angle = distance = None
             while angle is None and distance is None:
                 time.sleep(0.1)
+                print('Frame:', state[1])
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
