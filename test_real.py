@@ -121,7 +121,7 @@ while True:
             frame = defisheye.convert(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
-            distances = np.array([min(state[i-15:i] for i in range(15, 361, 15))]).squeeze()
+            distances = np.array([min(state[0][i-15:i] for i in range(15, 361, 15))]).squeeze()
             state = np.hstack([distances, angle, distance])
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
