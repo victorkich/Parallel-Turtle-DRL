@@ -113,7 +113,7 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            print(state)
+            print('State:', state)
             state = real_ttb.get_angle_distance(state, 1.0)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if config['model'] == 'DSAC' else np.array(state))
