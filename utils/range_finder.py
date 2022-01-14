@@ -83,7 +83,7 @@ class RealTtb:
         self.redLower = (141, 50, 90)  # (141, 50, 90)
         self.redUpper = (220, 255, 255)  # (220, 255, 255)
         self.yellowLower = (0, 0, 100)
-        self.yellowUpper = (130, 130, 200)
+        self.yellowUpper = (80, 80, 200)
 
         fourcc = cv2.VideoWriter_fourcc(*'MP4V')
         # self.out = cv2.VideoWriter(data_dir+archive+'.mp4', fourcc, 24.0, output, True)
