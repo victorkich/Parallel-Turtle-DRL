@@ -28,10 +28,10 @@ with open(path + '/config.yml', 'r') as ymlfile:
 env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 # os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
-env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
+env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 real_ttb = rf.RealTtb(config, path, output=(1200, 1200))
 print('Passou 0')
-state = env_real.step(action=[0.0, 0.0], test_real=True)
+state = env_real.step(action=[0.0, 0.0])
 print('Passou 1')
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
@@ -111,7 +111,7 @@ while True:
         num_steps = 0
         local_episode += 1
         ep_start_time = time.time()
-        state = env_real.reset(test_real=True)
+        state = env_real.step(action=[0.0, 0.0])
         done = False
         while True:
             print('Num steps:', num_steps)
@@ -128,7 +128,7 @@ while True:
                 action = b2.get_action(state)
 
             print('Action:', action)
-            next_state = env_real.step(action=[0.0, 0.0], test_real=True)
+            next_state = env_real.step(action=[0.0, 0.0])
             reward, done = env_real.get_done_reward()
             episode_reward += reward
             state = next_state
