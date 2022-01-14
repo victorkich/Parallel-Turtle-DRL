@@ -119,6 +119,7 @@ while True:
             state = env_real.reset()
             angle = distance = None
             while angle is None and distance is None:
+                time.sleep(1)
                 print('Num steps:', num_steps)
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
