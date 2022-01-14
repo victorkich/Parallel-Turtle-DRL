@@ -123,7 +123,6 @@ while True:
                     lidar[i] = 0.3
             angle = distance = None
             while angle is None and distance is None:
-                time.sleep(0.1)
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -141,10 +140,10 @@ while True:
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
                 if not config['model'] == 'DSAC':
                     action = action.squeeze(0)
-                else:
-                    action = action.detach().cpu().numpy().flatten()
-                action[0] = np.clip(action[0], action_low[0], action_high[0])
-                action[1] = np.clip(action[1], action_low[1], action_high[1])
+                # else:
+                #    action = action.detach().cpu().numpy().flatten()
+                    action[0] = np.clip(action[0], action_low[0], action_high[0])
+                    action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
 
