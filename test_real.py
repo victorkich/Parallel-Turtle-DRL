@@ -42,7 +42,7 @@ if not os.path.exists(path_results):
 
 if not os.path.exists(path_results+'/real_results_S{}.csv'.format(env)):
     print('File real_results_S{}.csv not found!\nGeneraring a new file real_results_S{}.csv ...'.format(env, env))
-    df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'Vector Field': []})
+    df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'BUG2': []})
     df.to_csv(path_results+'/real_results_S{}.csv'.format(env))
 else:
     print('File real_results_S{}.csv found!\nLoading data from real_results_S{}.csv...'.format(env, env))
@@ -66,12 +66,12 @@ while True:
         if reset.lower() == 'y':
             reset = input('Do you want to reset all the test results? [y/n]\n')
             if reset.lower() == 'y':
-                df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'Vector Field': []})
+                df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'BUG2': []})
                 df.to_csv(path_results + '/real_results.csv')
             else:
                 column = None
                 while not any(column == np.arange(7)+1):
-                    print('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->Vector Field')
+                    print('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->BUG2')
                     column = input('Which columns do you want reset?\n')
                 data[list(data.keys())[int(column) - 1]] = []
                 df = pd.DataFrame.from_dict(data, orient='index').T
@@ -123,6 +123,10 @@ while True:
             angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
             distances = np.array([min(state[0][i-15:i] for i in range(15, 361, 15))]).squeeze()
             state = np.hstack([distances, angle, distance])
+            # Display the resulting frame
+            cv2.imshow('View', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
             print('State:', state)
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
