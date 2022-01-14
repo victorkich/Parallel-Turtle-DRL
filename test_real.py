@@ -31,7 +31,7 @@ rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 real_ttb = rf.RealTtb(config, path, output=(1200, 1200))
 print('Passou 0')
-state = env_real.step()
+state = env_real.reset()
 print('Passou 1')
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
