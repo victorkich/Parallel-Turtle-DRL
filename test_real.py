@@ -4,14 +4,17 @@ import rospy
 from utils import range_finder as rf
 import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
+from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
 from math import isnan
 import pandas as pd
 import numpy as np
+import imutils
 import torch
 import yaml
 import time
 import gym
+import cv2
 import os
 
 # Hyper parameters
@@ -30,6 +33,7 @@ env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 real_ttb = rf.RealTtb(config, path, output=(1200, 1200))
+defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 state = env_real.reset()
 
 path_results = path + '/real_results'
@@ -113,9 +117,13 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            print('State[0]:', state[0])
             print('State[1]:', state[1])
-            state = real_ttb.get_angle_distance(state, 1.0)
+            frame = imutils.rotate_bound(state[1], 2)
+            frame = defisheye.convert(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
+            state = np.array([state[0], angle, distance])
+            print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if config['model'] == 'DSAC' else np.array(state))
                 if not config['model'] == 'DSAC':
