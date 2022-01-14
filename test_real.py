@@ -117,11 +117,11 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
+            state = env_real.reset()
+            distances = np.array([min(state[0][i - 15:i] for i in range(15, 361, 15))]).squeeze()
             angle = distance = None
             while angle is None and distance is None:
                 time.sleep(0.1)
-                state = env_real.reset()
-                distances = np.array([min(state[0][i - 15:i] for i in range(15, 361, 15))]).squeeze()
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
