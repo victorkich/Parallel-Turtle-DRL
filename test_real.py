@@ -142,9 +142,9 @@ while True:
                 if not config['model'] == 'DSAC':
                     action = action.squeeze(0)
                 # else:
-                #    action = action.detach().cpu().numpy().flatten()
-                    action[0] = np.clip(action[0], action_low[0], action_high[0])
-                    action[1] = np.clip(action[1], action_low[1], action_high[1])
+                action = action.detach().cpu().numpy().flatten()
+                action[0] = np.clip(action[0], action_low[0], action_high[0])
+                action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
 
