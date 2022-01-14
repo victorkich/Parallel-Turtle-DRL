@@ -30,11 +30,13 @@ env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1200, 1200))
+print('Passou 0')
 state = env_real.reset(test_real=True)
-
+print('Passou 1')
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
     os.makedirs(path_results)
+print('Passou 2')
 if not os.path.exists(path_results+'/real_results_S{}.csv'.format(env)):
     print('File real_results_S{}.csv not found!\nGeneraring a new file real_results_S{}.csv ...'.format(env, env))
     df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'Vector Field': []})
@@ -43,13 +45,13 @@ else:
     print('File real_results_S{}.csv found!\nLoading data from real_results_S{}.csv...'.format(env, env))
     df = pd.read_csv(path_results+'/real_results_S{}.csv'.format(env))
 data = df.to_dict()
-
+print('Passou 3')
 time.sleep(1)
 translator = {1: ['PDDRL', 'N'], 2: ['PDSRL', 'N'], 3: ['PDDRL', 'P'], 4: ['PDSRL', 'P'], 5: ['DDPG', 'N'],
               6: ['SAC', 'N'], 7: ['BUG2', 'N']}
 algorithms_sel = np.array(['1', '2', '3', '4', '5', '6', '7', 'e', 'r'])
 algorithm = ""
-print('Test')
+print('Passou 4')
 while True:
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
