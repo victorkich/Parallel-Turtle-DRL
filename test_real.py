@@ -32,7 +32,7 @@ env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 # os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
-real_ttb = rf.RealTtb(config, path, output=(1200, 1200))
+real_ttb = rf.RealTtb(config, path, output=(800, 800))
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 state = env_real.reset()
 
@@ -117,13 +117,10 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            print('Scan:', state[0])
-            print('Size:', len(state[0]))
             state = env_real.reset()
             angle = distance = None
             while angle is None and distance is None:
                 time.sleep(0.1)
-                print('Frame:', state[1])
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -136,7 +133,6 @@ while True:
                 cv2.imshow('View', frame)
                 cv2.waitKey(1)
             state = np.hstack([distances, angle, distance])
-            print('State:', state)
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
