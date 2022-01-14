@@ -146,7 +146,7 @@ while True:
                 action = b2.get_action(state)
 
             print('Action:', action)
-            next_state, _, _, _ = env_real.step(action=[0.0, 0.0])
+            next_state, _, _, _ = env_real.step(action=action)
             reward, done = env_real.get_done_reward(lidar=lidar, distance=distance)
             episode_reward += reward
             state = next_state
