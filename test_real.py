@@ -109,7 +109,7 @@ while True:
 
         episode_reward = 0
         xy = list()
-        lidar = list()
+        lidar_list = list()
         num_steps = 0
         local_episode += 1
         ep_start_time = time.time()
@@ -154,7 +154,7 @@ while True:
             position = env_real.get_position()  # Get x and y turtlebot position to compute test charts
             scan = env_real.get_scan()
             xy.append(position)
-            lidar.append(scan)
+            lidar_list.append(scan)
 
             if done or num_steps == max_steps:
                 break
@@ -167,7 +167,7 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar]
+        values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
         data[list(data.keys())[int(algorithm) - 1]] = filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]])
         data[list(data.keys())[int(algorithm) - 1]].append(values)
         df = pd.DataFrame.from_dict(data, orient='index').T
