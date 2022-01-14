@@ -119,7 +119,7 @@ while True:
             print('Num steps:', num_steps)
             print('Lidar:', state[0])
             print('Lidar Len:', len(state[0]))
-            state = env_real.reset()
+            # state = env_real.reset()
             distances = np.array([min(state[0][i - 15:i] for i in range(15, 361, 15))]).squeeze()
             print('Distances:', distances)
             print('Distances Len:', len(distances))
