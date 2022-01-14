@@ -57,7 +57,7 @@ algorithm = ""
 while True:
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
-        algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->Vector Field | '
+        algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->BUG2 | '
                           'e->exit | r->reset\n')
     if algorithm.lower() == 's':
         break
@@ -137,7 +137,8 @@ while True:
             state = np.hstack([lidar, angle, distance])
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
-                action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
+                # action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
+                action = actor.get_action(torch.Tensor(state).to(config['device']))
                 if not config['model'] == 'DSAC':
                     action = action.squeeze(0)
                 # else:
