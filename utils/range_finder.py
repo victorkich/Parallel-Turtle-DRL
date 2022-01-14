@@ -78,7 +78,7 @@ class RealTtb:
         # Colors to base in
         self.blueLower = (58, 50, 100)  # (26, 200, 100)  # (58, 108, 199)
         self.blueUpper = (100, 120, 255)  # (128, 255, 255)  # (136, 255, 255)
-        self.greenLower = (15, 50, 50)  # (26, 200, 40)
+        self.greenLower = (15, 100, 100)  # (26, 200, 40)
         self.greenUpper = (45, 255, 255)  # (128, 255, 203)
         self.redLower = (141, 50, 90)  # (141, 50, 90)
         self.redUpper = (220, 255, 255)  # (220, 255, 255)
