@@ -127,16 +127,15 @@ while True:
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                distances = np.array([min(state[0][i - 15:i] for i in range(15, 361, 15))]).squeeze()
                 try:
                     angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
-                    distances = np.array([min(state[0][i-15:i] for i in range(15, 361, 15))]).squeeze()
-                    state = np.hstack([distances, angle, distance])
                 except:
                     pass
                 # Display the resulting frame
                 cv2.imshow('View', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                cv2.waitKey(1)
+            state = np.hstack([distances, angle, distance])
             print('State:', state)
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
