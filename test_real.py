@@ -138,7 +138,7 @@ while True:
             print('State:', state)
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
-                action = actor.get_action(torch.Tensor(state).to(config['device']) if config['model'] == 'DSAC' else np.array(state))
+                action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
                 if not config['model'] == 'DSAC':
                     action = action.squeeze(0)
                 else:
