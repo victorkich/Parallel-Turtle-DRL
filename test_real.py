@@ -4,7 +4,7 @@ import rospy
 from utils import range_finder as rf
 import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
-from algorithms.bug2 import Bug2
+from algorithms.bug2 import BUG2
 from math import isnan
 import pandas as pd
 import numpy as np
