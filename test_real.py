@@ -31,7 +31,7 @@ rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True)
 real_ttb = rf.RealTtb(config, path, output=(1200, 1200))
 print('Passou 0')
-state = env_real.reset(test_real=True)
+state = env_real.step(action=[0.0, 0.0], test_real=True)
 print('Passou 1')
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
@@ -94,7 +94,7 @@ while True:
             actor = torch.load(model_fn)
         actor.eval()
     else:
-        b2 = Bug2()
+        b2 = BUG2()
 
     local_episode = len(data[list(data.keys())[int(algorithm) - 1]])
     while local_episode <= episodes:
@@ -127,7 +127,8 @@ while True:
             else:
                 action = b2.get_action(state)
 
-            next_state = env_real.step(action, test_real=True)
+            print('Action:', action)
+            next_state = env_real.step(action=[0.0, 0.0], test_real=True)
             reward, done = env_real.get_done_reward()
             episode_reward += reward
             state = next_state
