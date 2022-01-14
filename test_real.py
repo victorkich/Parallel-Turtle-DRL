@@ -117,6 +117,8 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
+            print('Scan:', state[0])
+            print('Size:', len(state[0]))
             state = env_real.reset()
             angle = distance = None
             while angle is None and distance is None:
