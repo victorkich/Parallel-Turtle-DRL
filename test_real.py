@@ -117,7 +117,7 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            distances = np.array([min(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+            lidar = np.array([min(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
             angle = distance = None
             while angle is None and distance is None:
                 time.sleep(0.1)
@@ -132,7 +132,7 @@ while True:
                 cv2.imshow('View', frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-            state = np.hstack([distances, angle, distance])
+            state = np.hstack([lidar, angle, distance])
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
@@ -147,7 +147,7 @@ while True:
 
             print('Action:', action)
             next_state, _, _, _ = env_real.step(action=[0.0, 0.0])
-            reward, done = env_real.get_done_reward()
+            reward, done = env_real.get_done_reward(lidar=lidar, distance=distance)
             episode_reward += reward
             state = next_state
 
