@@ -131,7 +131,8 @@ while True:
                     pass
                 # Display the resulting frame
                 cv2.imshow('View', frame)
-                cv2.waitKey(1)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
             state = np.hstack([distances, angle, distance])
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
