@@ -117,7 +117,7 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            lidar = np.array([min(state[0][i]) for i in range(15, 361, 15)]).squeeze()
+            lidar = np.array([min(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
             for i in range(len(lidar)):
                 if lidar[i] == 0:
                     lidar[i] = 0.3
