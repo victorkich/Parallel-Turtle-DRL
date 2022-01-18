@@ -78,18 +78,18 @@ class Agent(object):
                 goal = [test_goals(self.local_episode)]
                 print("New Goal:", goal)
             state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
-            print('Lidar:', state[0:-2])
-            print('Angle:', state[-2])
-            print('Distance:', state[-1])
             if not self.config['test']:
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
             done = False
             while not done:
+                print('Lidar:', state[0:-2])
+                print('Angle:', state[-2])
+                print('Distance:', state[-1])
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
-                         'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'DSAC' else
+                         'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'PDSRL' else
                          np.array(state))
-                if self.agent_type == "exploration" and not self.config['model'] == 'DSAC':
+                if self.agent_type == "exploration" and not self.config['model'] == 'PDSRL':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
                 else:
