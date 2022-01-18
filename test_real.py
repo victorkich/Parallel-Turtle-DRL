@@ -29,7 +29,6 @@ with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 env = input('Which environment are you running? [1 | 2 | l | u]:\n')
-# os.environ['ROS_MASTER_URI'] = "http://192.168.31.225:11311"
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 real_ttb = rf.RealTtb(config, path, output=(800, 800))
