@@ -31,6 +31,7 @@ real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
 
 while True:
     if img is not None:
+        start = time.time()
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = imutils.rotate_bound(frame, 2)
         frame = defisheye.convert(frame)
@@ -44,4 +45,5 @@ while True:
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    time.sleep(0.05)
+        fps = 1 / (time.time() - start)
+        print('FPS:', round(fps))
