@@ -79,7 +79,7 @@ class RealTtb:
         self.blueLower = (70, 70, 100)
         self.blueUpper = (110, 150, 210)
         self.greenLower = (20, 100, 100)
-        self.greenUpper = (33, 180, 180)
+        self.greenUpper = (33, 255, 180)
         self.redLower = (141, 50, 40)
         self.redUpper = (220, 255, 255)
         self.yellowLower = (0, 70, 120)
