@@ -135,6 +135,7 @@ while True:
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
             state = np.hstack([lidar, angle, distance])
+            print('Lidar')
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 # action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
@@ -149,6 +150,7 @@ while True:
                 action = b2.get_action(state)
 
             print('Action:', action)
+            action = [0.0, 0.0]
             next_state, _, _, _ = env_real.step(action=action)
             reward, done = env_real.get_done_reward(lidar=lidar, distance=distance)
             episode_reward += reward
