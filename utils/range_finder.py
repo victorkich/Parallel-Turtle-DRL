@@ -82,8 +82,8 @@ class RealTtb:
         self.greenUpper = (45, 255, 255)  # (128, 255, 203)
         self.redLower = (141, 50, 90)  # (141, 50, 90)
         self.redUpper = (220, 255, 255)  # (220, 255, 255)
-        self.yellowLower = (100, 100, 50)
-        self.yellowUpper = (255, 225, 200)
+        self.yellowLower = (265, 50, 100)
+        self.yellowUpper = (280, 120, 255)
 
         fourcc = cv2.VideoWriter_fourcc(*'MP4V')
         # self.out = cv2.VideoWriter(data_dir+archive+'.mp4', fourcc, 24.0, output, True)
@@ -223,9 +223,6 @@ class RealTtb:
 
             cv2.line(frame, green1, green2, (0, 250, 0), thickness=1, lineType=8, shift=0)
             resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
-            # cv2.imshow('Frame', resized)
-            # cv2.waitKey(1)
-            # self.out.write(resized)
             return angle1, distance, resized
 
         resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
