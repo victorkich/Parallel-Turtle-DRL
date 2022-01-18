@@ -164,6 +164,7 @@ while True:
                 break
             else:
                 num_steps += 1
+            time.sleep(1)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
