@@ -116,12 +116,14 @@ while True:
         done = False
         while True:
             print('Num steps:', num_steps)
-            lidar = np.array([min(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
-            for i in range(len(lidar)):
-                if lidar[i] == 0:
-                    lidar[i] = 0.3
             angle = distance = None
             while angle is None and distance is None:
+                state = env_real.reset()
+                lidar = np.array([min(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+                for i in range(len(lidar)):
+                    if lidar[i] == 0:
+                        lidar[i] = 0.3
+
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
