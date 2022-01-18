@@ -98,6 +98,7 @@ class Agent(object):
                     action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
                 next_state, reward, done, info = env.step(action)  # test_real=self.config['test_real']
+                print('Action', action)
                 episode_reward += reward
 
                 if not self.config['test']:
