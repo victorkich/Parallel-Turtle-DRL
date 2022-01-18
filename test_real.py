@@ -130,6 +130,7 @@ while True:
                     angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
                 except:
                     pass
+
                 # Display the resulting frame
                 cv2.imshow('View', frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
