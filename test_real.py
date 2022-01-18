@@ -144,13 +144,12 @@ while True:
                     action = action.squeeze(0)
                 # else:
                 action = action.detach().cpu().numpy().flatten()
-                # action[0] = np.clip(action[0], action_low[0], action_high[0])
-                # action[1] = np.clip(action[1], action_low[1], action_high[1])
+                action[0] = np.clip(action[0], action_low[0], action_high[0])
+                action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
 
             print('Action:', action)
-            action = [0.0, 0.0]
             next_state, _, _, _ = env_real.step(action=action)
             reward, done = env_real.get_done_reward(lidar=lidar, distance=distance)
             episode_reward += reward
