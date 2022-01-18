@@ -45,7 +45,7 @@ while True:
         # font which we will be using to display FPS
         font = cv2.FONT_HERSHEY_SIMPLEX
         # putting the FPS count on the frame
-        cv2.putText(frame, str(fps), (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA)
+        cv2.putText(frame, 'FPS: '+str(fps), (7, 70), font, 2, (255, 0, 0), 3, cv2.LINE_AA)
         # Display the resulting frame
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
