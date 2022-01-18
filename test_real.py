@@ -137,7 +137,7 @@ while True:
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
             state = np.hstack([lidar, angle, distance])
-            print('Lidar')
+            print('Lidar:', lidar)
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 # action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
