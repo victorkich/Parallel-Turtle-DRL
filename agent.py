@@ -78,6 +78,9 @@ class Agent(object):
                 goal = [test_goals(self.local_episode)]
                 print("New Goal:", goal)
             state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
+            print('Lidar:', state[0:-2])
+            print('Angle:', state[-2])
+            print('Distance:', state[-1])
             if not self.config['test']:
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
