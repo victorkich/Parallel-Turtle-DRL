@@ -152,7 +152,7 @@ while True:
                 action = b2.get_action(state)
 
             print('Action:', action)
-            next_state, _, _, _ = env_real.step(action=action/2)
+            next_state, _, _, _ = env_real.step(action=action)
             reward, done = env_real.get_done_reward(lidar=lidar, distance=distance)
             episode_reward += reward
             state = next_state
@@ -166,7 +166,7 @@ while True:
                 break
             else:
                 num_steps += 1
-            time.sleep(0.15)
+            time.sleep(0.33)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
