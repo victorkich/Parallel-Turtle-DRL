@@ -115,6 +115,7 @@ while True:
         state = env_real.reset()
         done = False
         while True:
+            start = time.time()
             print('Num steps:', num_steps)
             angle = distance = None
             while angle is None and distance is None:
@@ -136,6 +137,7 @@ while True:
                 cv2.imshow('View', frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
+
             state = np.hstack([lidar, angle, distance])
             print('Lidar:', lidar)
             print('Angle:', angle, 'Distance:', distance)
@@ -163,10 +165,12 @@ while True:
             lidar_list.append(scan)
 
             if done or num_steps == max_steps:
+                cv2.destroyAllWindows()
                 break
             else:
                 num_steps += 1
-            time.sleep(0.33)
+            print('Step timing:', time.time() - start)
+            time.sleep(0.45)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
