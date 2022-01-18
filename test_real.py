@@ -33,9 +33,7 @@ rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 real_ttb = rf.RealTtb(config, path, output=(800, 800))
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
-print('Passou 1')
 state = env_real.reset()
-print('Passou 2')
 
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
@@ -146,8 +144,8 @@ while True:
                     action = action.squeeze(0)
                 # else:
                 action = action.detach().cpu().numpy().flatten()
-                action[0] = np.clip(action[0], action_low[0], action_high[0])
-                action[1] = np.clip(action[1], action_low[1], action_high[1])
+                # action[0] = np.clip(action[0], action_low[0], action_high[0])
+                # action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
 
