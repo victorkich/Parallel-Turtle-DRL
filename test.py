@@ -40,8 +40,8 @@ while True:
                 lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=5)
             except:
                 pass
-        frame = cv2.UMat(bridge.imgmsg_to_cv2(img, desired_encoding='passthrough'))
-        frame = imutils.rotate_bound(frame, 2)
+        frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
+        frame = cv2.UMat(imutils.rotate_bound(frame, 2))
         frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
