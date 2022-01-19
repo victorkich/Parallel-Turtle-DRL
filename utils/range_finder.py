@@ -94,6 +94,24 @@ class RealTtb:
         self.camera_matrix = camera_matrix
         self.coeffs = coeffs
 
+    def lidar_dist(self, vector, distances, conversion):
+        # calculando o vetor unitario
+        d = (vector[0] ** 2 + vector[1] ** 2) ** 0.5
+        vector = [vector[0] / d, vector[1] / d]
+        vector = complex(vector[0], vector[1])
+
+        unit_vectors = [complex(1, 0), complex(0.939, 0.342), complex(0.766, 0.642), complex(0.599, 0.866),
+                        complex(0.173, 0.984), complex(-0.173, 0.984), complex(-0.599, 0.866), complex(-0.766, 0.642),
+                        complex(-0.939, 0.342), complex(-1, 0)]
+        output = []
+        for u, d in zip(unit_vectors, distances):
+            u = u * vector
+            a = u * complex(d, 0)
+            b = [int(a.real * conversion), int(a.imag * conversion)]
+            output.append(b)
+
+        return output
+
     def point(self, cnts):
         # find the largest contour in the mask, then use it to compute the minimum enclosing circle and centroid
         if len(cnts) > 0:
@@ -103,7 +121,7 @@ class RealTtb:
             return int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])
         return None
 
-    def get_angle_distance(self, state, green_magnitude=1.0):
+    def get_angle_distance(self, state, lidar, green_magnitude=1.0):
         # lidar = state[0]
         # frame = state[1]
         frame = state
@@ -209,17 +227,10 @@ class RealTtb:
 
             pixel_metro = moduloGreen / green_magnitude
             distance = (moduloDistance * green_magnitude) / moduloGreen
+            vectors = self.lidar_dist(vectorTurtle, lidar, pixel_metro)
 
-            if not self.pts:
-                self.pts.append(midPoint)
-            elif vet_sum_dif(self.pts[-1], midPoint) > 10:
-                self.pts.append(midPoint)
-                with open(self.ref_pixel_meter, 'a') as f:
-                    f.write(str(pixel_metro) + '\n')
-                with open(self.dados_xy, 'a') as f:
-                    f.write(str(midPoint[0]) + ',' + str(midPoint[1]) + '\n')
-                with open(self.alvo_xy, 'a') as f:
-                    f.write(str(aimPoint[0]) + ',' + str(aimPoint[1]) + '\n')
+            for v in vectors:
+                cv2.line(frame, midPoint, vet_sum(midPoint, v), (255, 0, 5), thickness=1, lineType=8, shift=0)
 
             cv2.line(frame, green1, green2, (0, 250, 0), thickness=1, lineType=8, shift=0)
             resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)

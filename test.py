@@ -5,6 +5,7 @@ import cv2
 from sensor_msgs.msg import Image
 from utils.defisheye import Defisheye
 from utils import range_finder as rf
+from sensor_msgs.msg import LaserScan
 from cv_bridge import CvBridge
 import imutils
 import time
@@ -12,7 +13,7 @@ import yaml
 import os
 
 img = None
-
+TURTLE = '004'
 
 def getImage(im):
     global img
@@ -32,12 +33,18 @@ real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
 while True:
     if img is not None:
         start = time.time()
+        lidar = None
+        while lidar is None:
+            try:
+                lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=5)
+            except:
+                pass
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = imutils.rotate_bound(frame, 2)
         frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
-            angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
+            angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
             print('Angle:', angle, 'Distance:', distance)
         except:
             pass

@@ -129,7 +129,7 @@ while True:
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 try:
-                    angle, distance, frame = real_ttb.get_angle_distance(frame, 1.0)
+                    angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
                 except:
                     pass
 
