@@ -121,16 +121,16 @@ while True:
             while angle is None and distance is None:
                 state = env_real.reset()
                 lidar = np.array([max(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
-                for i in range(len(lidar)):
-                    if lidar[i] == 0:
-                        lidar[i] = 0.3
+                # for i in range(len(lidar)):
+                #    if lidar[i] == 0:
+                #        lidar[i] = 0.3
 
                 frame = imutils.rotate_bound(state[1], 2)
                 frame = defisheye.convert(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 try:
                     angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-                    distance += 0.2
+                    distance += 0.17
                 except:
                     pass
 
@@ -178,9 +178,9 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        # values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
-        # data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
-        # data[list(data.keys())[int(algorithm) - 1]].append(values)
-        # df = pd.DataFrame.from_dict(data, orient='index').T
-        # df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
+        values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
+        data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
+        data[list(data.keys())[int(algorithm) - 1]].append(values)
+        df = pd.DataFrame.from_dict(data, orient='index').T
+        df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
     print('Done!')
