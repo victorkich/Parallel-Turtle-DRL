@@ -7,6 +7,7 @@ from utils.defisheye import Defisheye
 from utils import range_finder as rf
 from sensor_msgs.msg import LaserScan
 from cv_bridge import CvBridge
+import numpy as np
 import imutils
 import time
 import yaml
@@ -44,7 +45,8 @@ while True:
         frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
-            angle, distance, frame = real_ttb.get_angle_distance(frame, lidar.ranges, green_magnitude=1.0)
+            lidar = np.array([max(lidar.ranges[i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+            angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
             print('Angle:', angle, 'Distance:', distance)
         except:
             pass

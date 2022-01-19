@@ -121,8 +121,6 @@ class RealTtb:
         return None
 
     def get_angle_distance(self, state, lidar, green_magnitude=1.0):
-        # lidar = state[0]
-        # frame = state[1]
         frame = state
 
         # resize the frame, blur it, and convert it to the HSV color space
