@@ -39,7 +39,6 @@ while True:
                 lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=5)
             except:
                 pass
-        print('Lidar:', lidar.ranges)
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = imutils.rotate_bound(frame, 2)
         frame = defisheye.convert(frame)
