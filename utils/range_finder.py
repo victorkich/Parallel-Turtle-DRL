@@ -100,9 +100,8 @@ class RealTtb:
         vector = [vector[0] / d, vector[1] / d]
         vector = complex(vector[0], vector[1])
 
-        unit_vectors = [complex(1, 0), complex(0.939, 0.342), complex(0.766, 0.642), complex(0.599, 0.866),
-                        complex(0.173, 0.984), complex(-0.173, 0.984), complex(-0.599, 0.866), complex(-0.766, 0.642),
-                        complex(-0.939, 0.342), complex(-1, 0)]
+        unit_vectors = [complex(np.cos(x), np.sin(x)) for x in np.linspace(0, 2*np.pi, 24)]
+
         output = []
         for u, d in zip(unit_vectors, distances):
             u = u * vector
