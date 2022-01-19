@@ -170,7 +170,7 @@ while True:
             else:
                 num_steps += 1
             print('Step timing:', time.time() - start)
-            time.sleep(0.45)
+            time.sleep(0.25)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
