@@ -144,13 +144,17 @@ while True:
             print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 print('Algorithm:', algorithm)
-                action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == 2 or algorithm == 4 else np.array(state))
+                if algorithm == 2 or algorithm == 4:
+                    action = actor.get_action(torch.Tensor(state).to(config['device']))
+                    print('Passou aqui')
+                else:
+                    action = np.array(state)
                 if algorithm == 2 or algorithm == 4:
                     action = action.squeeze(0)
                 else:
                     action = action.detach().cpu().numpy().flatten()
-                    action[0] = np.clip(action[0], action_low[0], action_high[0])
-                    action[1] = np.clip(action[1], action_low[1], action_high[1])
+                action[0] = np.clip(action[0], action_low[0], action_high[0])
+                action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
 
