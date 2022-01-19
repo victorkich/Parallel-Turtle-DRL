@@ -46,7 +46,8 @@ while True:
         frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
-            lidar = np.array([max(lidar.ranges[i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+            lidar = np.array(lidar.ranges)
+            lidar = np.array([max(lidar[[i-1, i, i+1]]) for i in range(7, 361, 15)]).squeeze()
             angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
             print('Angle:', angle, 'Distance:', distance)
         except:
