@@ -222,6 +222,12 @@ class RealTtb:
             vectorGreen = np.array(vector(green1, green2))
             moduloGreen = modulo(vectorGreen)
 
+            if not self.pts:
+                self.pts.append(midPoint)
+                # points distance
+            elif vet_sum_dif(self.pts[-1], midPoint) > 10:
+                self.pts.append(midPoint)
+
             pixel_metro = moduloGreen / green_magnitude
             distance = (moduloDistance * green_magnitude) / moduloGreen
             vectors = self.lidar_dist(vectorTurtle, lidar, pixel_metro)
