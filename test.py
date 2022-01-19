@@ -43,6 +43,7 @@ while True:
                 pass
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = imutils.rotate_bound(frame, 2)
+        frame = defisheye.convert(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
             lidar = np.array([max(lidar.ranges[i - 15:i]) for i in range(15, 361, 15)]).squeeze()
