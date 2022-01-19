@@ -130,6 +130,7 @@ while True:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 try:
                     angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
+                    distance += 0.25
                 except:
                     pass
 
