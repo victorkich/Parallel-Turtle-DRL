@@ -57,6 +57,7 @@ while True:
         font = cv2.FONT_HERSHEY_SIMPLEX
         # putting the FPS count on the frame
         cv2.putText(frame, 'FPS: '+str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
+        print('Step timing:', time.time() - start)
         # Display the resulting frame
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
