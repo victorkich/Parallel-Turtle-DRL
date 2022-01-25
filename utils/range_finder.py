@@ -130,31 +130,39 @@ class RealTtb:
         # construct a mask for the color "blue", then perform a series of dilations and erosions to remove any small
         # blobs left in the mask
         mask = cv2.inRange(hsv, self.blueLower, self.blueUpper)
+        mask = cv2.UMat(mask)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
+        mask = cv2.UMat.get(mask)
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
         leftPoint = self.point(cnts)
 
         mask = cv2.inRange(hsv, self.redLower, self.redUpper)
+        mask = cv2.UMat(mask)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
+        mask = cv2.UMat.get(mask)
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
         rightPoint = self.point(cnts)
 
         # yellow aimPoint
         mask = cv2.inRange(hsv, self.yellowLower, self.yellowUpper)
+        mask = cv2.UMat(mask)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
+        mask = cv2.UMat.get(mask)
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
         aimPoint = self.point(cnts)
 
         # greenPoints
         mask = cv2.inRange(hsv, self.greenLower, self.greenUpper)
+        mask = cv2.UMat(mask)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
+        mask = cv2.UMat.get(mask)
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = list(imutils.grab_contours(cnts))
         green1 = 0
@@ -173,6 +181,7 @@ class RealTtb:
             green2 = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # desenhando os pontos e as linhas
+        frame = cv2.UMat(frame)
         if leftPoint:
             cv2.circle(frame, leftPoint, 5, (0, 0, 204), -1)
         if rightPoint:
@@ -183,6 +192,7 @@ class RealTtb:
             cv2.circle(frame, green1, 5, (0, 255, 0), -1)
         if green2:
             cv2.circle(frame, green2, 5, (0, 255, 0), -1)
+        frame = cv2.UMat.get(frame)
 
         if leftPoint and rightPoint and aimPoint and green1 and green2:
             midPoint = mid_point(rightPoint, leftPoint)
@@ -190,6 +200,7 @@ class RealTtb:
             vectorDistance = np.array(vector(aimPoint, midPoint))
 
             # drawing the robot tracking in blue
+            frame = cv2.UMat(frame)
             for i in range(1, len(self.pts)):
                 # if either of the tracked points are None, ignore them
                 if self.pts[i - 1] is None or self.pts[i] is None:
@@ -210,7 +221,7 @@ class RealTtb:
 
             vectorPerp = perpendicular(vectorTurtle)
             cv2.line(frame, midPoint, vet_sum(midPoint, vectorPerp), (255, 255, 255), thickness=1, lineType=8, shift=0)
-
+            frame = cv2.UMat.get(frame)
             angle1 = calculate_angle(vectorPerp, vectorDistance)
             angle2 = calculate_angle(vectorTurtle, vectorDistance)
 
@@ -232,11 +243,13 @@ class RealTtb:
             distance = (moduloDistance * green_magnitude) / moduloGreen
             vectors = self.lidar_dist(vectorTurtle, lidar, pixel_metro)
 
+            frame = cv2.UMat(frame)
             for v in vectors:
                 cv2.line(frame, midPoint, vet_sum(midPoint, v), (255, 0, 5), thickness=1, lineType=8, shift=0)
 
             cv2.line(frame, green1, green2, (0, 250, 0), thickness=1, lineType=8, shift=0)
             resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
+            resized = cv2.UMat.get(resized)
             return angle1, distance, resized
 
         frame = cv2.UMat(frame)
