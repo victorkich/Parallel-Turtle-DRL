@@ -166,7 +166,7 @@ while True:
             lidar_list.append(scan)
 
             if done or num_steps == max_steps:
-                cv2.destroyAllWindows()
+                # cv2.destroyAllWindows()
                 break
             else:
                 num_steps += 1
