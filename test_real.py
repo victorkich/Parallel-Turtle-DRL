@@ -131,7 +131,7 @@ while True:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 try:
                     angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-                    distance += 0.17
+                    distance += 0.15
                 except:
                     pass
 
@@ -141,8 +141,10 @@ while True:
                     break
 
             state = np.hstack([lidar, angle, distance])
-            print('Lidar:', lidar)
-            print('Angle:', angle, 'Distance:', distance)
+            print('Image processing timing:', time.time() - start)
+
+            # print('Lidar:', lidar)
+            # print('Angle:', angle, 'Distance:', distance)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
                 action = action.detach().cpu().numpy().flatten()
@@ -162,8 +164,9 @@ while True:
             xy.append(position)
             lidar_list.append(scan)
 
+            print('Done:', done)
             if done or num_steps == max_steps:
-                # cv2.destroyAllWindows()
+                cv2.destroyAllWindows()
                 break
             else:
                 num_steps += 1
