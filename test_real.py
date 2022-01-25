@@ -90,9 +90,10 @@ while True:
             actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                        hidden_sizes=[config['dense_size'], config['dense_size']])
         try:
-            actor.load_state_dict(torch.load(model_fn))
+            actor.load_state_dict(torch.load(model_fn, map_location=config['device']))
         except:
             actor = torch.load(model_fn)
+            actor.to(config['device'])
         actor.eval()
     else:
         b2 = BUG2()
