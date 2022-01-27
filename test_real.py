@@ -136,9 +136,9 @@ while True:
                     pass
 
                 # Display the resulting frame
-                cv2.imshow('View', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                #cv2.imshow('View', frame)
+                #if cv2.waitKey(1) & 0xFF == ord('q'):
+                #    break
 
             state = np.hstack([lidar, angle, distance])
             print('Image processing timing:', time.time() - start)
