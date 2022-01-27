@@ -248,7 +248,7 @@ class RealTtb:
                 cv2.line(frame, midPoint, vet_sum(midPoint, v), (255, 0, 5), thickness=1, lineType=8, shift=0)
 
             cv2.line(frame, green1, green2, (0, 250, 0), thickness=1, lineType=8, shift=0)
-            # resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
+            resized = cv2.resize(frame, self.output, interpolation=cv2.INTER_LINEAR)
             resized = cv2.UMat.get(frame)
             return angle1, distance, resized
 
