@@ -36,7 +36,7 @@ while True:
     if img is not None:
         start = time.time()
         try:
-            lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=5)
+            lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=1)
         except:
             pass
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
