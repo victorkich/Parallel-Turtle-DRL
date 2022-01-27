@@ -31,16 +31,14 @@ path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
-
+lidar = None
 while True:
     if img is not None:
         start = time.time()
-        lidar = None
-        while lidar is None:
-            try:
-                lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=5)
-            except:
-                pass
+        try:
+            lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=5)
+        except:
+            pass
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
         frame = imutils.rotate_bound(frame, 2)
         frame = defisheye.convert(frame)
