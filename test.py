@@ -14,7 +14,7 @@ import yaml
 import os
 
 img = None
-TURTLE = '003'
+TURTLE = '002'
 
 
 def getImage(im):
