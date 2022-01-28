@@ -40,7 +40,7 @@ with open(path + '/config.yml', 'r') as ymlfile:
 env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
-# state = env_real.reset()
+state = env_real.reset()
 real_ttb = rf.RealTtb(config, path, output=(640, 640))
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 
