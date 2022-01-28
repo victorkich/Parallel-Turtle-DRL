@@ -48,8 +48,11 @@ defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 def getImage(image):
     global state
     start = time.time()
-    lidar = env_real.get_scan()
-    print(lidar)
+    try:
+        lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=3)
+    except:
+        pass
+    print(lidar.ranges)
     frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
     frame = imutils.rotate_bound(frame, 2)
     frame = defisheye.convert(frame)
