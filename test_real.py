@@ -24,10 +24,11 @@ import os
 TURTLE = '004'
 bridge = CvBridge()
 state = None
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 def getImage(image):
     global state
-    print('Teste')
+    start = time.time()
     lidar = env_real.get_scan()
     frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
     frame = imutils.rotate_bound(frame, 2)
@@ -41,6 +42,17 @@ def getImage(image):
         print('Angle:', angle, 'Distance:', distance)
     except:
         pass
+
+    fps = round(1 / (time.time() - start))
+    # putting the FPS count on the frame
+    cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
+    print('Step timing:', time.time() - start)
+    print('FPS:', fps)
+    # Display the resulting frame
+    cv2.imshow('frame', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
     if not angle is None and not distance is None:
         state = np.hstack([lidar, angle, distance])
 
