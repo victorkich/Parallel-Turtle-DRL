@@ -6,6 +6,7 @@ import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
 from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
+import multiprocessing as mp
 from math import isnan
 import pandas as pd
 import numpy as np
@@ -31,9 +32,36 @@ with open(path + '/config.yml', 'r') as ymlfile:
 env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
-real_ttb = rf.RealTtb(config, path, output=(800, 800))
-defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 state = env_real.reset()
+img = None
+
+
+def f(mp_state):
+    global img
+    real_ttb = rf.RealTtb(config, path, output=(640, 640))
+    defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
+    while True:
+        angle = distance = None
+        while angle is None and distance is None:
+            state = env_real.reset()
+            lidar = np.array([max(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+            frame = imutils.rotate_bound(state[1], 2)
+            frame = defisheye.convert(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            try:
+                angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
+                distance += 0.15
+                img = frame
+            except:
+                pass
+        state = np.hstack([lidar, angle, distance])
+        with mp_state.get_lock():
+            mp_state.value = state.tolist()
+
+
+mp_state = mp.Array('d', np.zeros(24))
+p = mp.Process(target=f, args=(mp_state,))
+p.start()
 
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
@@ -119,28 +147,13 @@ while True:
             start = time.time()
             print('Num steps:', num_steps)
             angle = distance = None
-            while angle is None and distance is None:
-                state = env_real.reset()
-                lidar = np.array([max(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
-                # for i in range(len(lidar)):
-                #    if lidar[i] == 0:
-                #        lidar[i] = 0.3
 
-                frame = imutils.rotate_bound(state[1], 2)
-                frame = defisheye.convert(frame)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                try:
-                    angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-                    distance += 0.15
-                except:
-                    pass
+            # Display the resulting frame
+            cv2.imshow('View', img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-                # Display the resulting frame
-                #cv2.imshow('View', frame)
-                #if cv2.waitKey(1) & 0xFF == ord('q'):
-                #    break
-
-            state = np.hstack([lidar, angle, distance])
+            state = mp_state.value
             print('Image processing timing:', time.time() - start)
 
             # print('Lidar:', lidar)
@@ -155,7 +168,7 @@ while True:
 
             print('Action:', action)
             next_state, _, _, _ = env_real.step(action=action)
-            reward, done = env_real.get_done_reward(lidar=lidar, distance=distance)
+            reward, done = env_real.get_done_reward(lidar=mp_state.value[0:24], distance=mp_state[-1])
             episode_reward += reward
             state = next_state
 
@@ -170,8 +183,10 @@ while True:
                 break
             else:
                 num_steps += 1
+
             print('Step timing:', time.time() - start)
-            # time.sleep(0.25)
+            fps = round(1 / (time.time() - start))
+            print('FPS:', fps)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
@@ -185,3 +200,4 @@ while True:
         df = pd.DataFrame.from_dict(data, orient='index').T
         df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
     print('Done!')
+p.join()

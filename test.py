@@ -14,7 +14,7 @@ import yaml
 import os
 
 img = None
-TURTLE = '002'
+TURTLE = '004'
 
 
 def getImage(im):
@@ -30,13 +30,15 @@ bridge = CvBridge()
 path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
-real_ttb = rf.RealTtb(config, dir=path, output=(800, 800))
+real_ttb = rf.RealTtb(config, dir=path, output=(640, 640))
+# font which we will be using to display FPS
+font = cv2.FONT_HERSHEY_SIMPLEX
 lidar = None
 while True:
     if img is not None:
         start = time.time()
         try:
-            lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=1)
+            lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=3)
         except:
             pass
         frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
@@ -51,8 +53,6 @@ while True:
         except:
             pass
         fps = round(1 / (time.time() - start))
-        # font which we will be using to display FPS
-        font = cv2.FONT_HERSHEY_SIMPLEX
         # putting the FPS count on the frame
         cv2.putText(frame, 'FPS: '+str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
         print('Step timing:', time.time() - start)
