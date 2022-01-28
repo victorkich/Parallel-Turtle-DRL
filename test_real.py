@@ -27,6 +27,7 @@ state = None
 
 def getImage(image):
     global state
+    print('Teste')
     lidar = env_real.get_scan()
     frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
     frame = imutils.rotate_bound(frame, 2)
