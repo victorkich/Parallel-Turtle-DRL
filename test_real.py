@@ -26,6 +26,25 @@ bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
 
+# Hyper parameters
+episodes = 10
+max_steps = 1000
+action_low = [-1.5, -0.1]
+action_high = [1.5, 0.12]
+
+# Loading configs from config.yaml
+path = os.path.dirname(os.path.abspath(__file__))
+with open(path + '/config.yml', 'r') as ymlfile:
+    config = yaml.load(ymlfile, Loader=yaml.FullLoader)
+
+env = input('Which environment are you running? [1 | 2 | l | u]:\n')
+rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
+env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
+# state = env_real.reset()
+real_ttb = rf.RealTtb(config, path, output=(640, 640))
+defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
+
+
 def getImage(image):
     global state
     start = time.time()
@@ -57,23 +76,6 @@ def getImage(image):
         pass
 
 
-# Hyper parameters
-episodes = 10
-max_steps = 1000
-action_low = [-1.5, -0.1]
-action_high = [1.5, 0.12]
-
-# Loading configs from config.yaml
-path = os.path.dirname(os.path.abspath(__file__))
-with open(path + '/config.yml', 'r') as ymlfile:
-    config = yaml.load(ymlfile, Loader=yaml.FullLoader)
-
-env = input('Which environment are you running? [1 | 2 | l | u]:\n')
-rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
-env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
-# state = env_real.reset()
-real_ttb = rf.RealTtb(config, path, output=(640, 640))
-defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
 
 path_results = path + '/real_results'
