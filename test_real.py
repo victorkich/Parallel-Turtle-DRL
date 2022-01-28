@@ -37,7 +37,6 @@ img = None
 
 
 def f(mp_state):
-    global img
     print('Entrou na funcao')
     real_ttb = rf.RealTtb(config, path, output=(640, 640))
     defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
@@ -45,6 +44,7 @@ def f(mp_state):
         print('Entrou no loop')
         angle = distance = None
         while angle is None and distance is None:
+            print('Loop interno')
             state = env_real.reset()
             lidar = np.array([max(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
             frame = imutils.rotate_bound(state[1], 2)
@@ -54,7 +54,6 @@ def f(mp_state):
                 angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
                 distance += 0.15
                 print('Processou o frame')
-                img = frame
             except:
                 pass
         state = np.hstack([lidar, angle, distance])
@@ -149,12 +148,12 @@ while True:
         while True:
             start = time.time()
             print('Num steps:', num_steps)
-            angle = distance = None
+            #angle = distance = None
 
             # Display the resulting frame
-            cv2.imshow('View', img)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            #cv2.imshow('View', img)
+            #if cv2.waitKey(1) & 0xFF == ord('q'):
+            #    break
 
             state = mp_state.value
             print('Image processing timing:', time.time() - start)
