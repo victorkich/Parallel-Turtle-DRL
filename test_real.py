@@ -38,9 +38,11 @@ img = None
 
 def f(mp_state):
     global img
+    print('Entrou na funcao')
     real_ttb = rf.RealTtb(config, path, output=(640, 640))
     defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
     while True:
+        print('Entrou no loop')
         angle = distance = None
         while angle is None and distance is None:
             state = env_real.reset()
@@ -51,6 +53,7 @@ def f(mp_state):
             try:
                 angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
                 distance += 0.15
+                print('Processou o frame')
                 img = frame
             except:
                 pass
