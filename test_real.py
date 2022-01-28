@@ -20,7 +20,7 @@ import gym
 import cv2
 import os
 
-TURTLE = '004'
+TURTLE = '002'
 bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -171,7 +171,14 @@ while True:
 
             print('Action:', action)
             _, _, _, _ = env_real.step(action=action)
-            reward, done = env_real.get_done_reward(lidar=state[0:24], distance=state[-1])
+            done = False
+            reward = 0
+            if state[-1] < 0.25:
+                done = True
+                reward = 20
+            if min(state[0:24]) < 0.2:
+                done = True
+                reward = -200
             episode_reward += reward
 
             position = env_real.get_position()  # Get x and y turtlebot position to compute test charts
