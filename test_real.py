@@ -23,7 +23,7 @@ import os
 
 TURTLE = '004'
 bridge = CvBridge()
-
+state = None
 
 def getImage(image):
     global state
