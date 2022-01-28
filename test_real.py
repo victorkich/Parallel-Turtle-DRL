@@ -52,7 +52,6 @@ def getImage(image):
         lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=3)
     except:
         pass
-    print(lidar.ranges)
     frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
     frame = imutils.rotate_bound(frame, 2)
     frame = defisheye.convert(frame)
@@ -62,7 +61,6 @@ def getImage(image):
         lidar = np.array(lidar.ranges)
         lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-        print('Angle:', angle, 'Distance:', distance)
     except:
         pass
 
@@ -72,8 +70,6 @@ def getImage(image):
     fps = round(1 / (time.time() - start))
     # putting the FPS count on the frame
     cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
-    print('Step timing:', time.time() - start)
-    print('FPS:', fps)
     # Display the resulting frame
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -160,22 +156,10 @@ while True:
         num_steps = 0
         local_episode += 1
         ep_start_time = time.time()
-        # state = env_real.reset()
         done = False
         while True:
             start = time.time()
             print('Num steps:', num_steps)
-
-            # Display the resulting frame
-            #cv2.imshow('View', img)
-            #if cv2.waitKey(1) & 0xFF == ord('q'):
-            #    break
-
-            print('Image processing timing:', time.time() - start)
-
-            # print('Lidar:', lidar)
-            # print('Angle:', angle, 'Distance:', distance)
-            print('State', state)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
                 action = action.detach().cpu().numpy().flatten()
