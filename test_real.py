@@ -32,6 +32,7 @@ def getImage(image):
     frame = imutils.rotate_bound(frame, 2)
     frame = defisheye.convert(frame)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
         lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
@@ -39,7 +40,8 @@ def getImage(image):
         print('Angle:', angle, 'Distance:', distance)
     except:
         pass
-    state = np.hstack([lidar, angle, distance])
+    if not angle is None and not distance is None:
+        state = np.hstack([lidar, angle, distance])
 
 
 # Hyper parameters
