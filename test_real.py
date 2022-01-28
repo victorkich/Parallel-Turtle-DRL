@@ -161,6 +161,7 @@ while True:
             start = time.time()
             print('Num steps:', num_steps)
             print('State:', state)
+
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
                 action = action.detach().cpu().numpy().flatten()
@@ -177,8 +178,9 @@ while True:
                 done = True
                 reward = 20
             if min(state[0:24]) < 0.2:
-                done = True
-                reward = -200
+                # done = True
+                # reward = -200
+                pass
             episode_reward += reward
 
             position = env_real.get_position()  # Get x and y turtlebot position to compute test charts
