@@ -62,7 +62,6 @@ env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=
 state = env_real.reset()
 real_ttb = rf.RealTtb(config, path, output=(640, 640))
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
-
 sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
 
 path_results = path + '/real_results'
@@ -143,7 +142,7 @@ while True:
         num_steps = 0
         local_episode += 1
         ep_start_time = time.time()
-        state = env_real.reset()
+        # state = env_real.reset()
         done = False
         while True:
             start = time.time()
@@ -158,6 +157,7 @@ while True:
 
             # print('Lidar:', lidar)
             # print('Angle:', angle, 'Distance:', distance)
+            print('State', state)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
                 action = action.detach().cpu().numpy().flatten()
