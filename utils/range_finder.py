@@ -94,6 +94,9 @@ class RealTtb:
         self.camera_matrix = camera_matrix
         self.coeffs = coeffs
 
+    def cleanPath(self):
+        self.pts = []
+
     def lidar_dist(self, vector, distances, conversion):
         # calculando o vetor unitario
         d = (vector[0] ** 2 + vector[1] ** 2) ** 0.5

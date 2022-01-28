@@ -95,13 +95,13 @@ time.sleep(1)
 translator = {1: ['PDDRL', 'N'], 2: ['PDSRL', 'N'], 3: ['PDDRL', 'P'], 4: ['PDSRL', 'P'], 5: ['DDPG', 'N'],
               6: ['SAC', 'N'], 7: ['BUG2', 'N']}
 algorithms_sel = np.array(['1', '2', '3', '4', '5', '6', '7', 'e', 'r'])
-algorithm = ""
 while True:
+    algorithm = ""
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
         algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->BUG2 | '
                           'e->exit | r->reset\n')
-    if algorithm.lower() == 's':
+    if algorithm.lower() == 'e':
         break
     if algorithm.lower() == 'r':
         reset = input('Do you want to reset any test results? [y/n]\n')
@@ -209,4 +209,5 @@ while True:
         #data[list(data.keys())[int(algorithm) - 1]].append(values)
         #df = pd.DataFrame.from_dict(data, orient='index').T
         #df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
-    print('Done!')
+        real_ttb.cleanPath()
+    print('Episode done!')
