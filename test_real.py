@@ -6,7 +6,6 @@ import gym_turtlebot3
 from models import PolicyNetwork, TanhGaussianPolicy
 from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
-import multiprocessing as mp
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
 from math import isnan
@@ -61,6 +60,7 @@ def getImage(image):
         lidar = np.array(lidar.ranges)
         lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
+        distance += 0.15
     except:
         pass
 
@@ -196,10 +196,9 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
-        data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
-        data[list(data.keys())[int(algorithm) - 1]].append(values)
-        df = pd.DataFrame.from_dict(data, orient='index').T
-        df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
+        #values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
+        #data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
+        #data[list(data.keys())[int(algorithm) - 1]].append(values)
+        #df = pd.DataFrame.from_dict(data, orient='index').T
+        #df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
     print('Done!')
-p.join()
