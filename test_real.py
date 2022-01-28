@@ -43,6 +43,9 @@ def getImage(image):
     except:
         pass
 
+    if not angle is None and not distance is None:
+        state = np.hstack([lidar, angle, distance])
+
     fps = round(1 / (time.time() - start))
     # putting the FPS count on the frame
     cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
@@ -52,9 +55,6 @@ def getImage(image):
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         pass
-
-    if not angle is None and not distance is None:
-        state = np.hstack([lidar, angle, distance])
 
 
 # Hyper parameters
