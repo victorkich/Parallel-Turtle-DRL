@@ -44,11 +44,15 @@ def f(mp_state):
         print('Entrou no loop')
         angle = distance = None
         while angle is None and distance is None:
-            print('Loop interno')
+            print('Loop interno 1')
             state = env_real.reset()
+            print('Loop interno 2')
             lidar = np.array([max(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
+            print('Loop interno 3')
             frame = imutils.rotate_bound(state[1], 2)
+            print('Loop interno 4')
             frame = defisheye.convert(frame)
+            print('Loop interno 5')
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             try:
                 angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
