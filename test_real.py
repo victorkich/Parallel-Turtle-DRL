@@ -170,10 +170,9 @@ while True:
                 action = b2.get_action(state)
 
             print('Action:', action)
-            next_state, _, _, _ = env_real.step(action=action)
+            _, _, _, _ = env_real.step(action=action)
             reward, done = env_real.get_done_reward(lidar=state[0:24], distance=state[-1])
             episode_reward += reward
-            state = next_state
 
             position = env_real.get_position()  # Get x and y turtlebot position to compute test charts
             scan = env_real.get_scan()
