@@ -7,7 +7,10 @@ from models import PolicyNetwork, TanhGaussianPolicy
 from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
 import multiprocessing as mp
+from sensor_msgs.msg import Image
+from sensor_msgs.msg import LaserScan
 from math import isnan
+from cv_bridge import CvBridge
 import pandas as pd
 import numpy as np
 import imutils
@@ -17,6 +20,30 @@ import time
 import gym
 import cv2
 import os
+
+TURTLE = '004'
+bridge = CvBridge()
+
+
+def getImage(image):
+    global state
+    try:
+        lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=3)
+    except:
+        pass
+    frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
+    frame = imutils.rotate_bound(frame, 2)
+    frame = defisheye.convert(frame)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    try:
+        lidar = np.array(lidar.ranges)
+        lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+        angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
+        print('Angle:', angle, 'Distance:', distance)
+    except:
+        pass
+    state = np.hstack([lidar, angle, distance])
+
 
 # Hyper parameters
 episodes = 10
@@ -33,41 +60,10 @@ env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 state = env_real.reset()
-img = None
+real_ttb = rf.RealTtb(config, path, output=(640, 640))
+defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 
-
-def f(mp_state):
-    print('Entrou na funcao')
-    real_ttb = rf.RealTtb(config, path, output=(640, 640))
-    defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
-    while True:
-        print('Entrou no loop')
-        angle = distance = None
-        while angle is None and distance is None:
-            print('Loop interno 1')
-            state = env_real.reset()
-            print('Loop interno 2')
-            lidar = np.array([max(state[0][i - 15:i]) for i in range(15, 361, 15)]).squeeze()
-            print('Loop interno 3')
-            frame = imutils.rotate_bound(state[1], 2)
-            print('Loop interno 4')
-            frame = defisheye.convert(frame)
-            print('Loop interno 5')
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            try:
-                angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-                distance += 0.15
-                print('Processou o frame')
-            except:
-                pass
-        state = np.hstack([lidar, angle, distance])
-        with mp_state.get_lock():
-            mp_state.value = state.tolist()
-
-
-mp_state = mp.Array('d', np.zeros(24))
-p = mp.Process(target=f, args=(mp_state,))
-p.start()
+sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
 
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
@@ -152,14 +148,12 @@ while True:
         while True:
             start = time.time()
             print('Num steps:', num_steps)
-            #angle = distance = None
 
             # Display the resulting frame
             #cv2.imshow('View', img)
             #if cv2.waitKey(1) & 0xFF == ord('q'):
             #    break
 
-            state = mp_state.value
             print('Image processing timing:', time.time() - start)
 
             # print('Lidar:', lidar)
@@ -174,7 +168,7 @@ while True:
 
             print('Action:', action)
             next_state, _, _, _ = env_real.step(action=action)
-            reward, done = env_real.get_done_reward(lidar=mp_state.value[0:24], distance=mp_state[-1])
+            reward, done = env_real.get_done_reward(lidar=state[0:24], distance=state[-1])
             episode_reward += reward
             state = next_state
 
