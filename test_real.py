@@ -160,6 +160,7 @@ while True:
         while True:
             start = time.time()
             print('Num steps:', num_steps)
+            print('State:', state)
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
                 action = action.detach().cpu().numpy().flatten()
