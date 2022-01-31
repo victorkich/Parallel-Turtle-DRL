@@ -13,6 +13,7 @@ from math import isnan
 from cv_bridge import CvBridge
 import pandas as pd
 import numpy as np
+import pickle
 import imutils
 import torch
 import yaml
@@ -204,7 +205,9 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        values = np.asarray([episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list])
-        np.savetxt(path_results + '/S{}_episode{}.csv'.format(env, local_episode), values)
+        # print('Data:', data, 'Type:', type(data))
+        values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
+        with open(path_results + '/S{}_episode{}'.format(env, local_episode), "wb") as fp:
+            pickle.dump(values, fp)
         real_ttb.cleanPath()
     print('Episode done!')
