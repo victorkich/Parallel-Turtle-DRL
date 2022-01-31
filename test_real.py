@@ -153,6 +153,7 @@ while True:
         if quit.lower() == 'q':
             break
 
+        real_ttb.cleanPath()
         episode_reward = 0
         lidar_list = list()
         num_steps = 0
@@ -208,5 +209,4 @@ while True:
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
         with open(path_results + '/{}_S{}_episode{}'.format(translator[int(algorithm)][0], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
-        real_ttb.cleanPath()
     print('Episode done!')
