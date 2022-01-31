@@ -202,9 +202,11 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
+        print('Data:', data, 'Type:', type(data))
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
         data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
         data[list(data.keys())[int(algorithm) - 1]].append(values)
+        print('Data:', data, 'Type:', type(data))
         df = pd.DataFrame.from_dict(data, orient='index').T
         df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
         real_ttb.cleanPath()
