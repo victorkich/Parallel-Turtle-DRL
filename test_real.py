@@ -206,7 +206,7 @@ while True:
         # Save csv file
         # print('Data:', data, 'Type:', type(data))
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_S{}_episode{}'.format(translator[int(algorithm)], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_S{}_episode{}'.format(translator[int(algorithm)][0], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
         real_ttb.cleanPath()
     print('Episode done!')
