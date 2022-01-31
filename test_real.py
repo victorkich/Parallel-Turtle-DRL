@@ -69,7 +69,7 @@ def getImage(image):
 
     fps = round(1 / (time.time() - start))
     # putting the FPS count on the frame
-    cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
+    # cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
     # Display the resulting frame
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -152,7 +152,6 @@ while True:
             break
 
         episode_reward = 0
-        xy = list()
         lidar_list = list()
         num_steps = 0
         local_episode += 1
@@ -180,14 +179,11 @@ while True:
                 done = True
                 reward = 20
             if min(state[0:24]) < 0.2:
-                # done = True
-                # reward = -200
-                pass
+                done = True
+                reward = -200
             episode_reward += reward
 
-            position = env_real.get_position()  # Get x and y turtlebot position to compute test charts
-            scan = env_real.get_scan()
-            xy.append(position)
+            scan = state[0:24]
             lidar_list.append(scan)
 
             print('Done:', done)
@@ -206,7 +202,7 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
+        values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
         data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
         data[list(data.keys())[int(algorithm) - 1]].append(values)
         df = pd.DataFrame.from_dict(data, orient='index').T
