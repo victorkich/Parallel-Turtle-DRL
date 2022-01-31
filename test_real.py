@@ -9,7 +9,6 @@ from algorithms.bug2 import BUG2
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
 from tempfile import TemporaryFile
-from math import isnan
 from cv_bridge import CvBridge
 import pandas as pd
 import numpy as np
@@ -22,7 +21,7 @@ import gym
 import cv2
 import os
 
-TURTLE = '003'
+TURTLE = '004'
 bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -30,7 +29,7 @@ outfile = TemporaryFile()
 
 # Hyper parameters
 episodes = 10
-max_steps = 1000
+max_steps = 500
 action_low = [-1.5, -0.1]
 action_high = [1.5, 0.12]
 
@@ -49,7 +48,7 @@ defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 
 def getImage(image):
     global state
-    start = time.time()
+    # start = time.time()
     try:
         lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=1)
     except:
@@ -126,7 +125,7 @@ while True:
             continue
 
     if algorithm != '7':
-        process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+        process_dir = f"{path}/saved_models/{translator[int(algorithm)]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
         model_fn = f"{process_dir}/{list_dir[-2]}"
 
@@ -207,7 +206,7 @@ while True:
         # Save csv file
         # print('Data:', data, 'Type:', type(data))
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/S{}_episode{}'.format(env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_S{}_episode{}'.format(translator[int(algorithm)], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
         real_ttb.cleanPath()
     print('Episode done!')
