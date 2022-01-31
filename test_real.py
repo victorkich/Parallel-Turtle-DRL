@@ -104,6 +104,7 @@ while True:
     if algorithm.lower() == 'e':
         break
     if algorithm.lower() == 'r':
+        real_ttb.cleanPath()
         reset = input('Do you want to reset any test results? [y/n]\n')
         if reset.lower() == 'y':
             reset = input('Do you want to reset all the test results? [y/n]\n')
@@ -205,10 +206,10 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        #values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
-        #data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
-        #data[list(data.keys())[int(algorithm) - 1]].append(values)
-        #df = pd.DataFrame.from_dict(data, orient='index').T
-        #df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
+        values = [episode_reward, episode_timing, local_episode, num_steps, xy, lidar_list]
+        data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
+        data[list(data.keys())[int(algorithm) - 1]].append(values)
+        df = pd.DataFrame.from_dict(data, orient='index').T
+        df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
         real_ttb.cleanPath()
     print('Episode done!')
