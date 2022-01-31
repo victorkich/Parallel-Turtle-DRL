@@ -8,6 +8,7 @@ from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
+from tempfile import TemporaryFile
 from math import isnan
 from cv_bridge import CvBridge
 import pandas as pd
@@ -24,6 +25,7 @@ TURTLE = '003'
 bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
+outfile = TemporaryFile()
 
 # Hyper parameters
 episodes = 10
@@ -67,7 +69,7 @@ def getImage(image):
     if not angle is None and not distance is None:
         state = np.hstack([lidar, angle, distance])
 
-    fps = round(1 / (time.time() - start))
+    # fps = round(1 / (time.time() - start))
     # putting the FPS count on the frame
     # cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
     # Display the resulting frame
@@ -178,7 +180,7 @@ while True:
             if state[-1] < 0.38:
                 done = True
                 reward = 20
-            if min(state[0:24]) < 0.2:
+            if 0.1 < min(state[0:24]) < 0.2:
                 done = True
                 reward = -200
             episode_reward += reward
@@ -202,12 +204,7 @@ while True:
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save csv file
-        print('Data:', data, 'Type:', type(data))
-        values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        data[list(data.keys())[int(algorithm) - 1]] = list(filter(lambda k: not isnan(k), data[list(data.keys())[int(algorithm) - 1]]))
-        data[list(data.keys())[int(algorithm) - 1]].append(values)
-        print('Data:', data, 'Type:', type(data))
-        df = pd.DataFrame.from_dict(data, orient='index').T
-        df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
+        values = np.asarray([episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list])
+        np.savetxt(path_results + '/S{}_episode{}.csv'.format(env, local_episode), values)
         real_ttb.cleanPath()
     print('Episode done!')
