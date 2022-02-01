@@ -138,6 +138,7 @@ while True:
         try:
             actor.load_state_dict(torch.load(model_fn, map_location=config['device']))
         except:
+            print('É')
             actor = torch.load(model_fn)
             actor.to(config['device'])
         actor.eval()
