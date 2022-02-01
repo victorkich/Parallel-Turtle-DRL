@@ -145,7 +145,7 @@ while True:
         b2 = BUG2()
 
     local_episode = len(data[list(data.keys())[int(algorithm) - 1]])
-    while local_episode <= episodes:
+    while local_episode < episodes:
         if local_episode == 0:
             quit = input("Press [Enter] to start the test or press [q] to quit...")
         else:
