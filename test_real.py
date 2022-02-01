@@ -169,6 +169,8 @@ while True:
                         state[s] = 2.5
             print('State:', state)
 
+            state[:24] = reversed(state[:24])
+
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
                     action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
