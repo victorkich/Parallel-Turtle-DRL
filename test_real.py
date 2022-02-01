@@ -164,6 +164,10 @@ while True:
             start = time.time()
             print('Num steps:', num_steps)
             print('State:', state)
+            if state is not None:
+                for s in range(len(state)):
+                    if state[s] > 2.5:
+                        state[s] = 2.5
 
             if algorithm != '7':
                 action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
@@ -207,6 +211,6 @@ while True:
         # Save csv file
         # print('Data:', data, 'Type:', type(data))
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_S{}_episode{}'.format(translator[int(algorithm)][0], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')

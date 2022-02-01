@@ -87,7 +87,7 @@ class Agent(object):
                 print('Angle:', state[-2])
                 print('Distance:', state[-1])
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
-                         'test'] and not self.config['model'] == 'D4PG') or self.config['model'] == 'PDSRL' else
+                         'test'] and not self.config['model'] == 'PDDRL') or self.config['model'] == 'PDSRL' else
                          np.array(state))
                 if self.agent_type == "exploration" and not self.config['model'] == 'PDSRL':
                     action = action.squeeze(0)
