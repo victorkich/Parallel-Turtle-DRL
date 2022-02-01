@@ -171,7 +171,7 @@ while True:
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
-                    _, action, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']))
+                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
                 else:
                     action = actor.get_action(np.array(state))
                 action = action.detach().cpu().numpy().flatten()
