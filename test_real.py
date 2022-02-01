@@ -168,7 +168,6 @@ while True:
                     if state[s] > 2.5:
                         state[s] = 2.5
             print('State:', state)
-            print('Torch state:', torch.Tensor(state))
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
