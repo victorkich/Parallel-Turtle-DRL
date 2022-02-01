@@ -21,7 +21,7 @@ import gym
 import cv2
 import os
 
-TURTLE = '002'
+TURTLE = '003'
 bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
