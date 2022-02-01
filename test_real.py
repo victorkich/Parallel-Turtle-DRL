@@ -181,7 +181,7 @@ while True:
                 action = b2.get_action(state)
 
             print('Action:', action)
-            action[0] /= 2
+            action[0] /= 3
             _, _, _, _ = env_real.step(action=action)
             done = False
             reward = 0
