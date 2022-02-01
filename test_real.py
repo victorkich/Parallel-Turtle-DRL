@@ -28,7 +28,7 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
 
 # Hyper parameters
-episodes = 10
+episodes = 12
 max_steps = 500
 action_low = [-1.5, -0.1]
 action_high = [1.5, 0.12]
@@ -145,7 +145,7 @@ while True:
         b2 = BUG2()
 
     local_episode = len(data[list(data.keys())[int(algorithm) - 1]])
-    while local_episode < episodes:
+    while local_episode < episodes+2:
         if local_episode == 0:
             quit = input("Press [Enter] to start the test or press [q] to quit...")
         else:
@@ -211,6 +211,6 @@ while True:
         # Save csv file
         # print('Data:', data, 'Type:', type(data))
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode12'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
