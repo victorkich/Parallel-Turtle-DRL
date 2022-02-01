@@ -183,6 +183,7 @@ while True:
 
             print('Action:', action)
             action[0] /= 3
+            action[1] /= 1.5
             _, _, _, _ = env_real.step(action=action)
             done = False
             reward = 0
