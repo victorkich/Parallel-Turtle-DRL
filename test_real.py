@@ -138,7 +138,6 @@ while True:
         try:
             actor.load_state_dict(torch.load(model_fn, map_location=config['device']))
         except:
-            print('É')
             actor = torch.load(model_fn)
             actor.to(config['device'])
         actor.eval()
@@ -171,7 +170,10 @@ while True:
             print('State:', state)
 
             if algorithm != '7':
-                action = actor.get_action(torch.Tensor(state).to(config['device']) if algorithm == '2' or algorithm == '4' else np.array(state))
+                if algorithm == '2' or algorithm == '4':
+                    _, action, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']))
+                else:
+                    action = actor.get_action(np.array(state))
                 action = action.detach().cpu().numpy().flatten()
                 action[0] = np.clip(action[0], action_low[0], action_high[0])
                 action[1] = np.clip(action[1], action_low[1], action_high[1])
@@ -211,6 +213,6 @@ while True:
 
         # Save log file
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode{}'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode17'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
