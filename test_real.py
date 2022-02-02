@@ -48,7 +48,6 @@ defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
 
 def getImage(image):
     global state
-    # start = time.time()
     try:
         lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=1)
     except:
@@ -69,9 +68,6 @@ def getImage(image):
     if not angle is None and not distance is None:
         state = np.hstack([lidar, angle, distance])
 
-    # fps = round(1 / (time.time() - start))
-    # putting the FPS count on the frame
-    # cv2.putText(frame, 'FPS: ' + str(fps), (7, 40), font, 1, (0, 0, 255), 1, cv2.LINE_AA)
     # Display the resulting frame
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -83,15 +79,6 @@ sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
     os.makedirs(path_results)
-
-if not os.path.exists(path_results+'/real_results_S{}.csv'.format(env)):
-    print('File real_results_S{}.csv not found!\nGeneraring a new file real_results_S{}.csv ...'.format(env, env))
-    df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'BUG2': []})
-    df.to_csv(path_results+'/real_results_S{}.csv'.format(env))
-else:
-    print('File real_results_S{}.csv found!\nLoading data from real_results_S{}.csv...'.format(env, env))
-    df = pd.read_csv(path_results+'/real_results_S{}.csv'.format(env))
-data = df.to_dict()
 
 time.sleep(1)
 translator = {1: ['PDDRL', 'N'], 2: ['PDSRL', 'N'], 3: ['PDDRL', 'P'], 4: ['PDSRL', 'P'], 5: ['DDPG', 'N'],
@@ -144,8 +131,8 @@ while True:
     else:
         b2 = BUG2()
 
-    local_episode = len(data[list(data.keys())[int(algorithm) - 1]])
-    while local_episode < episodes+2:
+    local_episode = 0
+    while local_episode < episodes:
         if local_episode == 0:
             quit = input("Press [Enter] to start the test or press [q] to quit...")
         else:
@@ -169,7 +156,7 @@ while True:
                         state[s] = 2.5
             print('State:', state)
 
-            state[:24] = reversed(state[:24])
+            state[:24] = list(reversed(state[:24]))
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
