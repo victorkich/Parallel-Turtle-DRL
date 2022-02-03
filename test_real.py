@@ -10,7 +10,6 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
 from tempfile import TemporaryFile
 from cv_bridge import CvBridge
-import pandas as pd
 import numpy as np
 import pickle
 import imutils
