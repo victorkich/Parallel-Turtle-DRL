@@ -94,27 +94,11 @@ while True:
         break
     if algorithm.lower() == 'r':
         real_ttb.cleanPath()
-        reset = input('Do you want to reset any test results? [y/n]\n')
-        if reset.lower() == 'y':
-            reset = input('Do you want to reset all the test results? [y/n]\n')
-            if reset.lower() == 'y':
-                df = pd.DataFrame({'PDDRL': [], 'PDSRL': [], 'PDDRL-P': [], 'PDSRL-P': [], 'DDPG': [], 'SAC': [], 'BUG2': []})
-                df.to_csv(path_results + '/real_results.csv')
-            else:
-                column = None
-                while not any(column == np.arange(7)+1):
-                    print('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->BUG2')
-                    column = input('Which columns do you want reset?\n')
-                data[list(data.keys())[int(column) - 1]] = []
-                df = pd.DataFrame.from_dict(data, orient='index').T
-                df.to_csv(path_results + '/real_results_S{}.csv'.format(env))
-        else:
-            continue
 
     if algorithm != '7':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
-        model_fn = f"{process_dir}/{list_dir[-2]}"
+        model_fn = f"{process_dir}/{list_dir[-3]}"
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2]]):
