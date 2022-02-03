@@ -99,6 +99,7 @@ while True:
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
         model_fn = f"{process_dir}/{list_dir[1]}"
+        print(list_dir)
         print('Loaded:', list_dir[1])
 
         # Loading neural network model
