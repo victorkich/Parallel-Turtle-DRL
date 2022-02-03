@@ -98,7 +98,7 @@ while True:
     if algorithm != '7':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
-        model_fn = f"{process_dir}/{list_dir[-3]}"
+        model_fn = f"{process_dir}/{list_dir[-2]}"
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2]]):
@@ -186,6 +186,6 @@ while True:
 
         # Save log file
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode17'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
