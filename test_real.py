@@ -94,6 +94,7 @@ while True:
         break
     if algorithm.lower() == 'r':
         real_ttb.cleanPath()
+        continue
 
     if algorithm != '7':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if config['replay_memory_prioritized'] else 'N'}"
