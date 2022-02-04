@@ -54,6 +54,6 @@ disabled: 1
 # Miscellaneous
 save_buffer: 0
 results_path: results
-test: 1
+test: 0
 test_real: 0
 test_trials: 12
