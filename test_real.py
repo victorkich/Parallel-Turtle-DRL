@@ -103,7 +103,7 @@ while True:
         #for i, l in enumerate(list_dir):
         #    print(i, l)
 
-        #print('Loaded:', list_dir[25])
+        #print('Loaded:', list_dir[0])
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2]]):
