@@ -94,7 +94,7 @@ class Agent(object):
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
                 else:
-                    if self.agent_type == "exploration":
+                    if self.agent_type == "exploitation":
                         action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']),
                                                                 deterministic=True)
                     action = action.detach().cpu().numpy().flatten()
