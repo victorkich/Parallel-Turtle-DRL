@@ -90,11 +90,11 @@ class Agent(object):
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
                          'test'] and not self.config['model'] == 'PDDRL') or self.config['model'] == 'PDSRL' else
                          np.array(state))
-                if self.agent_type == "exploration" and not self.config['model'] == 'PDSRL':
+                if self.agent_type == "exploration" and self.config['model'] == 'PDDRL':
                     action = action.squeeze(0)
                     action = self.ou_noise.get_action(action, num_steps)
                 else:
-                    if self.agent_type == "exploitation":
+                    if self.agent_type == "exploitation" and self.config['model'] == 'PDSRL':
                         action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']),
                                                                 deterministic=True)
                     action = action.detach().cpu().numpy().flatten()
