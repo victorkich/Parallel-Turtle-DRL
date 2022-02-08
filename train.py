@@ -57,7 +57,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                 beta = config['priority_beta_end']
             else:
                 beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
-            batch = replay_buffer.sample(batch_size, beta=beta)
+            batch = replay_buffer.sample(batch_size, beta=config['priority_beta_start'])
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
