@@ -163,7 +163,7 @@ while True:
             _, _, _, _ = env_real.step(action=action)
             done = False
             reward = 0
-            if state[-1] < 0.38:
+            if state[-1] < 0.3:
                 done = True
                 reward = 20
             if 0.1 < min(state[0:24]) < 0.2:
