@@ -100,8 +100,8 @@ while True:
         list_dir = sorted(os.listdir(process_dir))
         list_dir = "local_episode_3000_reward_200.000000.pt"
         model_fn = f"{process_dir}/{list_dir}"
-        for i, l in enumerate(list_dir):
-            print(i, l)
+        #for i, l in enumerate(list_dir):
+        #    print(i, l)
 
         #print('Loaded:', list_dir[0])
 
@@ -145,7 +145,7 @@ while True:
                         state[s] = 2.5
             print('State:', state)
 
-            state[:24] = list(reversed(state[:24]))
+            # state[:24] = list(reversed(state[:24]))
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
