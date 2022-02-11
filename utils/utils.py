@@ -504,8 +504,8 @@ def test_goals(t):
     if t < 25:
         return [1.55, -1.55]
     elif 25 <= t < 50:
-        return [3.75, -0.25]
+        return [3.5, -0.5]
     elif 50 <= t < 75:
-        return [0.25, -3.75]
+        return [0.5, -3.5]
     elif t >= 75:
-        return [3.75, -3.75]
+        return [3.5, -3.5]
