@@ -208,7 +208,12 @@ if __name__ == "__main__":
     assert any(config['model'] == np.array(['PDDRL', 'PDSRL', 'DDPG', 'SAC']))  # Only D4PG, DSAC, DDPG, and SAC
     if config['model'] == 'PDDRL':
         if config['test']:
-            target_policy_net = torch.load(path_model)
+            try:
+                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+                target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
+            except:
+                target_policy_net = torch.load(path_model)
+                target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
             target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
@@ -217,7 +222,13 @@ if __name__ == "__main__":
         target_policy_net.share_memory()
     elif config['model'] == 'PDSRL':
         if config['test']:
-            target_policy_net = torch.load(path_model)
+            try:
+                target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
+                                                   hidden_sizes=[config['dense_size'], config['dense_size']])
+                target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
+            except:
+                target_policy_net = torch.load(path_model)
+                target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
             target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
