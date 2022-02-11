@@ -25,7 +25,7 @@ update_agent_ep: 1  # agent gets latest parameters from learner every update_age
 replay_queue_size: 1024  # queue with replays from all the agents
 batch_queue_size: 64  # queue with batches given to learner
 save_reward_threshold: 5
-replay_memory_prioritized: 1
+replay_memory_prioritized: 0
 num_episode_save: 50
 device: cuda
 action_prior: uniform
