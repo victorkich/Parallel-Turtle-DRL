@@ -27,7 +27,7 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
 
 # Hyper parameters
-episodes = 12
+episodes = 6
 max_steps = 500
 action_low = [-1.5, -0.1]
 action_high = [1.5, 0.12]
@@ -120,7 +120,7 @@ while True:
     else:
         b2 = BUG2()
 
-    local_episode = 0
+    local_episode = 2
     while local_episode < episodes:
         if local_episode == 0:
             quit = input("Press [Enter] to start the test or press [q] to quit...")
