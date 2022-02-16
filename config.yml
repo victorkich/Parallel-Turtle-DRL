@@ -9,7 +9,7 @@ action_dim: 2
 max_action: 1.5
 
 # Training parameters
-model: PDSRL
+model: PDDRL
 batch_size: 256
 num_episodes: 2000
 num_steps_train: 10000000  # number of episodes from all agents
