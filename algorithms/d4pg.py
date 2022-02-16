@@ -50,7 +50,6 @@ class LearnerD4PG(object):
         self.value_criterion = nn.BCELoss(reduction='none')
 
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
-        print('Treinando')
         update_time = time.time()
 
         state, action, reward, next_state, done, gamma, weights, inds = batch
@@ -132,7 +131,6 @@ class LearnerD4PG(object):
                 pass
 
         # Logging
-        print('Treinado')
         with logs.get_lock():
             logs[3] = policy_loss.item()
             logs[4] = value_loss.item()
