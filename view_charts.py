@@ -34,9 +34,8 @@ n = 50  # the larger n is, the smoother curve will be
 b = [1.0 / n] * n
 a = 1
 
-color = {'D4PG-N': 'dodgerblue', 'DSAC-N': 'springgreen', 'D4PG-P': 'indigo', 'DSAC-P': 'deeppink'}
-label = {'D4PG-N': 'PDDRL', 'DSAC-N': 'PDSRL', 'D4PG-P': 'PDDRL-P', 'DSAC-P': 'PDSRL-P'}
-x_lim = {'S1': 150, 'S2': 1000, 'Sl': 3000, 'Su': 3000}
+color = {'PDDRL-N': 'dodgerblue', 'PDSRL-N': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink'}
+x_lim = {'S1': 150, 'S2': 1000, 'Sl': 2000, 'Su': 2000}
 fig, ax = plt.subplots()
 
 print('Generating charts...')
@@ -58,7 +57,8 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     _, stds = mfilter(rewards, n)
 
     sel = '-'.join([directory[0], directory[4]])
-    ax.plot(episodes, means, linestyle='-', linewidth=2, label=label[sel], c=color[sel])
+    print(sel)
+    ax.plot(episodes, means, linestyle='-', linewidth=2, label=sel, c=color[sel])
     ax.fill_between(episodes, means - stds, means + stds, alpha=0.15, facecolor=color[sel])
 
     if (c+1) % 4 == 0:
