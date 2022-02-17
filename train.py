@@ -241,29 +241,29 @@ if __name__ == "__main__":
         action_high = [1.5, 0.12]
         if config['test']:
             try:
-                target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size']).to(config['device'])
+                target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
                 target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
-            target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size']).to(config['device'])
+            target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size']).to(config['device'])
+            policy_net_cpu = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
     elif config['model'] == 'SAC':
         if config['test']:
             try:
-                target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(config['device'])
+                target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
                 target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
-            target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(config['device'])
+            target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(config['device'])
+            policy_net_cpu = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
 
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
