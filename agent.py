@@ -87,7 +87,7 @@ class Agent(object):
                         state[s] = 2.5
 
                 action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
-                         'test'] and not self.config['model'] == 'PDDRL') or self.config['model'] == 'PDSRL' else
+                         'test'] and (not self.config['model'] == 'PDDRL' or self.config['model'] == 'DDPG')) or self.config['model'] == 'PDSRL' else
                          np.array(state))
                 if self.agent_type == "exploration" and self.config['model'] == 'PDDRL':
                     action = action.squeeze(0)
@@ -97,8 +97,8 @@ class Agent(object):
                         action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']),
                                                                 deterministic=True)
                     action = action.detach().cpu().numpy().flatten()
-                    action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
-                    action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
+                action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
+                action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
                 next_state, reward, done, info = env.step(action)  # test_real=self.config['test_real']
                 episode_reward += reward
