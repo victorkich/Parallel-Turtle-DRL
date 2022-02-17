@@ -88,12 +88,12 @@ class Agent(object):
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
                     action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']), deterministic=True if self.agent_type == "exploitation" else False)
+                    action = action.detach().cpu().numpy().flatten()
                 else:
                     action = self.actor.get_action(np.array(state))
                     if self.agent_type == "exploration":
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, num_steps)
-                action = action.detach().cpu().numpy().flatten()
                 action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
