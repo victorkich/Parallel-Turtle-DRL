@@ -158,11 +158,11 @@ if __name__ == "__main__":
         if not i:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11312 + i, 11342 + i, config['env_stage']))
         else:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11312 + i, 11342 + i, config['env_stage']))
         time.sleep(2)
     time.sleep(25)
 
