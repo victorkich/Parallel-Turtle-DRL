@@ -2,7 +2,6 @@
 
 import rospy
 from utils.utils import OUNoise, empty_torch_queue, test_goals
-from utils import range_finder as rf
 from collections import deque
 import gym_turtlebot3
 import numpy as np
