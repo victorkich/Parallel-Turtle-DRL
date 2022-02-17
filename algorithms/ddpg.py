@@ -40,12 +40,14 @@ class LearnerDDPG(object):
         update_time = time.time()
 
         # Sample replay buffer
-        x, u, r, y, d, _ = replay_buffer.sample(self.batch_size)
+        x, u, r, y, d, gamma, weights, inds = replay_buffer
         state = torch.FloatTensor(x).to(self.device)
         action = torch.FloatTensor(u).to(self.device)
         next_state = torch.FloatTensor(y).to(self.device)
         done = torch.FloatTensor(1-d).to(self.device)
         reward = torch.FloatTensor(r).to(self.device)
+        # weights = torch.FloatTensor(weights).to(self.device)
+        # inds = torch.FloatTensor(inds).flatten().to(self.device)
 
         # Compute the target Q value
         target_Q = self.critic_target(next_state, self.actor_target(next_state))
