@@ -86,17 +86,14 @@ class Agent(object):
                     if state[s] > 2.5:
                         state[s] = 2.5
 
-                action = self.actor.get_action(torch.Tensor(state).to(self.config['device']) if (not self.config[
-                         'test'] and (not self.config['model'] == 'PDDRL' or self.config['model'] == 'DDPG')) or self.config['model'] == 'PDSRL' else
-                         np.array(state))
-                if self.agent_type == "exploration" and self.config['model'] == 'PDDRL':
-                    action = action.squeeze(0)
-                    action = self.ou_noise.get_action(action, num_steps)
+                if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
+                    action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']), deterministic=True if self.agent_type == "exploitation" else False)
                 else:
-                    if self.agent_type == "exploitation" and self.config['model'] == 'PDSRL':
-                        action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']),
-                                                                deterministic=True)
-                    action = action.detach().cpu().numpy().flatten()
+                    action = self.actor.get_action(np.array(state))
+                    if self.agent_type == "exploration":
+                        action = action.squeeze(0)
+                        action = self.ou_noise.get_action(action, num_steps)
+                action = action.detach().cpu().numpy().flatten()
                 action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
