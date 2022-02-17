@@ -59,8 +59,8 @@ class LearnerDDPG(object):
         target_Q = self.critic_target(next_state, self.actor_target(next_state))
         print('target_Q 1:', target_Q.shape)
 
-        print('reward:', reward)
-        print('done:', done)
+        print('reward:', reward.shape)
+        print('done:', done.shape)
         target_Q = reward + (done * self.gamma * target_Q).detach()
         print('target_Q 2:', target_Q.shape)
         print('//////////////////////////////////')
