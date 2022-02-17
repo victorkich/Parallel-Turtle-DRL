@@ -44,32 +44,17 @@ class LearnerDDPG(object):
         state = torch.FloatTensor(x).to(self.device)
         action = torch.FloatTensor(u).to(self.device)
         next_state = torch.FloatTensor(y).to(self.device)
-        done = torch.FloatTensor(1-d).to(self.device)
-        reward = torch.FloatTensor(r).to(self.device)
+        done = torch.FloatTensor(1-d).to(self.device).unsqueeze(1)
+        reward = torch.FloatTensor(r).to(self.device).unsqueeze(1)
         # weights = torch.FloatTensor(weights).to(self.device)
         # inds = torch.FloatTensor(inds).flatten().to(self.device)
 
-        print('--------------------------------------')
-        print('target_Q = self.critic_target(next_state, self.actor_target(next_state))')
-        print('Next state:', next_state.shape)
-        print('self.actor_target(next_state):', self.actor_target(next_state).shape)
-
-
         # Compute the target Q value
         target_Q = self.critic_target(next_state, self.actor_target(next_state))
-        print('target_Q 1:', target_Q.shape)
-
-        print('reward:', reward.shape)
-        print('done:', done.shape)
         target_Q = reward + (done * self.gamma * target_Q).detach()
-        print('target_Q 2:', target_Q.shape)
-        print('//////////////////////////////////')
-        print('current_Q = self.critic(state, action)')
-        print('State:', state.shape)
-        print('Action:', action.shape)
+
         # Get current Q estimate
         current_Q = self.critic(state, action)
-        print('current_Q:', current_Q.shape)
 
         # Compute critic loss
         critic_loss = F.mse_loss(current_Q, target_Q)
