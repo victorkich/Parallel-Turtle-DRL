@@ -49,6 +49,11 @@ class LearnerDDPG(object):
         # weights = torch.FloatTensor(weights).to(self.device)
         # inds = torch.FloatTensor(inds).flatten().to(self.device)
 
+        print('Next state:', next_state.shape)
+        print('self.actor_target(next_state):', self.actor_target(next_state))
+        print('State:', state)
+        print('Action:', action)
+
         # Compute the target Q value
         target_Q = self.critic_target(next_state, self.actor_target(next_state))
         target_Q = reward + (done * self.gamma * target_Q).detach()
