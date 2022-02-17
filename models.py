@@ -378,6 +378,9 @@ class ActorSAC(nn.Module):
         log_std_head = torch.clamp(log_std_head, self.min_log_std, self.max_log_std)
         return mu, log_std_head
 
+    def to(self, device):
+        super(ActorSAC, self).to(device)
+
 
 class ActorDDPG(nn.Module):
     def __init__(self, state_dim, action_dim, max_action, hidden):
@@ -394,6 +397,9 @@ class ActorDDPG(nn.Module):
         x = F.relu(self.l2(x))
         x = self.max_action * torch.tanh(self.l3(x))
         return x
+
+    def to(self, device):
+        super(ActorDDPG, self).to(device)
         
 
 class Q(nn.Module):
