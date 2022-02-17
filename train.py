@@ -251,6 +251,7 @@ if __name__ == "__main__":
             target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
+        target_policy_net.share_memory()
     elif config['model'] == 'SAC':
         if config['test']:
             try:
@@ -264,6 +265,7 @@ if __name__ == "__main__":
             target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
+        target_policy_net.share_memory()
 
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
