@@ -1,5 +1,5 @@
 from utils.utils import empty_torch_queue
-from models import ActorSAC, Critic, Q
+from models import Critic, Q
 from torch.distributions import Normal
 import torch.optim as optim
 import torch.nn as nn

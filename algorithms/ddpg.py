@@ -1,5 +1,5 @@
 from utils.utils import empty_torch_queue
-from models import ActorDDPG, Critic
+from models import Critic
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
