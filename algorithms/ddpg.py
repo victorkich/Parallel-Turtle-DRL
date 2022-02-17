@@ -50,20 +50,23 @@ class LearnerDDPG(object):
         # inds = torch.FloatTensor(inds).flatten().to(self.device)
 
         print('--------------------------------------')
+        print('target_Q = self.critic_target(next_state, self.actor_target(next_state))')
         print('Next state:', next_state.shape)
         print('self.actor_target(next_state):', self.actor_target(next_state).shape)
-        print('State:', state.shape)
-        print('Action:', action.shape)
+
 
         # Compute the target Q value
         target_Q = self.critic_target(next_state, self.actor_target(next_state))
+        print('target_Q 1:', target_Q.shape)
         target_Q = reward + (done * self.gamma * target_Q).detach()
-
+        print('target_Q 2:', target_Q.shape)
+        print('//////////////////////////////////')
+        print('current_Q = self.critic(state, action)')
+        print('State:', state.shape)
+        print('Action:', action.shape)
         # Get current Q estimate
         current_Q = self.critic(state, action)
-
-        print('target_Q:', target_Q.shape)
-        print('current_Q:', current_Q)
+        print('current_Q:', current_Q.shape)
 
         # Compute critic loss
         critic_loss = F.mse_loss(current_Q, target_Q)
