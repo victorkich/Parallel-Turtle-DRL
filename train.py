@@ -22,7 +22,7 @@ from algorithms.d4pg import LearnerD4PG
 from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy, ActorDDPG, ActorSAC
+from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
 
 
@@ -238,33 +238,32 @@ if __name__ == "__main__":
                                                 hidden_sizes=[config['dense_size'], config['dense_size']])
         target_policy_net.share_memory()
     elif config['model'] == 'DDPG':
-        action_high = [1.5, 0.12]
         if config['test']:
             try:
-                target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
+                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
                 target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
-            target_policy_net = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
+            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = ActorDDPG(config['state_dim'], config['action_dim'], action_high, config['dense_size'], device=config['device']).to(config['device'])
+            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         target_policy_net.share_memory()
     elif config['model'] == 'SAC':
         if config['test']:
             try:
-                target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
+                target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
                 target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
-            target_policy_net = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
+            target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = ActorSAC(config['state_dim'], config['action_dim'], hidden=config['dense_size'], device=config['device']).to(config['device'])
+            policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
         target_policy_net.share_memory()
 
     if not config['test']:
