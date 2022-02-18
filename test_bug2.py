@@ -23,6 +23,7 @@ local_episode = 0
 agent = BUG2()
 
 goal = [test_goals(local_episode)]
+rospy.init_node(config['env_name'].replace('-', '_') + "_w{}".format(n_agent))
 env = gym.make(config['env_name'], env_stage=config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
 time.sleep(1)
 
