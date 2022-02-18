@@ -15,7 +15,7 @@ class BUG2:
         difference_angle = angle
 
         if math.fabs(difference_angle) > 0.05:
-            self.action[1] = 0.5 if difference_angle > 0 else -0.5
+            self.action[0] = 0.5 if difference_angle > 0 else -0.5
 
         if math.fabs(difference_angle) <= 0.05:
             self.flag_shift(1)
@@ -38,12 +38,12 @@ class BUG2:
             self.action[0] = 0.4
             self.action[1] = 0.3
         elif reg_values[2] > 1 and reg_values[3] < 1 and reg_values[1] > 1:
-            self.action[0] = 0.3
-            self.action[1] = -0.2
+            self.action[1] = 0.3
+            self.action[0] = -0.2
         elif reg_values[2] < 1 and reg_values[3] > 1 and reg_values[1] > 1:
-            self.action[1] = -0.3
+            self.action[0] = -0.3
         elif reg_values[2] > 1 and reg_values[3] > 1 and reg_values[1] < 1:
-            self.action[0] = 0.4
+            self.action[1] = 0.4
 
     def flag_shift(self, f):
         self.flag = f
