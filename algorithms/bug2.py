@@ -24,19 +24,19 @@ class BUG2:
         reg_values = self.regions
 
         if reg_values[2] > 1 and reg_values[3] < 1 and reg_values[1] < 1:
-            self.action[0] = 0.4
-            self.action[1] = -0.3
+            self.action[1] = 0.4
+            self.action[0] = -0.3
         elif reg_values[2] < 1 and reg_values[3] < 1 and reg_values[1] < 1:
-            self.action[1] = -0.3
+            self.action[0] = -0.3
         elif reg_values[2] < 1 and reg_values[3] < 1 and reg_values[1] > 1:
-            self.action[0] = 0.2
-            self.action[1] = -0.4
+            self.action[1] = 0.2
+            self.action[0] = -0.4
         elif reg_values[2] < 1 and reg_values[3] > 1 and reg_values[1] < 1:
-            self.action[0] = 0.2
-            self.action[1] = -0.4
+            self.action[1] = 0.2
+            self.action[0] = -0.4
         elif reg_values[2] > 1 and reg_values[3] > 1 and reg_values[1] > 1:
-            self.action[0] = 0.4
-            self.action[1] = 0.3
+            self.action[1] = 0.4
+            self.action[0] = 0.3
         elif reg_values[2] > 1 and reg_values[3] < 1 and reg_values[1] > 1:
             self.action[1] = 0.3
             self.action[0] = -0.2
