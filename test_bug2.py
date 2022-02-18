@@ -46,7 +46,7 @@ while local_episode <= config['test_trials']:
                 state[s] = 2.5
 
         action = agent.get_action(state)
-        print('Action:', action)
+        # print('Action:', action)
         action[0] = np.clip(action[0], action_low[0], action_high[0])
         action[1] = np.clip(action[1], action_low[1], action_high[1])
 
