@@ -61,9 +61,10 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             batch = replay_buffer.sample(batch_size, beta=beta)
             print('Sampler 2')
             batch_queue.put_nowait(batch)
+            print('Sampler 3')
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
-            print('Sampler 3')
+            print('Sampler 4')
         except:
             time.sleep(0.1)
             continue
