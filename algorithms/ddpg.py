@@ -38,6 +38,7 @@ class LearnerDDPG(object):
 
     def _update_step(self, replay_buffer, update_step, logs):
         update_time = time.time()
+        print('Train 1')
 
         # Sample replay buffer
         x, u, r, y, d, gamma, weights, inds = replay_buffer
@@ -89,6 +90,7 @@ class LearnerDDPG(object):
             except:
                 pass
 
+        print('Train 2')
         # Logging
         with logs.get_lock():
             logs[3] = critic_loss
