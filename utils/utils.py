@@ -512,11 +512,11 @@ def test_goals(t):
 """
 
 def test_goals(t):
-    if t < 2:
+    if t < 25:
         return [-1.5, -1.5]
-    elif 2 <= t < 5:
+    elif 25 <= t < 50:
         return [1.5, -1.5]
-    elif 5 <= t < 7:
+    elif 50 <= t < 75:
         return [-1.5, 1.5]
-    elif t >= 7:
+    elif t >= 77:
         return [1.5, 1.5]

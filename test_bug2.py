@@ -5,6 +5,7 @@ from algorithms.bug2 import BUG2
 from utils.utils import test_goals
 import gym_turtlebot3
 import numpy as np
+import pickle
 import yaml
 import time
 import gym
@@ -27,6 +28,7 @@ rospy.init_node(config['env_name'].replace('-', '_') + "_w{}".format(n_agent))
 env = gym.make(config['env_name'], env_stage=config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
 time.sleep(1)
 
+local_episode_list, episode_timing_list, episode_reward_list, position_list = [], [], [], []
 best_reward = -float("inf")
 rewards = []
 while local_episode <= config['test_trials']:
@@ -57,8 +59,7 @@ while local_episode <= config['test_trials']:
 
         num_steps += 1
         position = env.get_position()  # Get x and y turtlebot position to compute test charts
-        # logs[3] = position[0]
-        # logs[4] = position[1]
+        position_list.append(position)
 
     # Log metrics
     episode_timing = time.time() - ep_start_time
@@ -66,8 +67,12 @@ while local_episode <= config['test_trials']:
           f"{config['test_trials']}] Reward: "
           f"[{episode_reward}/200] Step: {num_steps} Episode Timing: {round(episode_timing, 2)}s")
 
-    # logs[0] = episode_reward
-    # logs[1] = episode_timing
-    # logs[2] = local_episode
+    episode_reward_list.append(episode_reward)
+    episode_timing_list.append(episode_timing)
+    local_episode_list.append(local_episode)
 
+# Save log file
+values = [local_episode_list, episode_timing_list, episode_reward_list, position_list]
+with open(path + "/results/BUG2", "wb") as fp:
+    pickle.dump(values, fp)
 print(f"Agent {n_agent} done.")
