@@ -53,7 +53,7 @@ class BUG2:
         difference_pos = distance
 
         if difference_pos > 0.2:
-            self.action[0] = 0.6
+            self.action[1] = 0.6
         else:
             self.flag_shift(2)
 
