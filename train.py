@@ -114,17 +114,14 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
                                                                         "y": logs[4]}, global_step=global_step.value)
 
             time.sleep(0.05)
-            writer.flush()
         except:
             print('Error on Logger!')
             pass
 
-        if (global_episode.value % 100) == 0:
-            process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-            if not os.path.exists(process_dir):
-                os.makedirs(process_dir)
-            writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
-    writer.close()
+        process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+        if not os.path.exists(process_dir):
+            os.makedirs(process_dir)
+        writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
