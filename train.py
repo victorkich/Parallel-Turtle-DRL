@@ -266,7 +266,7 @@ if __name__ == "__main__":
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
         target_policy_net.share_memory()
 
-    print('Algorithm:', config['model'])
+    print('Algorithm:', config['model'], "-" + 'P' if config['replay_memory_prioritized'] else 'N')
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                           learner_w_queue, replay_priorities_queue, batch_queue,
