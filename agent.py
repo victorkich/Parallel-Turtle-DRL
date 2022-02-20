@@ -57,7 +57,7 @@ class Agent(object):
 
     def run(self, training_on, replay_queue, learner_w_queue, logs):
         time.sleep(1)
-        os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11312 + self.n_agent)
+        os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
         goal = None
         if self.config['test']:
