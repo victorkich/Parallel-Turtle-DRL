@@ -91,7 +91,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
-    while training_on.value if not config['test'] else global_episode.value < 100:
+    while logs[8] <= config['num_episodes'] if not config['test'] else logs[8] < 100:
         try:
             if not config['test']:
                 step = update_step.value
@@ -114,14 +114,16 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
                                                                         "y": logs[4]}, global_step=global_step.value)
 
             time.sleep(0.05)
+            writer.flush()
         except:
             print('Error on Logger!')
             pass
 
-        process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-        if not os.path.exists(process_dir):
-            os.makedirs(process_dir)
-        writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+    if not os.path.exists(process_dir):
+        os.makedirs(process_dir)
+    writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
+    writer.close()
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,

@@ -138,7 +138,7 @@ class LearnerD4PG(object):
 
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
         torch.set_num_threads(4)
-        while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
+        while logs[8] <= self.config['num_episodes']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:

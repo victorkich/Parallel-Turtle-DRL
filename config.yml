@@ -11,7 +11,7 @@ max_action: 1.5
 # Training parameters
 model: PDSRL
 batch_size: 256
-num_episodes: 1000
+num_episodes: 5
 num_steps_train: 10000000  # number of episodes from all agents
 max_ep_length: 500  # maximum number of steps per episode
 replay_mem_size: 100000  # maximum capacity of replay memory
