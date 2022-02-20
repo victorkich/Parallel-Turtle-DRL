@@ -85,6 +85,7 @@ class Agent(object):
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
+                    state[-1] += 0.1
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
                     action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']), deterministic=True if self.agent_type == "exploitation" else False)
