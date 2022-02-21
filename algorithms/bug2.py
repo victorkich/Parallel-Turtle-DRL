@@ -1,3 +1,4 @@
+import numpy as np
 import math
 
 
@@ -67,6 +68,7 @@ class BUG2:
         # meio_esquerda = laser_msg[1:6]
         # meio = laser_msg[0]
         # meio_direita = laser_msg[-6:-1]
+        laser_msg = np.array(laser_msg)
 
         self.regions = [
             min(laser_msg[[-4, -5, -6]]),  # Right
