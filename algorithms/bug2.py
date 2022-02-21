@@ -11,7 +11,7 @@ class BUG2:
         self.flag_1 = 0
         self.dist = 0.0
         self.first = True
-        self.colission_distance = 0.18 * 3
+        self.colission_distance = 0.18 * 4
         self.initial_position = list()
         self.target_position = list()
 
