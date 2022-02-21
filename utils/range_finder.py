@@ -80,8 +80,8 @@ class RealTtb:
         self.blueUpper = (110, 220, 220)
         self.greenLower = (20, 60, 80)
         self.greenUpper = (33, 255, 160)
-        self.redLower = (140, 80, 80)
-        self.redUpper = (220, 150, 150)
+        self.redLower = (140, 90, 90)
+        self.redUpper = (220, 140, 140)
         self.yellowLower = (0, 70, 120)
         self.yellowUpper = (15, 200, 255)
 
