@@ -30,25 +30,25 @@ class BUG2:
 
         if reg_values[2] > self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.4 / 4
-            self.action[0] = -0.3 * 4
+            self.action[0] = -0.3 * 2
         elif reg_values[2] < self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.0
-            self.action[0] = -0.3 * 4
+            self.action[0] = -0.3 * 2
         elif reg_values[2] < self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.2 / 4
-            self.action[0] = -0.4 * 4
+            self.action[0] = -0.4 * 2
         elif reg_values[2] < self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.2 / 4
-            self.action[0] = -0.4 * 4  # -0.4
+            self.action[0] = -0.4 * 2  # -0.4
         elif reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.4 / 4  # 0.4
-            self.action[0] = 0.3 * 4
+            self.action[0] = 0.3 * 2
         elif reg_values[2] > self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.3 / 4  # 0.3
-            self.action[0] = -0.2 * 4  # -0.2
+            self.action[0] = -0.2 * 2  # -0.2
         elif reg_values[2] < self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.0
-            self.action[0] = -0.3 * 4
+            self.action[0] = -0.3 * 2
         elif reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.4 / 4
             self.action[0] = 0.0
