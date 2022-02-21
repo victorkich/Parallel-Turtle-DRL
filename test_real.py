@@ -143,9 +143,8 @@ while True:
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
-            state[-2] = -state[-2]
-            print('State:', state)
 
+            print('State:', state)
             # state[:24] = list(reversed(state[:24]))
 
             if algorithm != '7':
@@ -160,7 +159,7 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] /= 3
+            # action[0] /= 3
             _, _, _, _ = env_real.step(action=action)
             done = False
             reward = 0
