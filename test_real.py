@@ -98,7 +98,7 @@ while True:
     if algorithm != '7':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if algorithm == '3' or algorithm == '4' else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
-        list_dir = "local_episode_1800_reward_200.000000.pt"
+        list_dir = "local_episode_2000_reward_200.000000.pt"
         model_fn = f"{process_dir}/{list_dir}"
         #for i, l in enumerate(list_dir):
         #    print(i, l)
@@ -153,10 +153,10 @@ while True:
                 else:
                     action = actor.get_action(np.array(state))
                 action = action.detach().cpu().numpy().flatten()
-                action[0] = np.clip(action[0], action_low[0], action_high[0])
-                action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
+            action[0] = np.clip(action[0], action_low[0], action_high[0])
+            action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
             action[0] /= 3
