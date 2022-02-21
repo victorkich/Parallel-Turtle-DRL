@@ -115,6 +115,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
 
             time.sleep(0.05)
             writer.flush()
+            print('-----')
         except:
             print('Error on Logger!')
             pass
