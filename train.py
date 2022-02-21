@@ -91,7 +91,8 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
-    while training_on.value if not config['test'] else global_episode.value < 100:
+    print("Starting log...")
+    while (global_episode.value < config['test_trials']) if config['test'] else (logs[8] <= config['num_episodes']):
         try:
             if not config['test']:
                 step = update_step.value
@@ -119,12 +120,13 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
             print('Error on Logger!')
             pass
 
-        if (global_episode.value % 100) == 0:
-            process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-            if not os.path.exists(process_dir):
-                os.makedirs(process_dir)
-            writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
+    print("Writer closing...")
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+    if not os.path.exists(process_dir):
+        os.makedirs(process_dir)
+    writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
+    print("Writer closed!")
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
@@ -158,11 +160,11 @@ if __name__ == "__main__":
         if not i:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11312 + i, 11342 + i, config['env_stage']))
+                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
         else:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11312 + i, 11342 + i, config['env_stage']))
+                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
         time.sleep(2)
     time.sleep(25)
 
@@ -205,7 +207,7 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Learner (neural net training process)
-    assert any(config['model'] == np.array(['PDDRL', 'PDSRL', 'DDPG', 'SAC']))  # Only D4PG, DSAC, DDPG, and SAC
+    assert any(config['model'] == np.array(['PDDRL', 'PDSRL']))  # Only D4PG and DSAC
     if config['model'] == 'PDDRL':
         if config['test']:
             try:
@@ -266,6 +268,7 @@ if __name__ == "__main__":
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
         target_policy_net.share_memory()
 
+    print('Algorithm:', config['model'], "-" + 'P' if config['replay_memory_prioritized'] else 'N')
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                           learner_w_queue, replay_priorities_queue, batch_queue,

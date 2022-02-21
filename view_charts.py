@@ -39,16 +39,18 @@ x_lim = {'S1': 150, 'S2': 1000, 'Sl': 2000, 'Su': 2000}
 fig, ax = plt.subplots()
 
 print('Generating charts...')
-for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
+for c, directory in tqdm(enumerate(sorted_dir[-4:]), total=len(sorted_dir[-4:])):
     with open(path+'_'.join(directory)+'/writer_data.json') as f:
         data = json.load(f)
 
     key_list = list(data.keys())
+    print(key_list)
     new_key_list = ["/".join(key.split('/')[-2:]) for key in key_list]
 
     for i, key in enumerate(key_list):
         data[new_key_list[i]] = data.pop(key)
 
+    print(data)
     rewards = pd.DataFrame(data['agent_0/reward']).iloc[:, 2].to_numpy()
     rewards = np.array([200 if reward >= 200 else reward for reward in rewards])
     episodes = np.arange(len(rewards))
