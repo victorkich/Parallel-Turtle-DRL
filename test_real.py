@@ -160,7 +160,7 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] /= 2
+            # action[0] /= 2
             # action[1] /= 1.2
             _, _, _, _ = env_real.step(action=action)
             done = False
@@ -196,6 +196,6 @@ while True:
 
         # Save log file
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode{}'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}_test2'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
