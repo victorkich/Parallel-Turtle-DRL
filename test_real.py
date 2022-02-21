@@ -27,7 +27,7 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
 
 # Hyper parameters
-episodes = 12
+episodes = 50
 max_steps = 500
 action_low = [-1.5, -0.1]
 action_high = [1.5, 0.12]
