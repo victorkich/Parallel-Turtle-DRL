@@ -45,18 +45,18 @@ while local_episode < config['test_trials']:
             if state[s] > 2.5:
                 state[s] = 2.5
 
-        action = agent.get_action(state)
+        position = env.get_position()
+        target_position = env.get_target_position()
+        action = agent.get_action(state, position, target_position)
         print('Action:', action)
         action[0] = np.clip(action[0], action_low[0], action_high[0])
         action[1] = np.clip(action[1], action_low[1], action_high[1])
 
         # print(state)
         # action = [0.0, 0.0]
-        position = env.get_position()
-        target_position = env.get_target_position()
-        next_state, reward, done, info = env.step(action, position, target_position)
+        next_state, reward, done, info = env.step(action)
         episode_reward += reward
-        state =  next_state
+        state = next_state
 
         if done or num_steps == config['max_ep_length']:
             break
