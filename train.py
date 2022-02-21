@@ -94,7 +94,6 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     print("Starting log...")
     while (global_episode.value < config['test_trials']) if config['test'] else (logs[8] <= config['num_episodes']):
         try:
-            print('-----')
             if not config['test']:
                 step = update_step.value
                 writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
@@ -117,7 +116,6 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
 
             time.sleep(0.05)
             writer.flush()
-            print('-----')
         except:
             print('Error on Logger!')
             pass
