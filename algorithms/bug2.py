@@ -92,24 +92,24 @@ class BUG2:
         self.laser_scan(state[0:-2])
         reg_values = self.regions
         print("State:", state)
-        state[-2] = -state[-2]
+
         if self.first:
             self.dist = state[-1]
 
-        if self.dist < 0.35 and (reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance):
+        if self.dist > 0.35 and (reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance):
             if self.flag == 0:
                 self.angle_towards_goal(angle=state[-2])
             elif self.flag == 1:
                 self.move(angle=state[-2], distance=state[-1])
 
-        elif self.dist < 0.35 and reg_values[3] < self.colission_distance:
+        elif self.dist > 0.35 and reg_values[3] < self.colission_distance:
             self.flag_1 = 1
             self.obstacle_avoidance()
 
-        elif self.dist > 0.35:
+        elif self.dist < 0.35:
             self.obstacle_avoidance()
 
-        elif self.dist < 0.35 and self.flag_1 == 1:
+        elif self.dist > 0.35 and self.flag_1 == 1:
             if self.flag == 0:
                 self.angle_towards_goal(angle=state[-2])
             elif self.flag == 1:
