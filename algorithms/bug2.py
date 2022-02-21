@@ -73,6 +73,7 @@ class BUG2:
         # meio = laser_msg[0]
         # meio_direita = laser_msg[-6:-1]
         laser_msg = np.array(laser_msg)
+        """
         self.regions = [
             min(laser_msg[[3, 4, 5]]),  # Right
             min(laser_msg[[1, 2]]),  # Front Right
@@ -88,7 +89,7 @@ class BUG2:
             min(laser_msg[[1, 2]]),  # Front Left
             min(laser_msg[[3, 4, 5]]),  # Left
         ]
-        """
+
 
     def get_action(self, state):
         self.laser_scan(state[0:-2])
