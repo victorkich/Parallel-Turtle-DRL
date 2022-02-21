@@ -10,7 +10,7 @@ class BUG2:
         self.flag_1 = 0
         self.dist = 0.0
         self.first = True
-        self.colission_distance = 0.5
+        self.colission_distance = 0.35
 
     def angle_towards_goal(self, angle):
         difference_angle = angle
@@ -64,14 +64,16 @@ class BUG2:
             self.flag_shift(0)
 
     def laser_scan(self, laser_msg):
+        # meio_esquerda = laser_msg[1:6]
+        # meio = laser_msg[0]
+        # meio_direita = laser_msg[-6:-1]
 
-        # 12 primeiros
         self.regions = [
-            min(laser_msg[0:5]),  # Right
-            min(laser_msg[5:10]),  # Front Right
-            min(laser_msg[10:14]),  # Front
-            min(laser_msg[14:19]),  # Front Left
-            min(laser_msg[19:24]),  # Left
+            min(laser_msg[[-4, -5, -6]]),  # Right
+            min(laser_msg[[-2, -3]]),  # Front Right
+            min(laser_msg[[0, -1]]),  # Front
+            min(laser_msg[[1, 2]]),  # Front Left
+            min(laser_msg[[3, 4, 5]]),  # Left
         ]
 
     def get_action(self, state):

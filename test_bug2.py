@@ -50,8 +50,8 @@ while local_episode < config['test_trials']:
         action[0] = np.clip(action[0], action_low[0], action_high[0])
         action[1] = np.clip(action[1], action_low[1], action_high[1])
 
-        print(state)
-        action = [0.0, 0.0]
+        # print(state)
+        # action = [0.0, 0.0]
         next_state, reward, done, info = env.step(action)
         episode_reward += reward
         state =  next_state
