@@ -91,8 +91,9 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
-    while (logs[8] <= config['num_episodes']) if not config['test'] else (logs[8] < config['test_trials']):
+    while (logs[2] < config['test_trials']) if config['test'] else (logs[8] <= config['num_episodes']):
         try:
+            print('-----')
             if not config['test']:
                 step = update_step.value
                 writer.add_scalars(main_tag="data_struct", tag_scalar_dict={"global_episode": global_episode.value,
