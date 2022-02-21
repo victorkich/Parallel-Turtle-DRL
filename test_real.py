@@ -150,7 +150,7 @@ while True:
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
-                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
+                    _, action, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=False)
                 else:
                     action = actor.get_action(np.array(state))
                 action = action.detach().cpu().numpy().flatten()
@@ -196,6 +196,6 @@ while True:
 
         # Save log file
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode{}test3'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}test3_excluir'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
