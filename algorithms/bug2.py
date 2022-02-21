@@ -91,6 +91,7 @@ class BUG2:
     def get_action(self, state):
         self.laser_scan(state[0:-2])
         reg_values = self.regions
+        print("State:", state)
         if self.first:
             self.dist = state[-1]
 
