@@ -31,7 +31,7 @@ time.sleep(1)
 local_episode_list, episode_timing_list, episode_reward_list, position_list = [], [], [], []
 best_reward = -float("inf")
 rewards = []
-while local_episode <= config['test_trials']:
+while local_episode < config['test_trials']:
     episode_reward = 0
     num_steps = 0
     local_episode += 1
