@@ -73,6 +73,9 @@ while local_episode <= config['test_trials']:
 
 # Save log file
 values = [local_episode_list, episode_timing_list, episode_reward_list, position_list]
-with open(path + "/results/BUG2", "wb") as fp:
+save_dir = path + f"/results/BUG2_S{config['env_stage']}"
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+with open(save_dir + "/BUG2", "wb") as fp:
     pickle.dump(values, fp)
 print(f"Agent {n_agent} done.")
