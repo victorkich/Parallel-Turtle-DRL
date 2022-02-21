@@ -11,7 +11,7 @@ class BUG2:
         self.flag_1 = 0
         self.dist = 0.0
         self.first = True
-        self.colission_distance = 0.8
+        self.colission_distance = 0.18 * 3
         self.initial_position = list()
         self.target_position = list()
 
@@ -131,6 +131,7 @@ class BUG2:
                 self.angle_towards_goal(angle=state[-2])
             elif self.flag == 1:
                 self.move(angle=state[-2], distance=state[-1])
+            self.flag_1 = 0
 
         print('self.flag:', self.flag, 'self.flag_1:', self.flag_1)
         return self.action
