@@ -91,7 +91,8 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
-    while (logs[2] < config['test_trials']) if config['test'] else (logs[8] <= config['num_episodes']):
+    print("Starting log...")
+    while (global_episode.value < config['test_trials']) if config['test'] else (logs[8] <= config['num_episodes']):
         try:
             print('-----')
             if not config['test']:
