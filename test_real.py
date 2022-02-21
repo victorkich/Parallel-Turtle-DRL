@@ -58,7 +58,7 @@ def getImage(image):
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
-        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+        lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
         # distance += 0.20
     except:
@@ -96,9 +96,9 @@ while True:
         continue
 
     if algorithm != '7':
-        process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if algorithm == '3' or algorithm == '4' else 'N'}"
+        process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if (algorithm == '3' or algorithm == '4') else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
-        list_dir = "local_episode_2000_reward_200.000000.pt"
+        list_dir = "local_episode_2000_reward_400.000000.pt"
         model_fn = f"{process_dir}/{list_dir}"
         #for i, l in enumerate(list_dir):
         #    print(i, l)
@@ -186,7 +186,7 @@ while True:
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
-        print(f"Agent: [Test] Episode: [{local_episode}/{episodes}] Reward: [{episode_reward}/200] "
+        print(f"Agent: [Test] Episode: [{local_episode}/{episodes}] Reward: [{episode_reward}/20] "
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save log file
