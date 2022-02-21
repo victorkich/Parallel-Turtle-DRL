@@ -84,9 +84,9 @@ class BUG2:
         """
         self.regions = [
             min(laser_msg[[-5, -6]]),  # Right
-            min(laser_msg[[-3, -4]]),  # Front Right
+            min(laser_msg[[-2, -3, -4]]),  # Front Right
             min(laser_msg[[0, -1, -2, 1]]),  # Front
-            min(laser_msg[[2, 3]]),  # Front Left
+            min(laser_msg[[1, 2, 3]]),  # Front Left
             min(laser_msg[[4, 5]]),  # Left
         ]
 
