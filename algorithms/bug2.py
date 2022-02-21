@@ -10,6 +10,7 @@ class BUG2:
         self.flag_1 = 0
         self.dist = 0.0
         self.first = True
+        self.colission_distance = 0.18
 
     def angle_towards_goal(self, angle):
         difference_angle = angle
@@ -22,28 +23,28 @@ class BUG2:
 
     def obstacle_avoidance(self):
         reg_values = self.regions
-        colission_distance = 0.18
 
-        if reg_values[2] > colission_distance and reg_values[3] < colission_distance and reg_values[1] < colission_distance:
+
+        if reg_values[2] > self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.4
             self.action[0] = -0.3 * 3
-        elif reg_values[2] < colission_distance and reg_values[3] < colission_distance and reg_values[1] < colission_distance:
+        elif reg_values[2] < self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[0] = -0.3 * 3
-        elif reg_values[2] < colission_distance and reg_values[3] < colission_distance and reg_values[1] > colission_distance:
+        elif reg_values[2] < self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.2
             self.action[0] = -0.4 * 3
-        elif reg_values[2] < colission_distance and reg_values[3] > colission_distance and reg_values[1] < colission_distance:
+        elif reg_values[2] < self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.2
             self.action[0] = -0.4 * 3
-        elif reg_values[2] > colission_distance and reg_values[3] > colission_distance and reg_values[1] > colission_distance:
+        elif reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.4
             self.action[0] = 0.3 * 3
-        elif reg_values[2] > colission_distance and reg_values[3] < colission_distance and reg_values[1] > colission_distance:
+        elif reg_values[2] > self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.3
             self.action[0] = -0.2 * 3
-        elif reg_values[2] < colission_distance and reg_values[3] > colission_distance and reg_values[1] > colission_distance:
+        elif reg_values[2] < self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[0] = -0.3 * 3
-        elif reg_values[2] > colission_distance and reg_values[3] > colission_distance and reg_values[1] < colission_distance:
+        elif reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.4
 
     def flag_shift(self, f):
@@ -77,13 +78,13 @@ class BUG2:
         if self.first:
             self.dist = state[-2]
 
-        if self.dist < 0.35 and (reg_values[2] > 1 and reg_values[3] > 1 and reg_values[1] > 1):
+        if self.dist < 0.35 and (reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance):
             if self.flag == 0:
                 self.angle_towards_goal(angle=state[-2])
             elif self.flag == 1:
                 self.move(angle=state[-2], distance=state[-1])
 
-        elif self.dist < 0.35 and reg_values[3] < 1:
+        elif self.dist < 0.35 and reg_values[3] < self.colission_distance:
             self.flag_1 = 1
             self.obstacle_avoidance()
 
