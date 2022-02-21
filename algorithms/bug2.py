@@ -64,6 +64,8 @@ class BUG2:
             self.flag_shift(0)
 
     def laser_scan(self, laser_msg):
+
+        # 12 primeiros
         self.regions = [
             min(laser_msg[0:5]),  # Right
             min(laser_msg[5:10]),  # Front Right
