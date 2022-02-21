@@ -98,7 +98,7 @@ while True:
     if algorithm != '7':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if (algorithm == '3' or algorithm == '4') else 'N'}"
         list_dir = sorted(os.listdir(process_dir))
-        list_dir = "local_episode_2000_reward_400.000000.pt"
+        list_dir = "local_episode_1950_reward_400.000000.pt"
         model_fn = f"{process_dir}/{list_dir}"
         #for i, l in enumerate(list_dir):
         #    print(i, l)
