@@ -37,13 +37,13 @@ class BUG2:
             self.action[0] = -0.4 * 4
         elif reg_values[2] < self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.2 / 4
-            self.action[0] = -0.3 * 4  # -0.4
+            self.action[0] = -0.4 * 4  # -0.4
         elif reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance:
-            self.action[1] = 0.2 / 4  # 0.4
+            self.action[1] = 0.4 / 4  # 0.4
             self.action[0] = 0.3 * 4
         elif reg_values[2] > self.colission_distance and reg_values[3] < self.colission_distance and reg_values[1] > self.colission_distance:
-            self.action[1] = 0.2 / 4  # 0.3
-            self.action[0] = -0.3 * 4  # -0.2
+            self.action[1] = 0.3 / 4  # 0.3
+            self.action[0] = -0.2 * 4  # -0.2
         elif reg_values[2] < self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance:
             self.action[1] = 0.0
             self.action[0] = -0.3 * 4
@@ -92,7 +92,7 @@ class BUG2:
         self.laser_scan(state[0:-2])
         reg_values = self.regions
         if self.first:
-            self.dist = state[-2]
+            self.dist = state[-1]
 
         if self.dist < 0.35 and (reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] > self.colission_distance):
             if self.flag == 0:
