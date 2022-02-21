@@ -49,6 +49,7 @@ class BUG2:
             self.action[0] = -0.3 * 4
         elif reg_values[2] > self.colission_distance and reg_values[3] > self.colission_distance and reg_values[1] < self.colission_distance:
             self.action[1] = 0.4 / 4
+            self.action[0] = 0.0
         print('Outra gameplay')
 
     def flag_shift(self, f):
@@ -69,11 +70,8 @@ class BUG2:
             self.flag_shift(0)
 
     def laser_scan(self, laser_msg):
-        # meio_esquerda = laser_msg[1:6]
-        # meio = laser_msg[0]
-        # meio_direita = laser_msg[-6:-1]
         laser_msg = np.array(laser_msg)
-
+        """
         self.regions = [
             min(laser_msg[[3, 4, 5]]),  # Right
             min(laser_msg[[1, 2]]),  # Front Right
@@ -89,8 +87,6 @@ class BUG2:
             min(laser_msg[[1, 2]]),  # Front Left
             min(laser_msg[[3, 4, 5]]),  # Left
         ]
-        """
-
 
     def get_action(self, state):
         self.laser_scan(state[0:-2])
