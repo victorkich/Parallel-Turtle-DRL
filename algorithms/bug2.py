@@ -112,4 +112,6 @@ class BUG2:
                 self.angle_towards_goal(angle=state[-2])
             elif self.flag == 1:
                 self.move(angle=state[-2], distance=state[-1])
+
+        print('self.flag:', self.flag, 'self.flag_1:', self.flag_1)
         return self.action
