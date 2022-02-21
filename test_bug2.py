@@ -52,7 +52,9 @@ while local_episode < config['test_trials']:
 
         # print(state)
         # action = [0.0, 0.0]
-        next_state, reward, done, info = env.step(action)
+        position = env.get_position()
+        target_position = env.get_target_position()
+        next_state, reward, done, info = env.step(action, position, target_position)
         episode_reward += reward
         state =  next_state
 
