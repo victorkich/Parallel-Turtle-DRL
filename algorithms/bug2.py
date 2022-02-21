@@ -26,23 +26,23 @@ class BUG2:
 
         if reg_values[2] > colission_distance and reg_values[3] < colission_distance and reg_values[1] < colission_distance:
             self.action[1] = 0.4
-            self.action[0] = -0.3
+            self.action[0] = -0.3 * 3
         elif reg_values[2] < colission_distance and reg_values[3] < colission_distance and reg_values[1] < colission_distance:
-            self.action[0] = -0.3
+            self.action[0] = -0.3 * 3
         elif reg_values[2] < colission_distance and reg_values[3] < colission_distance and reg_values[1] > colission_distance:
             self.action[1] = 0.2
-            self.action[0] = -0.4
+            self.action[0] = -0.4 * 3
         elif reg_values[2] < colission_distance and reg_values[3] > colission_distance and reg_values[1] < colission_distance:
             self.action[1] = 0.2
-            self.action[0] = -0.4
+            self.action[0] = -0.4 * 3
         elif reg_values[2] > colission_distance and reg_values[3] > colission_distance and reg_values[1] > colission_distance:
             self.action[1] = 0.4
-            self.action[0] = 0.3
+            self.action[0] = 0.3 * 3
         elif reg_values[2] > colission_distance and reg_values[3] < colission_distance and reg_values[1] > colission_distance:
             self.action[1] = 0.3
-            self.action[0] = -0.2
+            self.action[0] = -0.2 * 3
         elif reg_values[2] < colission_distance and reg_values[3] > colission_distance and reg_values[1] > colission_distance:
-            self.action[0] = -0.3
+            self.action[0] = -0.3 * 3
         elif reg_values[2] > colission_distance and reg_values[3] > colission_distance and reg_values[1] < colission_distance:
             self.action[1] = 0.4
 
