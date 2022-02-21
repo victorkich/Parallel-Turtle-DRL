@@ -166,7 +166,7 @@ while True:
             for i in range(len(state[:24])):
                 if state[i] == 0.0:
                     state[i] = 1.0
-            if state[-1] < 0.26:
+            if state[-1] < 0.3:
                 done = True
                 reward = 20
             if 0.1 < min(state[0:24]) < 0.15:
