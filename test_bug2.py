@@ -31,7 +31,7 @@ time.sleep(1)
 local_episode_list, episode_timing_list, episode_reward_list, position_list = [], [], [], []
 best_reward = -float("inf")
 rewards = []
-while local_episode <= config['test_trials']:
+while local_episode < config['test_trials']:
     episode_reward = 0
     num_steps = 0
     local_episode += 1
@@ -45,11 +45,15 @@ while local_episode <= config['test_trials']:
             if state[s] > 2.5:
                 state[s] = 2.5
 
-        action = agent.get_action(state)
-        # print('Action:', action)
+        position = env.get_position()
+        target_position = env.get_target_position()
+        action = agent.get_action(state, position, target_position)
+        print('Action:', action)
         action[0] = np.clip(action[0], action_low[0], action_high[0])
         action[1] = np.clip(action[1], action_low[1], action_high[1])
 
+        # print(state)
+        # action = [0.0, 0.0]
         next_state, reward, done, info = env.step(action)
         episode_reward += reward
         state = next_state
@@ -73,6 +77,9 @@ while local_episode <= config['test_trials']:
 
 # Save log file
 values = [local_episode_list, episode_timing_list, episode_reward_list, position_list]
-with open(path + "/results/BUG2", "wb") as fp:
+save_dir = path + f"/results/BUG2_S{config['env_stage']}"
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+with open(save_dir + "/BUG2", "wb") as fp:
     pickle.dump(values, fp)
 print(f"Agent {n_agent} done.")
