@@ -58,9 +58,9 @@ def getImage(image):
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
-        lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-        #distance += 0.10
+        distance += 0.10
     except:
         pass
 
@@ -97,7 +97,7 @@ while True:
 
     if algorithm != '7':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if (algorithm == '3' or algorithm == '4') else 'N'}"
-        list_dir = sorted(os.listdir(process_dir))
+        # list_dir = sorted(os.listdir(process_dir))
         list_dir = "local_episode_1000_reward_200.000000.pt"
         model_fn = f"{process_dir}/{list_dir}"
         #for i, l in enumerate(list_dir):
@@ -150,7 +150,7 @@ while True:
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
-                    _, action, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=False)
+                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
                 else:
                     action = actor.get_action(np.array(state))
                 action = action.detach().cpu().numpy().flatten()
@@ -160,7 +160,7 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] /= 3
+            action[0] /= 2
             # action[1] /= 1.2
             _, _, _, _ = env_real.step(action=action)
             done = False
