@@ -91,7 +91,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
-    while logs[8] <= config['num_episodes'] if not config['test'] else logs[8] < 100:
+    while (logs[8] <= config['num_episodes']) if not config['test'] else (logs[8] < config['test_trials']):
         try:
             if not config['test']:
                 step = update_step.value
@@ -124,6 +124,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
+    print("Writer closed!")
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
