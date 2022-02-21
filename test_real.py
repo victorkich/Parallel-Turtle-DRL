@@ -58,7 +58,7 @@ def getImage(image):
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
-        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+        lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
         #distance += 0.10
     except:
@@ -160,7 +160,7 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            # action[0] /= 2
+            action[0] /= 3
             # action[1] /= 1.2
             _, _, _, _ = env_real.step(action=action)
             done = False
