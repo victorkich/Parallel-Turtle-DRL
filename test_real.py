@@ -159,7 +159,7 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            # action[0] /= 2
+            action[0] /= 2
             # action[1] /= 1.2
             _, _, _, _ = env_real.step(action=action)
             done = False
