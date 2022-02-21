@@ -67,7 +67,7 @@ class Agent(object):
 
         best_reward = -float("inf")
         rewards = []
-        while self.local_episode <= self.config['num_episodes'] if not self.config['test'] else self.config['test_trials']:
+        while (self.local_episode <= self.config['num_episodes']) if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
