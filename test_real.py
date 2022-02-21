@@ -146,7 +146,7 @@ while True:
 
             print('State:', state)
             # state[:24] = list(reversed(state[:24]))
-            state[-2] = -state[-2]
+            # state[-2] = -state[-2]
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
@@ -196,6 +196,6 @@ while True:
 
         # Save log file
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode{}test2'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}test3'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
