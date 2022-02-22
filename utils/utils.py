@@ -510,7 +510,7 @@ def test_goals(t):
     elif t >= 75:
         return [3.5, -3.5]
 """
-"""
+
 def test_goals(t):
     if t < 25:
         return [-1.5, -1.5]
@@ -521,7 +521,7 @@ def test_goals(t):
     elif t >= 75:
         return [1.5, 1.5]
 
-"""
+
 """
 def test_goals(t):
     if t < 2:
@@ -534,6 +534,7 @@ def test_goals(t):
         return [1.5, 1.5]
 
 """
+"""
 def test_goals(t):
     if t < 2:
         return [1.5, -1.5]  # return [1.5, -1.5] [2.5, -2.0]
@@ -543,4 +544,4 @@ def test_goals(t):
         return [0.5, -3.5]
     elif t >= 4:
         return [3.5, -3.5]
-
+"""
