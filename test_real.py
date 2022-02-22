@@ -20,14 +20,14 @@ import gym
 import cv2
 import os
 
-TURTLE = '004'
+TURTLE = '003'
 bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
 
 # Hyper parameters
-episodes = 12
+episodes = 50
 max_steps = 500
 action_low = [-1.5, -0.1]
 action_high = [1.5, 0.12]
@@ -58,9 +58,9 @@ def getImage(image):
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
-        lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
-        distance += 0.20
+        distance += 0.10
     except:
         pass
 
@@ -96,9 +96,9 @@ while True:
         continue
 
     if algorithm != '7':
-        process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if algorithm == '3' or algorithm == '4' else 'N'}"
-        list_dir = sorted(os.listdir(process_dir))
-        list_dir = "local_episode_1800_reward_200.000000.pt"
+        process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if (algorithm == '3' or algorithm == '4') else 'N'}"
+        # list_dir = sorted(os.listdir(process_dir))
+        list_dir = "local_episode_1000_reward_200.000000.pt"
         model_fn = f"{process_dir}/{list_dir}"
         #for i, l in enumerate(list_dir):
         #    print(i, l)
@@ -143,9 +143,10 @@ while True:
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
-            print('State:', state)
 
+            print('State:', state)
             # state[:24] = list(reversed(state[:24]))
+            # state[-2] = -state[-2]
 
             if algorithm != '7':
                 if algorithm == '2' or algorithm == '4':
@@ -153,20 +154,24 @@ while True:
                 else:
                     action = actor.get_action(np.array(state))
                 action = action.detach().cpu().numpy().flatten()
-                action[0] = np.clip(action[0], action_low[0], action_high[0])
-                action[1] = np.clip(action[1], action_low[1], action_high[1])
             else:
                 action = b2.get_action(state)
+            action[0] = np.clip(action[0], action_low[0], action_high[0])
+            action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] /= 3
+            # action[0] /= 2
+            # action[1] /= 1.2
             _, _, _, _ = env_real.step(action=action)
             done = False
             reward = 0
-            if state[-1] < 0.24:
+            for i in range(len(state[:24])):
+                if state[i] == 0.0:
+                    state[i] = 1.0
+            if state[-1] < 0.3:
                 done = True
                 reward = 20
-            if 0.1 < min(state[0:24]) < 0.2:
+            if 0.1 < min(state[0:24]) < 0.14:
                 done = True
                 reward = -200
             episode_reward += reward
@@ -186,7 +191,7 @@ while True:
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
-        print(f"Agent: [Test] Episode: [{local_episode}/{episodes}] Reward: [{episode_reward}/200] "
+        print(f"Agent: [Test] Episode: [{local_episode}/{episodes}] Reward: [{episode_reward}/20] "
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save log file
