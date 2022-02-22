@@ -20,7 +20,7 @@ import gym
 import cv2
 import os
 
-TURTLE = '002'
+TURTLE = '003'
 bridge = CvBridge()
 state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -196,6 +196,6 @@ while True:
 
         # Save log file
         values = [episode_reward, episode_timing, local_episode, num_steps, real_ttb.pts, lidar_list]
-        with open(path_results + '/{}_{}_S{}_episode{}_test2'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
+        with open(path_results + '/{}_{}_S{}_episode{}_test3'.format(translator[int(algorithm)][0], translator[int(algorithm)][1], env, local_episode), "wb") as fp:
             pickle.dump(values, fp)
     print('Episode done!')
