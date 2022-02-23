@@ -39,6 +39,7 @@ while local_episode < config['test_trials']:
     goal = [test_goals(local_episode)]
     print("New Goal:", goal)
     state = env.reset(new_random_goals=False, goal=goal)
+    agent.reset()
     done = False
     while not done:
         for s in range(len(state)):
