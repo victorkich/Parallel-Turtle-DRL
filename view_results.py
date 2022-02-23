@@ -20,7 +20,7 @@ for dir in list_dir:
 sorted_dir = sorted(splitted_dir, key=lambda row: row[1] if row[0] == 'BUG2' else row[3])
 print('Dir:', sorted_dir)
 
-sorted_dir = sorted_dir[11:]
+sorted_dir = sorted_dir[10:]
 
 for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     with open(path+'/results/'+'_'.join(directory)+'/writer_data.json') as f:
@@ -96,8 +96,8 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     for x, y in zip(new_x, new_y):
         x = np.array(x)
         y = np.array(y)
-        x -= 0.15
-        y += 0.25
+        x -= 0.25
+        y += 0.15
         plt.plot(x, y, color=color[name], linestyle='-', linewidth=1)
 
     plt.title('Path ' + name, size=20)
