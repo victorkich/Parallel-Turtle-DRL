@@ -20,7 +20,7 @@ for dir in list_dir:
 sorted_dir = sorted(splitted_dir, key=lambda row: row[1] if row[0] == 'BUG2' else row[3])
 print('Dir:', sorted_dir)
 
-sorted_dir = sorted_dir[10:]
+sorted_dir = sorted_dir[8:]
 
 for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     with open(path+'/results/'+'_'.join(directory)+'/writer_data.json') as f:
@@ -80,8 +80,6 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     x = pd.DataFrame(data['agent_0/x']).iloc[:, 2].to_numpy().tolist()
     y = pd.DataFrame(data['agent_0/y']).iloc[:, 2].to_numpy().tolist()
 
-    #plt.imshow(stage[sel[c]], extent=[min(x) - 0.7, max(x) + 0.7, min(y) - 0.7, max(y) + 0.7] if
-    #           sel[c] <= 1 else [min(x) - 0.95, max(x) + 0.95, min(y) - 0.95, max(y) + 0.95])
     plt.imshow(stage[sel[c]], extent=[min(x) - 0.7, max(x) + 0.7, min(y) - 0.7, max(y) + 0.7])
 
     new_x = list()
@@ -96,14 +94,11 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     for x, y in zip(new_x, new_y):
         x = np.array(x)
         y = np.array(y)
-        x -= 0.25
+        x -= 0.2
         y += 0.15
         plt.plot(x, y, color=color[name], linestyle='-', linewidth=1)
 
     plt.title('Path ' + name, size=20)
     plt.xlabel('Meters')
     plt.ylabel('Meters')
-    #plt.xlim([-1.1, 3.1])
-    #plt.ylim([-1.1, 3.1])
-    # plt.savefig("{}.pdf".format(directory[0]), format="pdf", bbox_inches="tight")
     plt.show()
