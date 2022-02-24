@@ -1,6 +1,6 @@
 # Environment parameters
 env_name: TurtleBot3_Circuit_Simple-v0
-env_stage: 1  # gazebo turtlebot3 stage number
+env_stage: u  # gazebo turtlebot3 stage number
 seed: 1
 random_seed: 2022
 num_agents: 5
