@@ -1,6 +1,6 @@
 # Environment parameters
 env_name: TurtleBot3_Circuit_Simple-v0
-env_stage: u  # gazebo turtlebot3 stage number
+env_stage: 2  # gazebo turtlebot3 stage number
 seed: 1
 random_seed: 2022
 num_agents: 5
@@ -11,7 +11,7 @@ max_action: 1.5
 # Training parameters
 model: PDSRL
 batch_size: 256
-num_episodes: 2000
+num_episodes: 500
 num_steps_train: 10000000  # number of episodes from all agents
 max_ep_length: 500  # maximum number of steps per episode
 replay_mem_size: 100000  # maximum capacity of replay memory
@@ -56,4 +56,4 @@ save_buffer: 0
 results_path: results
 test: 0
 test_real: 0
-test_trials: 100
+test_trials: 4
