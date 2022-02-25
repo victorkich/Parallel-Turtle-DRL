@@ -56,28 +56,28 @@ Note: depending on the speed of your internet connection this can take a long ti
 </p>
 
 <p align="center"> 
-  <img src="media/networks.png" alt="Approaches Scheme" width="800"/>
+  <img src="media/Networks.png" alt="Approaches Scheme" width="800"/>
 </p>
 
 ## Results
 
 <p align="center"> 
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
-  <img src="media/img1.png" alt="img1" width="300"/>
+  <img src="media/PDDRL_S1_N_SIM.png" alt="PDDRL_S1_N_SIM" width="200"/>
+  <img src="media/PDSRL_S1_N_SIM.png" alt="PDSRL_S1_N_SIM" width="200"/>
+  <img src="media/PDDRL_S1_P_SIM.png" alt="PDDRL_S1_P_SIM" width="200"/>
+  <img src="media/PDSRL_S1_P_SIM.png" alt="PDSRL_S1_P_SIM" width="200"/>
+  <img src="media/PDDRL_S2_N_SIM.png" alt="PDDRL_S2_N_SIM" width="200"/>
+  <img src="media/PDSRL_S2_N_SIM.png" alt="PDSRL_S2_N_SIM" width="200"/>
+  <img src="media/PDDRL_S2_P_SIM.png" alt="PDDRL_S2_P_SIM" width="200"/>
+  <img src="media/PDSRL_S2_P_SIM.png" alt="PDSRL_S2_P_SIM" width="200"/>
+  <img src="media/PDDRL_S3_N_SIM.png" alt="PDDRL_S3_N_SIM" width="200"/>
+  <img src="media/PDSRL_S3_N_SIM.png" alt="PDSRL_S3_N_SIM" width="200"/>
+  <img src="media/PDDRL_S3_P_SIM.png" alt="PDDRL_S3_P_SIM" width="200"/>
+  <img src="media/PDSRL_S3_P_SIM.png" alt="PDSRL_S3_P_SIM" width="200"/>
+  <img src="media/PDDRL_S4_N_SIM.png" alt="PDDRL_S4_N_SIM" width="200"/>
+  <img src="media/PDSRL_S4_N_SIM.png" alt="PDSRL_S4_N_SIM" width="200"/>
+  <img src="media/PDDRL_S4_P_SIM.png" alt="PDDRL_S4_P_SIM" width="200"/>
+  <img src="media/PDSRL_S4_P_SIM.png" alt="PDSRL_S4_P_SIM" width="200"/>
 </p>
 
 See more about the results in the [YouTube video](https://www.youtube.com/).
