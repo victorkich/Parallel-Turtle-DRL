@@ -11,7 +11,17 @@ class BUG2:
         self.flag_1 = 0
         self.dist = 0.0
         self.first = True
-        self.colission_distance = 0.21 * 2
+        self.colission_distance = 0.18 * 3
+
+    def reset(self):
+        self.regions = [0, 0, 0, 0, 0]
+        self.flag = 0
+        self.pose_flag = 0
+        self.action = [0.0, 0.0]
+        self.flag_1 = 0
+        self.dist = 0.0
+        self.first = True
+        self.colission_distance = 0.18 * 3
 
     def angle_towards_goal(self, angle):
         difference_angle = angle
