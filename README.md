@@ -41,7 +41,7 @@ pip3 install -r requirements.txt
 python3 train.py
 ```
 
-We strongly recommend using the package with the pre-configured docker image. Don't forget to use the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker">nvidia container toolkit</a>  to enable GPU usage within docker. 
+We strongly recommend using the package with the pre-configured <a href="https://github.com/victorkich/Parallel-Turtle-DRL/pkgs/container/ros">docker image</a>. Don't forget to use the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker">nvidia container toolkit</a>  to enable GPU usage within docker. 
 Inside the docker image, just use the following command to download and install the data from the training and evaluation repositories: 
 
 ```shell
