@@ -57,7 +57,7 @@ Note: depending on the speed of your internet connection this can take a long ti
 
 <p align="center"> 
   <img src="media/Networks.png#gh-light-mode-only" alt="Approaches Scheme" width="800"/>
-  <img src="media/NetworksB.png#gh-dark-mode-only" alt="Approaches Scheme" width="800"/>
+  <img src="media/NetworksDark.png#gh-dark-mode-only" alt="Approaches Scheme" width="800"/>
 </p>
 
 ## Results
