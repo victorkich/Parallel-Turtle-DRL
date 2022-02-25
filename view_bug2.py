@@ -72,13 +72,13 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
             last = i+1
 
     for x, y in zip(new_x, new_y):
-        x = x[5:-5]
-        y = y[5:-5]
-        x, y = antispike(x, y)
+        #x = x[5:-5]
+        #y = y[5:-5]
+        #x, y = antispike(x, y)
         x = np.array(x)
         y = np.array(y)
-        x -= 0.3
-        y += 0.2
+        x -= 0.2
+        y += 0.15
         plt.plot(x, y, color='gold', linestyle='-', linewidth=1)
 
     plt.title('Path ' + name, size=20)
