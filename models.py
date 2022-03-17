@@ -77,16 +77,8 @@ class PolicyNetwork(nn.Module):
                 batch_size, obs_size = state.size()
 
             state = pad_sequence(state)
-            print(state.shape)
-            lenghts = torch.Tensor([seq_size for _ in range(batch_size)])
             state = state.view(-1, seq_size, obs_size)
-            print(state.shape)
-            state = pack_padded_sequence(input=state, lengths=lenghts, batch_first=True, enforce_sorted=False).data
-            print(state.shape)
             x, _ = self.lstm(state)
-            print(x.shape)
-            x, _ = pad_packed_sequence(x, batch_first=True)
-            print(x.shape)
             x = torch.tanh(x)
             x = torch.tanh(self.linear1(x))
         else:
