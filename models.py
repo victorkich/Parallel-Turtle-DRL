@@ -1,5 +1,6 @@
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from utils.utils import hidden_init, TanhNormal, fanin_init
+from torch.nn.utils.rnn import pad_sequence
 from torch.distributions import Normal
 import torch.nn.functional as F
 import torch.nn as nn
@@ -75,7 +76,9 @@ class PolicyNetwork(nn.Module):
                 seq_size = 1
                 batch_size, obs = state.size()
 
-            state = pack_padded_sequence(state, lengths=torch.Tensor(32, dtype=torch.int64), batch_first=True, enforce_sorted=False)
+            state = pad_sequence(state)
+            lenghts = torch.Tensor([seq_size for _ in range(batch_size)])
+            state = pack_padded_sequence(input=state, lengths=lenghts, batch_first=True, enforce_sorted=False)
             x, _ = self.lstm(state)
             x, _ = pad_packed_sequence(x, batch_first=True)
             x = torch.tanh(x)
