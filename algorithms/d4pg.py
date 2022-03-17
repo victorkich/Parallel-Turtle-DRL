@@ -115,7 +115,7 @@ class LearnerD4PG(object):
         # -------- Update actor -----------
         policy_loss = self.value_net.get_probs(state, self.policy_net(state))
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
-        policy_loss = torch.sum(policy_loss, dim=1)
+        policy_loss = torch.sum(policy_loss, dim=2)
         policy_loss = -policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
