@@ -85,7 +85,7 @@ class LearnerD4PG(object):
         target_z_projected = _l2_project(next_distr_v=target_value.view(-1, 51),
                                          rewards_v=reward.view(-1, 1),
                                          dones_mask_t=done.view(-1, 1),
-                                         gamma=(self.gamma ** self.n_step_return).view(-1, 1),
+                                         gamma=self.gamma ** self.n_step_return,
                                          n_atoms=self.num_atoms,
                                          v_min=self.v_min,
                                          v_max=self.v_max,
