@@ -128,6 +128,7 @@ class Agent(object):
                                     sequence_replay_buffer = []
                                 else:
                                     replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
+                                print('Sequence replay buffer:', len(sequence_replay_buffer))
                             except:
                                 pass
 
@@ -149,6 +150,7 @@ class Agent(object):
                                         replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
                                     else:
                                         replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
+                                    print('Sequence replay buffer:', len(sequence_replay_buffer))
                                 except:
                                     pass
                     break
