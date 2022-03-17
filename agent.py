@@ -67,8 +67,7 @@ class Agent(object):
 
         best_reward = -float("inf")
         rewards = []
-        if self.config['recurrent_policy']:
-            sequence_replay_buffer = []
+
         while (self.local_episode <= self.config['num_episodes']) if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
             episode_reward = 0
             num_steps = 0
@@ -83,6 +82,8 @@ class Agent(object):
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
             done = False
+            if self.config['recurrent_policy']:
+                sequence_replay_buffer = []
             while not done:
                 for s in range(len(state)):
                     if state[s] > 2.5:
@@ -143,11 +144,8 @@ class Agent(object):
                                 gamma *= self.config['discount_rate']
                             if self.agent_type == "exploration":
                                 try:
-                                    if self.config['recurrent_policy'] and len(sequence_replay_buffer) < self.config['sequence_size']:
-                                        sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma])
-                                    elif self.config['recurrent_policy']:
+                                    if self.config['recurrent_policy']:
                                         replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
-                                        sequence_replay_buffer = []
                                     else:
                                         replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
                                 except:
