@@ -52,7 +52,7 @@ class LearnerD4PG(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        print('Batch shape:', batch.shape)
+        print('Batch shape:', len(batch))
         print('Batch:', batch)
 
         state, action, reward, next_state, done, gamma, weights, inds = batch
