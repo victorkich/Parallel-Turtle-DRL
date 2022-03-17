@@ -109,7 +109,7 @@ class Agent(object):
 
                     # We need at least N steps in the experience buffer before we can compute Bellman
                     # rewards and add an N-step experience to replay memory
-                    if len(self.exp_buffer) >= (self.config['n_step_return'] if not self.config['recurrent_policy'] else self.config['recurrent_size']):
+                    if len(self.exp_buffer) >= (self.config['n_step_return'] if not self.config['recurrent_policy'] else self.config['sequence_size']):
                         state_0, action_0, reward_0 = self.exp_buffer.popleft()
                         discounted_reward = reward_0
                         gamma = self.config['discount_rate']
