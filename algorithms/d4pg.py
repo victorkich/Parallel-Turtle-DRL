@@ -81,6 +81,9 @@ class LearnerD4PG(object):
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
 
         print('Target value:', target_value.view(-1, 51).shape)
+        print('Reward:', reward.view(-1, 1).shape)
+        print('Done:', done.view(-1, 1).shape)
+
         # Get projected distribution
         target_z_projected = _l2_project(next_distr_v=target_value.view(-1, 51).squeeze(),
                                          rewards_v=reward.view(-1, 1),
