@@ -162,8 +162,8 @@ class ReplayBuffer(object):
             obses_tp1.append(np.array(obs_tp1, copy=False))
             dones.append(done)
             gammas.append(gamma)
-        return [np.array(obses_t), np.array(actions), np.array(rewards), np.array(obses_tp1), np.array(dones), np.array(
-            gammas)]
+        return [np.array(obses_t, dtype=np.float32), np.array(actions, dtype=np.float32), np.array(rewards, dtype=np.float32),
+                np.array(obses_tp1, dtype=np.float32), np.array(dones, dtype=np.bool), np.array(gammas, dtype=np.float32)]
 
     def sample(self, batch_size, **kwags):
         """Sample a batch of experiences.
