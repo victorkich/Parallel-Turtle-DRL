@@ -71,18 +71,15 @@ class PolicyNetwork(nn.Module):
     def forward(self, state):
         if self.recurrent:
             if len(state.size()) == 3:
-                batch_size, seq_size, _ = state.size()
+                batch_size, seq_size, obs_size = state.size()
             else:
                 seq_size = 1
-                batch_size, obs = state.size()
+                batch_size, obs_size = state.size()
 
-            print(state.shape)
-            print(state)
-            #state = pad_sequence(state)
+            state = pad_sequence(state)
             lenghts = torch.Tensor([seq_size for _ in range(batch_size)])
-            print('State 1:', state.shape)
+            state = state.view(-1, seq_size, obs_size)
             state = pack_padded_sequence(input=state, lengths=lenghts, batch_first=True, enforce_sorted=False).data
-            print('State 2:', state.shape)
             x, _ = self.lstm(state)
             x, _ = pad_packed_sequence(x, batch_first=True)
             x = torch.tanh(x)
