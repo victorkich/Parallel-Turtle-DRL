@@ -41,7 +41,7 @@ class ValueNetwork(nn.Module):
         return x
 
     def get_probs(self, state, action):
-        return torch.softmax(self.forward(state, action), dim=1)
+        return torch.softmax(self.forward(state, action), dim=2)
 
 
 class PolicyNetwork(nn.Module):
