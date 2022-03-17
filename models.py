@@ -75,6 +75,7 @@ class PolicyNetwork(nn.Module):
                 batch_size, obs = state.size()
 
             x, _ = self.lstm(state)
+            x = torch.tanh(x)
             x = torch.tanh(self.linear1(x))
         else:
             x = torch.relu(self.linear1(state))
