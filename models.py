@@ -75,7 +75,7 @@ class PolicyNetwork(nn.Module):
                 seq_size = 1
                 batch_size, obs = state.size()
 
-            state = pack_padded_sequence(state, lengths=torch.Tensor([32], dtype=torch.int64), batch_first=True, enforce_sorted=False)
+            state = pack_padded_sequence(state, lengths=torch.Tensor(32, dtype=torch.int64), batch_first=True, enforce_sorted=False)
             x, _ = self.lstm(state)
             x, _ = pad_packed_sequence(x, batch_first=True)
             x = torch.tanh(x)
