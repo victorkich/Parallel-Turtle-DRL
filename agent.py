@@ -81,6 +81,8 @@ class Agent(object):
                 self.exp_buffer.clear()
                 self.ou_noise.reset()
             done = False
+            # if self.config['recurrent_policy']:
+            #    sequence_replay_buffer = []
             while not done:
                 for s in range(len(state)):
                     if state[s] > 2.5:
@@ -107,7 +109,7 @@ class Agent(object):
 
                     # We need at least N steps in the experience buffer before we can compute Bellman
                     # rewards and add an N-step experience to replay memory
-                    if len(self.exp_buffer) >= self.config['n_step_return']:
+                    if len(self.exp_buffer) >= (self.config['n_step_return'] if not self.config['recurrent_policy'] else self.config['recurrent_size']):
                         state_0, action_0, reward_0 = self.exp_buffer.popleft()
                         discounted_reward = reward_0
                         gamma = self.config['discount_rate']
@@ -117,6 +119,12 @@ class Agent(object):
                         # We want to fill buffer only with form explorator
                         if self.agent_type == "exploration":
                             try:
+                                # if self.config['recurrent_policy'] and len(sequence_replay_buffer) < 32:
+                                #    sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma])
+                                # elif self.config['recurrent_policy']:
+                                #    replay_queue.put_nowait(sequence_replay_buffer)
+                                #    sequence_replay_buffer = []
+                                # else:
                                 replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
                             except:
                                 pass
@@ -135,7 +143,11 @@ class Agent(object):
                                 gamma *= self.config['discount_rate']
                             if self.agent_type == "exploration":
                                 try:
-                                    replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done,
+                                    if self.config['recurrent_policy']:
+                                        sequence_replay_buffer.append(
+                                            [state_0, action_0, discounted_reward, next_state, done, gamma])
+                                    else:
+                                        replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done,
                                                              gamma])
                                 except:
                                     pass

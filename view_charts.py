@@ -47,22 +47,16 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
         data = json.load(f)
 
     print('Directory:', directory)
-    if directory[0] == 'PDSRL' and directory[3] == 'Sl' and directory[4] == 'N':
-        print('Data:', data[2]['y'])
-        print('------------------------------------------------')
-        print('Data Full:', data)
-        rewards = data[1]['y']
-    else:
-        key_list = list(data.keys())
-        new_key_list = ["/".join(key.split('/')[-2:]) for key in key_list]
+    key_list = list(data.keys())
+    new_key_list = ["/".join(key.split('/')[-2:]) for key in key_list]
 
-        for i, key in enumerate(key_list):
-            data[new_key_list[i]] = data.pop(key)
+    for i, key in enumerate(key_list):
+        data[new_key_list[i]] = data.pop(key)
 
-        # print(data)
-        rewards = pd.DataFrame(data['agent_0/reward']).iloc[:, 2].to_numpy()
-        rewards = np.array([200 if reward >= 200 else reward for reward in rewards])
-        # steps = pd.DataFrame(data['data_struct/global_step']).iloc[:, 2].to_numpy()
+    # print(data)
+    rewards = pd.DataFrame(data['agent_0/reward']).iloc[:, 2].to_numpy()
+    rewards = np.array([200 if reward >= 200 else reward for reward in rewards])
+    # steps = pd.DataFrame(data['data_struct/global_step']).iloc[:, 2].to_numpy()
     episodes = np.arange(len(rewards))
     means = lfilter(b, a, rewards)
     _, stds = mfilter(rewards, n)

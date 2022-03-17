@@ -45,7 +45,7 @@ class ValueNetwork(nn.Module):
 class PolicyNetwork(nn.Module):
     """Actor - return action value given states. """
 
-    def __init__(self, num_states, num_actions, hidden_size, device='cuda'):
+    def __init__(self, num_states, num_actions, hidden_size, device='cuda', recurrent=False):
         """
         Args:
             num_states (int): state dimension
@@ -54,17 +54,32 @@ class PolicyNetwork(nn.Module):
         """
         super(PolicyNetwork, self).__init__()
         self.device = device
+        self.recurrent = recurrent
 
-        self.linear1 = nn.Linear(num_states, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, hidden_size)
-        self.linear3 = nn.Linear(hidden_size, num_actions)
+        if recurrent:
+            self.lstm = nn.LSTM(input_size=26, hidden_size=256, num_layers=32, batch_first=True)
+            self.linear1 = nn.Linear(hidden_size, num_actions)
+        else:
+            self.linear1 = nn.Linear(num_states, hidden_size)
+            self.linear2 = nn.Linear(hidden_size, hidden_size)
+            self.linear3 = nn.Linear(hidden_size, num_actions)
 
         self.to(device)
 
     def forward(self, state):
-        x = torch.relu(self.linear1(state))
-        x = torch.relu(self.linear2(x))
-        x = torch.tanh(self.linear3(x))
+        if self.recurrent:
+            if len(state.size()) == 3:
+                batch_size, seq_size, _ = state.size()
+            else:
+                seq_size = 1
+                batch_size, _, obs = state.size()
+
+            x, _ = self.lstm(state)
+            x = torch.tanh(self.linear1(x))
+        else:
+            x = torch.relu(self.linear1(state))
+            x = torch.relu(self.linear2(x))
+            x = torch.tanh(self.linear3(x))
         return x
 
     def to(self, device):
