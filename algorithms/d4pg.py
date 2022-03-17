@@ -145,6 +145,7 @@ class LearnerD4PG(object):
                 time.sleep(0.01)
                 continue
 
+            print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
             self._update_step(batch, replay_priority_queue, update_step, logs)
             with update_step.get_lock():
                 update_step.value += 1
