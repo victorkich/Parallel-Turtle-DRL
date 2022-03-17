@@ -92,8 +92,6 @@ class LearnerD4PG(object):
 
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(batch_size, -1, 51)
 
-        print(target_value == target_value.view(-1, 51).view(batch_size, -1, 51))
-
         critic_value = self.value_net.get_probs(state, action)
         critic_value = critic_value.to(self.device)
 
