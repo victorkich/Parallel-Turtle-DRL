@@ -77,7 +77,8 @@ class LearnerD4PG(object):
 
         # Predict Z distribution with target value network
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
-
+        # [256, 32, 8]
+        print('Target value:', target_value.shape)
         # Get projected distribution
         target_z_projected = _l2_project(next_distr_v=target_value,
                                          rewards_v=reward,
