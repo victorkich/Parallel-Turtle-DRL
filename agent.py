@@ -125,6 +125,7 @@ class Agent(object):
                                 #    replay_queue.put_nowait(sequence_replay_buffer)
                                 #    sequence_replay_buffer = []
                                 # else:
+                                print(len(state_0))
                                 replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
                             except:
                                 pass
