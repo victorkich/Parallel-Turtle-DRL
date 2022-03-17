@@ -31,7 +31,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
     if config['recurrent_policy']:
-        batch_size = config['batch_size'] / config['sequence_size']
+        batch_size = int(config['batch_size'] / config['sequence_size'])
     else:
         batch_size = config['batch_size']
 
