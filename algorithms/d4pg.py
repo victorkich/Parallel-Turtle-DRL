@@ -80,10 +80,6 @@ class LearnerD4PG(object):
         # Predict Z distribution with target value network
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
 
-        print('Target value:', target_value.view(-1, 51).shape)
-        print('Reward:', reward.view(-1, 1).shape)
-        print('Done:', done.view(-1, 1).shape)
-
         # Get projected distribution
         target_z_projected = _l2_project(next_distr_v=target_value.view(-1, 51),
                                          rewards_v=reward.view(-1, 1).squeeze(),
@@ -95,6 +91,8 @@ class LearnerD4PG(object):
                                          delta_z=self.delta_z)
 
         target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(batch_size, -1, 51)
+
+        print(target_value == target_value.view(-1, 51).view(batch_size, -1, 51))
 
         critic_value = self.value_net.get_probs(state, action)
         critic_value = critic_value.to(self.device)
@@ -155,7 +153,6 @@ class LearnerD4PG(object):
                 time.sleep(0.01)
                 continue
 
-            print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
             self._update_step(batch, replay_priority_queue, update_step, logs)
             with update_step.get_lock():
                 update_step.value += 1
