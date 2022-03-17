@@ -77,6 +77,7 @@ class PolicyNetwork(nn.Module):
                 batch_size, obs = state.size()
 
             print(state.shape)
+            print(state)
             #state = pad_sequence(state)
             lenghts = torch.Tensor([seq_size for _ in range(batch_size)])
             print('State 1:', state.shape)
