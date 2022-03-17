@@ -52,10 +52,12 @@ class LearnerD4PG(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        print('Batch shape:', len(batch))
-        print('Batch:', batch)
-
         state, action, reward, next_state, done, gamma, weights, inds = batch
+
+        if self.config['recurrent_policy']:
+            batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
+        else:
+            batch_size = self.config['batch_size']
 
         state = np.asarray(state)
         action = np.asarray(action)
@@ -77,18 +79,19 @@ class LearnerD4PG(object):
 
         # Predict Z distribution with target value network
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
-        # [256, 32, 8]
+
         print('Target value:', target_value.shape)
         # Get projected distribution
-        target_z_projected = _l2_project(next_distr_v=target_value,
-                                         rewards_v=reward,
-                                         dones_mask_t=done,
-                                         gamma=self.gamma ** self.n_step_return,
+        target_z_projected = _l2_project(next_distr_v=target_value.view(-1, 51),
+                                         rewards_v=reward.view(-1, 1),
+                                         dones_mask_t=done.view(-1, 1),
+                                         gamma=(self.gamma ** self.n_step_return).view(-1, 1),
                                          n_atoms=self.num_atoms,
                                          v_min=self.v_min,
                                          v_max=self.v_max,
                                          delta_z=self.delta_z)
-        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device)
+
+        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(batch_size, -1, 51)
 
         critic_value = self.value_net.get_probs(state, action)
         critic_value = critic_value.to(self.device)

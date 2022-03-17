@@ -121,7 +121,7 @@ class Agent(object):
                         # We want to fill buffer only with form explorator
                         if self.agent_type == "exploration":
                             try:
-                                if self.config['recurrent_policy'] and len(sequence_replay_buffer) < (self.config['sequence_size'] - 1):
+                                if self.config['recurrent_policy'] and len(sequence_replay_buffer) < self.config['sequence_size']:
                                     sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma])
                                 elif self.config['recurrent_policy']:
                                     replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
