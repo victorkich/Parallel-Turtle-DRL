@@ -36,6 +36,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         batch_size = config['batch_size']
 
     while training_on.value:
+        print('Len replay buffer:', len(replay_buffer))
         # (1) Transfer replays to global buffer
         time.sleep(0.1)
         n = replay_queue.qsize()
