@@ -9,6 +9,7 @@ import torch
 import time
 import gym
 import os
+gym.logger.set_level(40)
 
 
 class Agent(object):
