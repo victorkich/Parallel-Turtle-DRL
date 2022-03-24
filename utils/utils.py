@@ -329,7 +329,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
 
 def create_replay_buffer(config, save_dir):
-    size = config['replay_mem_size']
+    size = config['replay_mem_size'] if not config['recurrent_policy'] else int(config['replay_mem_size'] / config['sequence_size'])
     if config['replay_memory_prioritized']:
         alpha = config['priority_alpha']
         return PrioritizedReplayBuffer(size=size, alpha=alpha, save_dir=save_dir)
