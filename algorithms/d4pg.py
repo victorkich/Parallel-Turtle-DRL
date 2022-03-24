@@ -96,6 +96,7 @@ class LearnerD4PG(object):
         critic_value = critic_value.to(self.device)
 
         value_loss = self.value_criterion(critic_value, target_z_projected)
+        print('Value loss:', value_loss)
         value_loss = value_loss.mean(axis=2)
 
         # Update priorities in buffer
@@ -115,6 +116,7 @@ class LearnerD4PG(object):
         # -------- Update actor -----------
         policy_loss = self.value_net.get_probs(state, self.policy_net(state))
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
+        print("Policy loss:", policy_loss)
         policy_loss = torch.sum(policy_loss, dim=2)
         policy_loss = -policy_loss.mean()
 

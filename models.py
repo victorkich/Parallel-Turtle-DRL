@@ -1,4 +1,3 @@
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from utils.utils import hidden_init, TanhNormal, fanin_init
 from torch.nn.utils.rnn import pad_sequence
 from torch.distributions import Normal
