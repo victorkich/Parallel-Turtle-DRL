@@ -68,15 +68,16 @@ class PolicyNetwork(nn.Module):
 
         self.to(device)
 
-    def forward(self, state, hxs=None):
+    def forward(self, state, h_0=None, c_0=None):
         if self.recurrent:
             if len(state.size()) == 3:
                 batch_size, seq_size, obs_size = state.size()
-                hxs = hxs.view(batch_size, seq_size, -1)
+
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
 
+            hxs = (h_0, c_0)
             state = pad_sequence(state, batch_first=True)
             state = state.view(batch_size, seq_size, obs_size)
             print('State:', state)
