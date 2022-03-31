@@ -1,5 +1,4 @@
 from utils.utils import hidden_init, TanhNormal, fanin_init
-from torch.nn.utils.rnn import pad_sequence
 from torch.distributions import Normal
 import torch.nn.functional as F
 import torch.nn as nn
@@ -85,7 +84,7 @@ class PolicyNetwork(nn.Module):
 
             hxs = (torch.tensor(h_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size),
                    torch.tensor(c_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size))
-            state = pad_sequence(state, batch_first=True)
+
             state = state.view(batch_size, seq_size, obs_size)
             print('State:', state.shape)
             print('h_0:', h_0.shape, 'c_0:', c_0.shape)
