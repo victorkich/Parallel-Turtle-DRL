@@ -86,10 +86,10 @@ class PolicyNetwork(nn.Module):
             hxs = (h_0, c_0)
             state = pad_sequence(state, batch_first=True)
             state = state.view(batch_size, seq_size, obs_size)
-            # print('State:', state.shape)
-            # print('h_0:', h_0.shape, 'c_0:', c_0.shape)
+            print('State:', state.shape)
+            print('h_0:', h_0.shape, 'c_0:', c_0.shape)
             x, (h_0, c_0) = self.lstm(state, hxs)
-            hx = (h_0.detach(), c_0.detach())
+            hx = (h_0.detach().cpu(), c_0.detach().cpu())
             x = torch.relu(x)
             x = torch.tanh(self.linear1(x))
         else:
