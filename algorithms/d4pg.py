@@ -83,7 +83,7 @@ class LearnerD4PG(object):
 
         # ------- Update critic -------
         # Predict next actions with target policy network
-        next_action = self.target_policy_net(next_state, h_0=h_0, c_0=c_0)
+        next_action, _ = self.target_policy_net(next_state, h_0=h_0, c_0=c_0)
 
         # Predict Z distribution with target value network
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
@@ -122,7 +122,8 @@ class LearnerD4PG(object):
         self.value_optimizer.step()
 
         # -------- Update actor -----------
-        policy_loss = self.value_net.get_probs(state, self.policy_net(state, h_0=h_0, c_0=c_0))
+        policy_action, _ = self.policy_net(state, h_0=h_0, c_0=c_0)
+        policy_loss = self.value_net.get_probs(state, policy_action)
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
         policy_loss = torch.sum(policy_loss, dim=2)
         policy_loss = -policy_loss.mean()
