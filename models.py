@@ -93,7 +93,7 @@ class PolicyNetwork(nn.Module):
 
     def get_action(self, state, hxs=None):
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
-        hxs = torch.FloatTensor(hxs).unsqueeze(0).to(self.device)
+        hxs = torch.FloatTensor([hxs]).to(self.device)
         # hxs = torch.from_numpy(hxs).float().unsqueeze(0).to(self.device)
         action, hx = self.forward(state, hxs=hxs)
         return action, hx
