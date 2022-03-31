@@ -83,7 +83,7 @@ class PolicyNetwork(nn.Module):
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
 
-            hxs = (torch.FloatTensor(h_0).to(self.device), torch.FloatTensor(c_0).to(self.device))
+            hxs = (torch.tensor(h_0).to(self.device), torch.tensor(c_0).to(self.device))
             state = pad_sequence(state, batch_first=True)
             state = state.view(batch_size, seq_size, obs_size)
             print('State:', state.shape)
