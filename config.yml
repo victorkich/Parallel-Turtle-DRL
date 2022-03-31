@@ -51,7 +51,7 @@ tau: 0.001  # parameter for soft target network updates
 # Comet parameters
 api_key: 53WlWYRLtr1QwZTbjazoEv35u
 project_name: turtlebot3-recurrent
-disabled: 1
+disabled: 0
 
 # Miscellaneous
 save_buffer: 0
