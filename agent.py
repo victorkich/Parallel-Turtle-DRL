@@ -85,7 +85,7 @@ class Agent(object):
             done = False
             if self.config['recurrent_policy']:
                 sequence_replay_buffer = []
-            hx = None
+            hx = 0.0
             while not done:
                 for s in range(len(state)):
                     if state[s] > 2.5:
