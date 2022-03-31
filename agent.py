@@ -90,8 +90,8 @@ class Agent(object):
                 batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
             else:
                 batch_size = self.config['batch_size']
-            h_0 = torch.zeros((1, batch_size, self.config['dense_size']))
-            c_0 = torch.zeros((1, batch_size, self.config['dense_size']))
+            h_0 = None
+            c_0 = None
             while not done:
                 for s in range(len(state)):
                     if state[s] > 2.5:
