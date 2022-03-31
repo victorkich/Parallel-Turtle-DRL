@@ -72,13 +72,13 @@ class PolicyNetwork(nn.Module):
         if self.recurrent:
             if len(state.size()) == 3:
                 batch_size, seq_size, obs_size = state.size()
+                hxs = hxs.view(batch_size, seq_size, -1)
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
 
             state = pad_sequence(state, batch_first=True)
             state = state.view(batch_size, seq_size, obs_size)
-            hxs = hxs.view(batch_size, seq_size, -1)
             print('State:', state)
             print('Hxs:', hxs)
             x, hx = self.lstm(state, hxs)
