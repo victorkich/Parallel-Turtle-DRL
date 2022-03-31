@@ -83,13 +83,13 @@ class PolicyNetwork(nn.Module):
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
 
-            hxs = (h_0.to(self.device), c_0.to(self.device))
+            hxs = (torch.FloatTensor(h_0.to(self.device)), torch.FloatTensor(c_0.to(self.device)))
             state = pad_sequence(state, batch_first=True)
             state = state.view(batch_size, seq_size, obs_size)
             print('State:', state.shape)
             print('h_0:', h_0.shape, 'c_0:', c_0.shape)
             x, (h_0, c_0) = self.lstm(state, hxs)
-            hx = (h_0.detach().cpu(), c_0.detach().cpu())
+            hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             x = torch.relu(x)
             x = torch.tanh(self.linear1(x))
         else:

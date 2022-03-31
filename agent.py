@@ -86,10 +86,6 @@ class Agent(object):
             if self.config['recurrent_policy']:
                 sequence_replay_buffer = []
 
-            if self.config['recurrent_policy']:
-                batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
-            else:
-                batch_size = self.config['batch_size']
             h_0 = None
             c_0 = None
             while not done:
