@@ -53,7 +53,7 @@ class LearnerD4PG(object):
         update_time = time.time()
 
         if self.config['recurrent_policy']:
-            state, action, reward, next_state, done, gamma, weights, inds, h_0, c_0 = batch
+            state, action, reward, next_state, done, gamma, h_0, c_0, weights, inds = batch
         else:
             state, action, reward, next_state, done, gamma, weights, inds = batch
             h_0 = c_0 = None

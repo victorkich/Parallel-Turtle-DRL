@@ -133,7 +133,7 @@ class Agent(object):
                                 if self.config['recurrent_policy'] and len(sequence_replay_buffer) < self.config['sequence_size']:
                                     sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma, h_0, c_0])
                                 elif self.config['recurrent_policy']:
-                                    replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
+                                    replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(8)])
                                     sequence_replay_buffer = []
                                 else:
                                     replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
@@ -155,7 +155,7 @@ class Agent(object):
                             if self.agent_type == "exploration":
                                 try:
                                     if self.config['recurrent_policy']:
-                                        replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
+                                        replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(8)])
                                     else:
                                         replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma, h_0, c_0])
                                 except:
