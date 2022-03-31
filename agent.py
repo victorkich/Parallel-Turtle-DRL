@@ -85,16 +85,18 @@ class Agent(object):
             done = False
             if self.config['recurrent_policy']:
                 sequence_replay_buffer = []
+            hx = None
             while not done:
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
-                    action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']), deterministic=True if self.agent_type == "exploitation" else False)
+                    action, _, _, _, _, _, _, _ = self.actor.forward(torch.Tensor(state).to(self.config['device']),
+                                                                     deterministic=True if self.agent_type == "exploitation" else False)
                     action = action.detach().cpu().numpy().flatten()
                 else:
-                    action = self.actor.get_action(np.array(state))
+                    action, hx = self.actor.get_action(np.array(state), hx=hx)
                     if self.agent_type == "exploration":
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, num_steps).flatten()
@@ -123,7 +125,7 @@ class Agent(object):
                         if self.agent_type == "exploration":
                             try:
                                 if self.config['recurrent_policy'] and len(sequence_replay_buffer) < self.config['sequence_size']:
-                                    sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma])
+                                    sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma, hx])
                                 elif self.config['recurrent_policy']:
                                     replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
                                     sequence_replay_buffer = []
@@ -149,7 +151,7 @@ class Agent(object):
                                     if self.config['recurrent_policy']:
                                         replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(6)])
                                     else:
-                                        replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
+                                        replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma, hx])
                                 except:
                                     pass
                     break

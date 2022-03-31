@@ -58,7 +58,7 @@ class PolicyNetwork(nn.Module):
         self.recurrent = recurrent
 
         if recurrent:
-            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=32, batch_first=True)
+            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=1, batch_first=True)
             self.lstm.flatten_parameters()
             self.linear1 = nn.Linear(hidden_size, num_actions)
         else:
@@ -68,7 +68,7 @@ class PolicyNetwork(nn.Module):
 
         self.to(device)
 
-    def forward(self, state):
+    def forward(self, state, hxs=None):
         if self.recurrent:
             if len(state.size()) == 3:
                 batch_size, seq_size, obs_size = state.size()
@@ -78,22 +78,24 @@ class PolicyNetwork(nn.Module):
 
             state = pad_sequence(state, batch_first=True)
             state = state.view(batch_size, seq_size, obs_size)
-            x, _ = self.lstm(state)
+            x, hx = self.lstm(state, hxs)
             x = torch.relu(x)
             x = torch.tanh(self.linear1(x))
         else:
             x = torch.relu(self.linear1(state))
             x = torch.relu(self.linear2(x))
             x = torch.tanh(self.linear3(x))
-        return x
+            hx = None
+        return x, hx
 
     def to(self, device):
         super(PolicyNetwork, self).to(device)
 
-    def get_action(self, state):
+    def get_action(self, state, hxs=None):
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
-        action = self.forward(state)
-        return action
+        hxs = torch.from_numpy(hxs).float().unsqueeze(0).to(self.device)
+        action, hx = self.forward(state, hxs=hxs)
+        return action, hx
 
 
 class PolicyNetwork2(nn.Module):

@@ -52,7 +52,11 @@ class LearnerD4PG(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        state, action, reward, next_state, done, gamma, weights, inds = batch
+        if self.config['recurrent_policy']:
+            state, action, reward, next_state, done, gamma, weights, inds, hxs = batch
+        else:
+            state, action, reward, next_state, done, gamma, weights, inds = batch
+            hxs = None
 
         if self.config['recurrent_policy']:
             batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
@@ -66,16 +70,18 @@ class LearnerD4PG(object):
         done = np.asarray(done)
         weights = np.asarray(weights)
         inds = np.asarray(inds).flatten()
+        hxs = np.asarray(hxs)
 
         state = torch.from_numpy(state).float().to(self.device)
         next_state = torch.from_numpy(next_state).float().to(self.device)
         action = torch.from_numpy(action).float().to(self.device)
         reward = torch.from_numpy(reward).float().to(self.device)
         done = torch.from_numpy(done).float().to(self.device)
+        hxs = torch.from_numpy(hxs).float().to(self.device)
 
         # ------- Update critic -------
         # Predict next actions with target policy network
-        next_action = self.target_policy_net(next_state)
+        next_action = self.target_policy_net(next_state, hxs=hxs)
 
         # Predict Z distribution with target value network
         target_value = self.target_value_net.get_probs(next_state, next_action.detach())
@@ -114,9 +120,8 @@ class LearnerD4PG(object):
         self.value_optimizer.step()
 
         # -------- Update actor -----------
-        policy_loss = self.value_net.get_probs(state, self.policy_net(state))
+        policy_loss = self.value_net.get_probs(state, self.policy_net(state, hxs=hxs))
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
-        print("Policy loss:", policy_loss)
         policy_loss = torch.sum(policy_loss, dim=2)
         policy_loss = -policy_loss.mean()
 
