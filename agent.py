@@ -96,7 +96,7 @@ class Agent(object):
                                                                      deterministic=True if self.agent_type == "exploitation" else False)
                     action = action.detach().cpu().numpy().flatten()
                 else:
-                    action, hx = self.actor.get_action(np.array(state), hx=hx)
+                    action, hx = self.actor.get_action(np.array(state), hxs=hx)
                     if self.agent_type == "exploration":
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, num_steps).flatten()
