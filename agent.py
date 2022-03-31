@@ -85,7 +85,13 @@ class Agent(object):
             done = False
             if self.config['recurrent_policy']:
                 sequence_replay_buffer = []
-            hx = (0.0, 0.0)
+
+            if self.config['recurrent_policy']:
+                batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
+            else:
+                batch_size = self.config['batch_size']
+            hx = (torch.zeros((1, batch_size, self.config['dense_size'])),
+                  torch.zeros((1, batch_size, self.config['dense_size'])))
             while not done:
                 for s in range(len(state)):
                     if state[s] > 2.5:

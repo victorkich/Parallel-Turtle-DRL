@@ -11,7 +11,7 @@ max_action: 1.5
 # Training parameters
 model: PDDRL
 batch_size: 256
-sequence_size: 32
+sequence_size: 8
 recurrent_policy: 1
 num_episodes: 150
 num_steps_train: 10000000  # number of episodes from all agents
