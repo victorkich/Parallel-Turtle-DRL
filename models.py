@@ -56,6 +56,7 @@ class PolicyNetwork(nn.Module):
         super(PolicyNetwork, self).__init__()
         self.device = device
         self.recurrent = recurrent
+        self.hidden_size = hidden_size
 
         if recurrent:
             self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=1, batch_first=True)
@@ -73,14 +74,14 @@ class PolicyNetwork(nn.Module):
             if len(state.size()) == 3:
                 batch_size, seq_size, obs_size = state.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.config['dense_size']))
-                    c_0 = torch.zeros((1, batch_size, self.config['dense_size']))
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.config['dense_size']))
-                    c_0 = torch.zeros((1, batch_size, self.config['dense_size']))
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
 
             hxs = (h_0, c_0)
             state = pad_sequence(state, batch_first=True)
