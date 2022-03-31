@@ -142,8 +142,8 @@ class ReplayBuffer(object):
     def __len__(self):
         return len(self._storage)
 
-    def add(self, obs_t, action, reward, obs_tp1, done, gamma):
-        data = (obs_t, action, reward, obs_tp1, done, gamma)
+    def add(self, obs_t, action, reward, obs_tp1, done, gamma, h_0, c_0):
+        data = (obs_t, action, reward, obs_tp1, done, gamma, h_0, c_0)
         self._storage.append(data)
         self._next_idx += 1
 
@@ -152,18 +152,21 @@ class ReplayBuffer(object):
         self._next_idx = len(self._storage)
 
     def _encode_sample(self, idxes):
-        obses_t, actions, rewards, obses_tp1, dones, gammas = [], [], [], [], [], []
+        obses_t, actions, rewards, obses_tp1, dones, gammas, h_0s, c_0s = [], [], [], [], [], [], [], []
         for i in idxes:
             data = self._storage[i]
-            obs_t, action, reward, obs_tp1, done, gamma = data
+            obs_t, action, reward, obs_tp1, done, gamma, h_0, c_0 = data
             obses_t.append(np.array(obs_t, copy=False))
             actions.append(np.array(action, copy=False))
             rewards.append(reward)
             obses_tp1.append(np.array(obs_tp1, copy=False))
             dones.append(done)
             gammas.append(gamma)
+            h_0s.append(np.array(h_0, copy=False))
+            c_0s.append(np.array(c_0, copy=False))
         return [np.array(obses_t, dtype=np.float32), np.array(actions, dtype=np.float32), np.array(rewards, dtype=np.float32),
-                np.array(obses_tp1, dtype=np.float32), np.array(dones, dtype=np.bool), np.array(gammas, dtype=np.float32)]
+                np.array(obses_tp1, dtype=np.float32), np.array(dones, dtype=np.bool), np.array(gammas, dtype=np.float32),
+                np.array(h_0s, dtype=np.float32), np.array(c_0s, dtype=np.float32)]
 
     def sample(self, batch_size, **kwags):
         """Sample a batch of experiences.
