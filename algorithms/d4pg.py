@@ -104,7 +104,7 @@ class LearnerD4PG(object):
         critic_value = critic_value.to(self.device)
 
         value_loss = self.value_criterion(critic_value, target_z_projected)
-        print('Value loss:', value_loss)
+        # print('Value loss:', value_loss)
         value_loss = value_loss.mean(axis=2)
 
         # Update priorities in buffer
