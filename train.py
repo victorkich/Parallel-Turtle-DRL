@@ -55,7 +55,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         except queue.Empty:
             pass
 
-        #try:
         if logs[8] >= config['num_episodes']:
             beta = config['priority_beta_end']
         else:
@@ -64,9 +63,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         batch_queue.put_nowait(batch)
         if len(replay_buffer) > config['replay_mem_size']:
             replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
-        #except:
-        #    time.sleep(0.1)
-        #    continue
 
         try:
             # Log data structures sizes

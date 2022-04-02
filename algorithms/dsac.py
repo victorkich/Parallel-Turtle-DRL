@@ -84,7 +84,16 @@ class LearnerDSAC(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
+        if self.config['recurrent_policy']:
+            obs, actions, rewards, next_obs, terminals, gamma, h_0, c_0, weights, inds = batch
+        else:
+            obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
+            h_0 = c_0 = None
+
+        if self.config['recurrent_policy']:
+            batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
+        else:
+            batch_size = self.config['batch_size']
 
         obs = np.asarray(obs)
         actions = np.asarray(actions)
@@ -93,17 +102,21 @@ class LearnerDSAC(object):
         terminals = np.asarray(terminals)
         weights = np.asarray(weights)
         inds = np.asarray(inds).flatten()
+        h_0 = np.asarray(h_0)
+        c_0 = np.asarray(c_0)
 
         obs = torch.from_numpy(obs).float().to(self.device)
         next_obs = torch.from_numpy(next_obs).float().to(self.device)
         actions = torch.from_numpy(actions).float().to(self.device)
         rewards = torch.from_numpy(rewards).float().to(self.device)
         terminals = torch.from_numpy(terminals).float().to(self.device)
+        h_0 = torch.from_numpy(h_0).float().to(self.device)
+        c_0 = torch.from_numpy(c_0).float().to(self.device)
 
         # ------- Update critic -------
         # Get predicted next-state actions and Q values from target models
-        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, reparameterize=True,
-                                                                               return_log_prob=True)
+        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, h_0=h_0, c_0=c_0,
+                                                                               reparameterize=True, return_log_prob=True)
         if self.use_automatic_entropy_tuning:
             alpha_loss = -(self.log_alpha.exp() * (log_pi + self.target_entropy).detach()).mean()
             self.alpha_optimizer.zero_grad()
@@ -111,12 +124,11 @@ class LearnerDSAC(object):
             self.alpha_optimizer.step()
             alpha = self.log_alpha.exp()
         else:
-            alpha_loss = 0
             alpha = self.alpha
 
         # ------- Update ZF -------
         with torch.no_grad():
-            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, reparameterize=True, return_log_prob=True)
+            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
@@ -128,8 +140,8 @@ class LearnerDSAC(object):
         z2_pred = self.zf2(obs, actions, tau_hat)
         zf1_loss = self.zf_criterion(z1_pred, z_target, tau_hat, next_presum_tau)
         zf2_loss = self.zf_criterion(z2_pred, z_target, tau_hat, next_presum_tau)
-        zf1_loss = zf1_loss.mean(axis=1)
-        zf2_loss = zf2_loss.mean(axis=1)
+        zf1_loss = zf1_loss.mean(axis=2 if self.config['recurrent_policy'] else 1)
+        zf2_loss = zf2_loss.mean(axis=2 if self.config['recurrent_policy'] else 1)
 
         # Update priorities in buffer 1
         value_loss = torch.min(zf1_loss, zf2_loss)
@@ -154,12 +166,12 @@ class LearnerDSAC(object):
 
         # ------- Update Policy -------
         with torch.no_grad():
-            newtau, new_tau_hat, new_presum_tau = self.get_tau(new_actions)
+            newtau, new_tau_hat, new_presum_tau = self.get_tau(new_actions.detach())
 
         z1_new_actions = self.zf1(obs, new_actions, new_tau_hat)
         z2_new_actions = self.zf2(obs, new_actions, new_tau_hat)
-        q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=1, keepdim=True)
-        q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=1, keepdim=True)
+        q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=2 if self.config['recurrent_policy'] else 1, keepdim=True)
+        q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=2 if self.config['recurrent_policy'] else 1, keepdim=True)
         q_new_actions = torch.min(q1_new_actions, q2_new_actions)
 
         policy_loss = (alpha * log_pi - q_new_actions).mean()

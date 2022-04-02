@@ -164,8 +164,7 @@ class ReplayBuffer(object):
             gammas.append(gamma)
             h_0s.append(np.array(h_0, copy=False))
             c_0s.append(np.array(c_0, copy=False))
-        # for i in obses_t:
-        #    print('obses_t shape:', i.shape)
+
         return [np.array(obses_t, dtype=np.float32), np.array(actions, dtype=np.float32), np.array(rewards, dtype=np.float32),
                 np.array(obses_tp1, dtype=np.float32), np.array(dones, dtype=np.bool), np.array(gammas, dtype=np.float32),
                 np.array(h_0s, dtype=np.float32), np.array(c_0s, dtype=np.float32)]
@@ -334,7 +333,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
 
 def create_replay_buffer(config, save_dir):
-    size = config['replay_mem_size'] if not config['recurrent_policy'] else int(config['replay_mem_size'] / config['sequence_size'])
+    size = int(config['replay_mem_size'] / config['sequence_size'] if config['recurrent_policy'] else config['replay_mem_size'])
     if config['replay_memory_prioritized']:
         alpha = config['priority_alpha']
         return PrioritizedReplayBuffer(size=size, alpha=alpha, save_dir=save_dir)

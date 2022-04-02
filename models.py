@@ -45,7 +45,7 @@ class ValueNetwork(nn.Module):
 class PolicyNetwork(nn.Module):
     """Actor - return action value given states. """
 
-    def __init__(self, num_states, num_actions, hidden_size, device='cuda', recurrent=False):
+    def __init__(self, num_states, num_actions, hidden_size, device='cuda', recurrent=False, lstm_cells=1):
         """
         Args:
             num_states (int): state dimension
@@ -58,7 +58,7 @@ class PolicyNetwork(nn.Module):
         self.hidden_size = hidden_size
 
         if recurrent:
-            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=1, batch_first=True)
+            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
             self.lstm.flatten_parameters()
             self.linear1 = nn.Linear(hidden_size, num_actions)
         else:
@@ -86,8 +86,6 @@ class PolicyNetwork(nn.Module):
                    torch.tensor(c_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
 
             state = state.view(batch_size, seq_size, obs_size)
-            # print('State:', state.shape)
-            # print('h_0:', hxs[0].shape, 'c_0:', hxs[1].shape)
             x, (h_0, c_0) = self.lstm(state, hxs)
             hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             x = torch.relu(x)
@@ -111,7 +109,8 @@ class PolicyNetwork(nn.Module):
 class PolicyNetwork2(nn.Module):
     """Actor for SAC - return action value given states. """
 
-    def __init__(self, state_size, action_size, device, hidden_size=32, init_w=3e-3, log_std_min=-20, log_std_max=2):
+    def __init__(self, state_size, action_size, device, hidden_size=32, init_w=3e-3, log_std_min=-20, log_std_max=2,
+                 recurrent=False, lstm_cells=1):
         """Initialize parameters and build model.
         Params
         ======
@@ -126,9 +125,14 @@ class PolicyNetwork2(nn.Module):
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.device = device
+        self.recurrent = recurrent
 
-        self.fc1 = nn.Linear(state_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        if recurrent:
+            self.lstm = nn.LSTM(input_size=state_size, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
+            self.lstm.flatten_parameters()
+        else:
+            self.fc1 = nn.Linear(state_size, hidden_size)
+            self.fc2 = nn.Linear(hidden_size, hidden_size)
 
         self.mu = nn.Linear(hidden_size, action_size)
         self.log_std_linear = nn.Linear(hidden_size, action_size)
@@ -136,19 +140,44 @@ class PolicyNetwork2(nn.Module):
         self.to(device)
 
     def reset_parameters(self):
-        self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
-        self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
+        if self.recurrent:
+            self.lstm.weight.data.uniform_(*hidden_init(self.lstm))
+        else:
+            self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
+            self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
         self.mu.weight.data.uniform_(-self.init_w, self.init_w)
         self.log_std_linear.weight.data.uniform_(-self.init_w, self.init_w)
 
-    def forward(self, state):
-        x = F.relu(self.fc1(state), inplace=True)
-        x = F.relu(self.fc2(x), inplace=True)
-        mu = self.mu(x)
+    def forward(self, state, h_0=None, c_0=None):
+        if self.recurrent:
+            if len(state.size()) == 3:
+                batch_size, seq_size, obs_size = state.size()
+                if h_0 is None and c_0 is None:
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+            else:
+                seq_size = 1
+                batch_size, obs_size = state.size()
+                if h_0 is None and c_0 is None:
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
 
+            hxs = (torch.tensor(h_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
+                   torch.tensor(c_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+
+            state = state.view(batch_size, seq_size, obs_size)
+            x, (h_0, c_0) = self.lstm(state, hxs)
+            hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
+            x = torch.relu(x)
+        else:
+            x = F.relu(self.fc1(state), inplace=True)
+            x = F.relu(self.fc2(x), inplace=True)
+            hx = None
+
+        mu = self.mu(x)
         log_std = self.log_std_linear(x)
         log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
-        return mu, log_std
+        return mu, log_std, hx
 
     def to(self, device):
         super(PolicyNetwork2, self).to(device)
@@ -189,10 +218,12 @@ class QuantileMlp(nn.Module):
             embedding_size=64,
             num_quantiles=32,
             layer_norm=True,
+            recurrent=False,
             **kwargs,
     ):
         super().__init__()
         self.layer_norm = layer_norm
+        self.recurrent = recurrent
 
         self.base_fc = []
         last_size = input_size
@@ -216,7 +247,7 @@ class QuantileMlp(nn.Module):
         Calculate Quantile Value in Batch
         tau: quantile fractions, (N, T)
         """
-        h = torch.cat([state, action], dim=1)
+        h = torch.cat([state, action], dim=2 if self.config['recurrent_policy'] else 1)
         h = self.base_fc(h)  # (N, C)
 
         x = torch.cos(tau.unsqueeze(-1) * self.const_vec * np.pi)  # (N, T, E)
