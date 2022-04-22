@@ -9,7 +9,6 @@ import torch
 import time
 import gym
 import os
-gym.logger.set_level(40)
 
 
 class Agent(object):
@@ -109,6 +108,8 @@ class Agent(object):
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
                 next_state, reward, done, info = env.step(action)
+                if reward > 200:
+                    reward = 200
                 episode_reward += reward
 
                 if not self.config['test']:
@@ -175,7 +176,8 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
+            print(f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
+                  f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
                   f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
                   f"[{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
@@ -204,6 +206,7 @@ class Agent(object):
 
         if not self.config['test']:
             empty_torch_queue(replay_queue)
+        rospy.signal_shutdown(f"Agent {self.n_agent} done.")
         print(f"Agent {self.n_agent} done.")
 
     def save(self, checkpoint_name):

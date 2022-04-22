@@ -74,11 +74,15 @@ class LearnerDSAC(object):
 
     def get_tau(self, actions):
         presum_tau = torch.zeros(len(actions), self.num_quantiles).to(self.device) + 1. / self.num_quantiles
-        tau = torch.cumsum(presum_tau, dim=1)  # (N, T), note that they are tau1...tauN in the paper
+        tau = torch.cumsum(presum_tau, dim=2 if self.config['recurrent_policy'] else 1)  # (N, T), note that they are tau1...tauN in the paper
         with torch.no_grad():
             tau_hat = torch.zeros_like(tau).to(self.device)
-            tau_hat[:, 0:1] = tau[:, 0:1] / 2.
-            tau_hat[:, 1:] = (tau[:, 1:] + tau[:, :-1]) / 2.
+            if self.config['recurrent_policy']:
+                tau_hat[:, :, 0:1] = tau[:, :, 0:1] / 2.
+                tau_hat[:, :, 1:] = (tau[:, :, 1:] + tau[:, :, :-1]) / 2.
+            else:
+                tau_hat[:, 0:1] = tau[:, 0:1] / 2.
+                tau_hat[:, 1:] = (tau[:, 1:] + tau[:, :-1]) / 2.
         return tau, tau_hat, presum_tau
 
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
