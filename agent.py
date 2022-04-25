@@ -184,7 +184,6 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            # if update_step.value:
             sys.stdout.write("\033[F")  # back to previous line
             sys.stdout.write("\033[K")  # clear line
             print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
