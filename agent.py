@@ -58,7 +58,7 @@ class Agent(object):
             target_param.data.copy_(w)
         del source
 
-    def run(self, training_on, replay_queue, learner_w_queue, logs):
+    def run(self, training_on, replay_queue, learner_w_queue, update_step, logs):
         colorama_init(autoreset=True)
         colors = dict(Fore.__dict__.items())
         color = list(colors.keys())[self.n_agent]
@@ -181,14 +181,14 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            if self.update_step.value:
+            if update_step.value:
                 sys.stdout.write("\033[F")  # back to previous line
                 sys.stdout.write("\033[K")  # clear line
             print(colors[color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
                   f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
                   f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
                   f"[{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s",
-                  '\n' if self.update_step.value else '')
+                  '\n' if update_step.value else '')
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:

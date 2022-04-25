@@ -85,6 +85,7 @@ class PolicyNetwork(nn.Module):
 
             hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
                    c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+            # requires_grad_(True)
 
             state = state.view(batch_size, seq_size, obs_size)
             x, (h_0, c_0) = self.lstm(state, hxs)
