@@ -61,7 +61,7 @@ class Agent(object):
     def run(self, training_on, replay_queue, learner_w_queue, update_step, logs):
         colorama_init(autoreset=True)
         colors = dict(Fore.__dict__.items())
-        color = list(colors.keys())[self.n_agent]
+        color = list(colors.keys())[self.n_agent + 1]
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
