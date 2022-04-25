@@ -2,6 +2,7 @@ from utils.utils import empty_torch_queue, fast_clip_grad_norm, quantile_regress
 from models import QuantileMlp
 import torch.optim as optim
 import numpy as np
+import enlighten
 import queue
 import torch
 import time
@@ -9,7 +10,6 @@ import time
 
 class LearnerDSAC(object):
     """Policy and value network update routine. """
-
     def __init__(self, config, policy_net, target_policy_net, learner_w_queue, log_dir=''):
         self.config = config
         value_lr = config['critic_learning_rate']
@@ -197,7 +197,7 @@ class LearnerDSAC(object):
         if update_step.value % 100 == 0:
             try:
                 params = [p.data.cpu().detach().numpy() for p in self.policy_net.parameters()]
-                self.learner_w_queue.put(params)
+                self.learner_w_queue.put_nowait(params)
             except:
                 pass
 
@@ -207,16 +207,21 @@ class LearnerDSAC(object):
             logs[4] = value_loss.mean().item()
             logs[5] = time.time() - update_time
 
-    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
         torch.set_num_threads(4)
-        while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
+        time.sleep(2)
+        manager = enlighten.get_manager()
+        ticks = manager.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
+        while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
+                ticks.update(0)
                 time.sleep(0.01)
                 continue
 
             self._update_step(batch, replay_priority_queue, update_step, logs)
+            ticks.update(1)
             with update_step.get_lock():
                 update_step.value += 1
 
