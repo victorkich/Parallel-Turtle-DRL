@@ -12,6 +12,7 @@ import time
 import sys
 import gym
 import os
+gym.logger.set_level(40)
 
 
 class Agent(object):
