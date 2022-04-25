@@ -159,7 +159,7 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 if __name__ == "__main__":
     colorama_init(autoreset=True)
-    print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH------')
+    print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(80))
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
