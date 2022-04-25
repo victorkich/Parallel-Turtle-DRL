@@ -8,6 +8,7 @@ import torch.multiprocessing as torch_mp
 import multiprocessing as mp
 from colorama import Fore
 import numpy as np
+import enlighten
 import queue
 import torch
 import time
@@ -159,13 +160,16 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 if __name__ == "__main__":
     colorama_init(autoreset=True)
+    manager = enlighten.get_manager()
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
     pipeline_configs = os.listdir(path + '/pipeline_configs')
+    ticks = manager.counter(total=len(pipeline_configs), desc="Approaches", unit="ticks", color="blue")
 
     for pipeline_config in pipeline_configs:
+        ticks.update(0)
         print('Starting new training for', pipeline_config, 'config file.')
         with open(path + '/pipeline_configs/' + pipeline_config, 'r') as ymlfile:
             config = yaml.load(ymlfile, Loader=yaml.FullLoader)
@@ -303,6 +307,6 @@ if __name__ == "__main__":
             p.start()
         for p in processes:
             p.join()
-
+        ticks.update(1)
         time.sleep(5)
     print("End.")
