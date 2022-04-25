@@ -35,6 +35,7 @@ reward_scale: 1.0
 clip_norm: 0.0
 use_automatic_entropy_tuning: 1
 num_quantiles: 51
+obs_noise: 1
 
 # LSTM parameters
 sequence_size: 8

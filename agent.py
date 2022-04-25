@@ -74,7 +74,6 @@ class Agent(object):
         env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
 
-        best_reward = -float("inf")
         rewards = []
         while training_on.value if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
             episode_reward = 0
@@ -96,6 +95,9 @@ class Agent(object):
             h_0 = None
             c_0 = None
             while not done:
+                if self.config['obs_noise']:
+                    noise = np.random.standard_normal(size=state.size)
+                    state += noise
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5

@@ -76,9 +76,6 @@ class PolicyNetwork(nn.Module):
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
-                #else:
-                #    h_0 = torch.Tensor(h_0)
-                #    c_0 = torch.Tensor(c_0)
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
@@ -234,12 +231,16 @@ class QuantileMlp(nn.Module):
         self.layer_norm = layer_norm
         self.recurrent = recurrent
 
-        self.base_fc = []
-        last_size = input_size
-        for next_size in hidden_sizes[:-1]:
-            self.base_fc += [nn.Linear(last_size, next_size), nn.LayerNorm(next_size) if layer_norm else nn.Identity(), nn.ReLU(inplace=True)]
-            last_size = next_size
-        self.base_fc = nn.Sequential(*self.base_fc)
+        if not recurrent:
+            self.base_fc = []
+            last_size = input_size
+            for next_size in hidden_sizes[:-1]:
+                self.base_fc += [nn.Linear(last_size, next_size), nn.LayerNorm(next_size) if layer_norm else nn.Identity(), nn.ReLU(inplace=True)]
+                last_size = next_size
+            self.base_fc = nn.Sequential(*self.base_fc)
+        else:
+            self.lstm = nn.LSTM(input_size=state_size, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
+            self.lstm.flatten_parameters()
         self.num_quantiles = num_quantiles
         self.embedding_size = embedding_size
         self.tau_fc = nn.Sequential(nn.Linear(embedding_size, last_size), nn.LayerNorm(last_size) if layer_norm else nn.Identity(), nn.Sigmoid())
@@ -251,7 +252,7 @@ class QuantileMlp(nn.Module):
     def to(self, device):
         super(QuantileMlp, self).to(device)
 
-    def forward(self, state, action, tau):
+    def forward(self, state, action, tau, h_0=None, c_0=None):
         """
         Calculate Quantile Value in Batch
         tau: quantile fractions, (N, T)

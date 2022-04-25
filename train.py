@@ -295,6 +295,8 @@ if __name__ == "__main__":
             processes.append(p)
 
     for p in processes:
+        p.daemon = True
+    for p in processes:
         p.start()
     for p in processes:
         p.join()
