@@ -28,8 +28,7 @@ from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
 
 
-
-def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, logs, experiment_dir):
+def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir):
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
@@ -129,7 +128,8 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
             pass
 
     print("Writer closing...")
-    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_" \
+                  f"{'P' if config['replay_memory_prioritized'] else 'N'}{'_LSTM' if config['recurrent_policy'] else ''}"
     if not os.path.exists(process_dir):
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
@@ -154,12 +154,13 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
                  replay_queue, logs, global_step, update_step):
     agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
                   log_dir=experiment_dir, global_step=global_step)
-    agent.run(training_on, replay_queue, learner_w_queue, update_step, logs)
+    agent.run(training_on=training_on, replay_queue=replay_queue, learner_w_queue=learner_w_queue,
+              update_step=update_step, logs=logs)
 
 
 if __name__ == "__main__":
     colorama_init(autoreset=True)
-    print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(80))
+    print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
@@ -221,7 +222,7 @@ if __name__ == "__main__":
     if not config['test']:
         batch_queue = mp.Queue(maxsize=config['batch_queue_size'])
         p = torch_mp.Process(target=sampler_worker, args=(config, replay_queue, batch_queue, replay_priorities_queue,
-                                                          training_on, global_episode, logs, experiment_dir))
+                                                          training_on, logs, experiment_dir))
         processes.append(p)
 
     # Learner (neural net training process)
