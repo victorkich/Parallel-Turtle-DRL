@@ -39,7 +39,7 @@ num_quantiles: 51
 # LSTM parameters
 sequence_size: 8
 recurrent_policy: 1
-num_lstm_cell: 2
+num_lstm_cell: 1
 
 # Network parameters
 critic_learning_rate: 0.0005

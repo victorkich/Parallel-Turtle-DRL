@@ -2,11 +2,14 @@
 
 import rospy
 from utils.utils import OUNoise, empty_torch_queue, test_goals
+from colorama import init as colorama_init
 from collections import deque
+from colorama import Fore
 import gym_turtlebot3
 import numpy as np
 import torch
 import time
+import sys
 import gym
 import os
 
@@ -56,6 +59,9 @@ class Agent(object):
         del source
 
     def run(self, training_on, replay_queue, learner_w_queue, logs):
+        colorama_init(autoreset=True)
+        colors = dict(Fore.__dict__.items())
+        color = colors.keys()[self.n_agent]
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
@@ -67,8 +73,7 @@ class Agent(object):
 
         best_reward = -float("inf")
         rewards = []
-
-        while (self.local_episode <= self.config['num_episodes']) if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
+        while training_on.value if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
@@ -176,10 +181,14 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
+            if self.update_step.value:
+                sys.stdout.write("\033[F")  # back to previous line
+                sys.stdout.write("\033[K")  # clear line
+            print(colors[color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
                   f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
                   f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
-                  f"[{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s")
+                  f"[{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s",
+                  '\n' if self.update_step.value else '')
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:
@@ -193,12 +202,9 @@ class Agent(object):
 
             # Saving agent
             if not self.config['test']:
-                reward_outperformed = episode_reward - best_reward > self.config["save_reward_threshold"]
                 time_to_save = self.local_episode % self.num_episode_save == 0
-                if self.agent_type == "exploitation" and (time_to_save or reward_outperformed):
-                    if episode_reward > best_reward:
-                        best_reward = episode_reward
-                    self.save(f"local_episode_{self.local_episode}_reward_{best_reward:4f}")
+                if self.agent_type == "exploitation" and (time_to_save or self.global_step.value >= self.config['num_steps_train']):
+                    self.save(f"step_{self.global_step.value}_episode_{self.local_episode}")
 
                 rewards.append(episode_reward)
                 if self.agent_type == "exploration" and self.local_episode % self.config['update_agent_ep'] == 0:
@@ -210,8 +216,9 @@ class Agent(object):
         print(f"Agent {self.n_agent} done.")
 
     def save(self, checkpoint_name):
-        process_dir = f"{self.log_dir}/{self.config['model']}_{self.config['dense_size']}_A{self.config['num_agents']}_S{self.config['env_stage']}_{'P' if self.config['replay_memory_prioritized'] else 'N'}"
+        process_dir = f"{self.log_dir}/{self.config['model']}_{self.config['dense_size']}_A{self.config['num_agents']}_S" \
+                      f"{self.config['env_stage']}_{'P' if self.config['replay_memory_prioritized'] else 'N'}"
         if not os.path.exists(process_dir):
             os.makedirs(process_dir)
-        model_fn = f"{process_dir}/{checkpoint_name}.pt"
+        model_fn = f"{process_dir}/{checkpoint_name}.pth"
         torch.save(self.actor.state_dict(), model_fn)

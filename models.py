@@ -10,7 +10,7 @@ import abc
 class ValueNetwork(nn.Module):
     """Critic - return Q value from given states and actions. """
     def __init__(self, num_states, num_actions, hidden_size, v_min, v_max,
-                 num_atoms, device='cuda'):
+                 num_atoms, device='cuda', recurrent=False):
         """
         Args:
             num_states (int): state dimension
@@ -22,6 +22,7 @@ class ValueNetwork(nn.Module):
             init_w:
         """
         super(ValueNetwork, self).__init__()
+        self.recurrent = recurrent
 
         self.linear1 = nn.Linear(num_states + num_actions, hidden_size)
         self.linear2 = nn.Linear(hidden_size, hidden_size)
@@ -32,14 +33,14 @@ class ValueNetwork(nn.Module):
         self.to(device)
 
     def forward(self, state, action):
-        x = torch.cat([state, action], 2)
+        x = torch.cat([state, action], 2 if self.recurrent else 1)
         x = torch.relu(self.linear1(x))
         x = torch.relu(self.linear2(x))
         x = self.linear3(x)
         return x
 
     def get_probs(self, state, action):
-        return torch.softmax(self.forward(state, action), dim=2)
+        return torch.softmax(self.forward(state, action), dim=2 if self.recurrent else 1)
 
 
 class PolicyNetwork(nn.Module):

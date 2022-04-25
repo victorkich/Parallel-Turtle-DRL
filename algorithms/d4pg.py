@@ -3,6 +3,7 @@ from utils.utils import empty_torch_queue
 from models import ValueNetwork
 import torch.optim as optim
 import torch.nn as nn
+from tqdm import tqdm
 import numpy as np
 import queue
 import torch
@@ -32,10 +33,12 @@ class LearnerD4PG(object):
 
         # Value and policy nets
         self.value_net = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'], self.v_min,
-                                      self.v_max, self.num_atoms, device=self.device)
+                                      self.v_max, self.num_atoms, device=self.device,
+                                      recurrent=config['recurrent_policy'])
         self.policy_net = policy_net
         self.target_value_net = ValueNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                             self.v_min, self.v_max, self.num_atoms, device=self.device)
+                                             self.v_min, self.v_max, self.num_atoms, device=self.device,
+                                             recurrent=config['recurrent_policy'])
         self.target_policy_net = target_policy_net
 
         for target_param, param in zip(self.target_value_net.parameters(), self.value_net.parameters()):
@@ -124,7 +127,7 @@ class LearnerD4PG(object):
         policy_action, _ = self.policy_net(state, h_0=h_0, c_0=c_0)
         policy_loss = self.value_net.get_probs(state, policy_action)
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
-        policy_loss = torch.sum(policy_loss, dim=2)
+        policy_loss = torch.sum(policy_loss, dim=2 if self.config['recurrent_policy'] else 1)
         policy_loss = -policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
@@ -153,7 +156,8 @@ class LearnerD4PG(object):
 
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
         torch.set_num_threads(4)
-        while logs[8] <= self.config['num_episodes']:
+        pbar = tqdm(total=self.config['num_steps_train'])
+        while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
@@ -161,6 +165,7 @@ class LearnerD4PG(object):
                 continue
 
             self._update_step(batch, replay_priority_queue, update_step, logs)
+            pbar.update(1)
             with update_step.get_lock():
                 update_step.value += 1
 
