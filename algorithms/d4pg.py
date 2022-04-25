@@ -3,8 +3,8 @@ from utils.utils import empty_torch_queue
 from models import ValueNetwork
 import torch.optim as optim
 import torch.nn as nn
-from tqdm import tqdm
 import numpy as np
+import enlighten
 import queue
 import torch
 import time
@@ -158,17 +158,18 @@ class LearnerD4PG(object):
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
         torch.set_num_threads(4)
         time.sleep(2)
-        pbar = tqdm(total=self.config['num_steps_train'], desc='\rSteps')
+        manager = enlighten.get_manager()
+        ticks = manager.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
         while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
-                pbar.update(0)
+                ticks.update(0)
                 time.sleep(0.01)
                 continue
 
             self._update_step(batch, replay_priority_queue, update_step, logs)
-            pbar.update(1)
+            ticks.update(1)
             with update_step.get_lock():
                 update_step.value += 1
 
