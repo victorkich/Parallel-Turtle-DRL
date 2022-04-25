@@ -17,7 +17,11 @@ gym.logger.set_level(40)
 
 class Agent(object):
     def __init__(self, config, policy, global_episode, global_step, n_agent=0, agent_type='exploration', log_dir=''):
-        print(f"Initializing agent {n_agent}...")
+        colorama_init(autoreset=True)
+        self.colors = dict(Fore.__dict__.items())
+        self.color = list(self.colors.keys())[n_agent + 1]
+
+        print(self.colors[self.color] + f"Initializing agent {n_agent}...")
         self.config = config
         self.action_low = [-1.5, -0.1]
         self.action_high = [1.5, 0.12]
@@ -43,7 +47,7 @@ class Agent(object):
         self.ou_noise.reset()
 
         self.actor = policy
-        print("Started agent", n_agent, "using", config['device'])
+        print(self.colors[self.color] + f"Started agent {n_agent} using {config['device']}")
 
     def update_actor_learner(self, learner_w_queue, training_on):
         """Update local actor to the actor from learner. """
@@ -60,9 +64,7 @@ class Agent(object):
         del source
 
     def run(self, training_on, replay_queue, learner_w_queue, update_step, logs):
-        colorama_init(autoreset=True)
-        colors = dict(Fore.__dict__.items())
-        color = list(colors.keys())[self.n_agent + 1]
+
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
@@ -185,11 +187,10 @@ class Agent(object):
             if update_step.value:
                 sys.stdout.write("\033[F")  # back to previous line
                 sys.stdout.write("\033[K")  # clear line
-            print(colors[color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
-                  f"Agent: [{self.n_agent}/{self.config['num_agents'] - 1}] Episode: [{self.local_episode}/"
+            print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
+                  f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}/"
                   f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
-                  f"[{episode_reward}/200] Step: {self.global_step.value} Episode Timing: {round(episode_timing, 2)}s",
-                  '\n' if update_step.value else '')
+                  f"[{episode_reward}/200] Episode Timing: {round(episode_timing, 2)}s", '\n' if update_step.value else '')
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:

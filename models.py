@@ -94,6 +94,7 @@ class PolicyNetwork(nn.Module):
             # requires_grad_(True)
 
             state = state.view(batch_size, seq_size, obs_size)
+            self.lstm.flatten_parameters()
             x, (h_0, c_0) = self.lstm(state, hxs)
             hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             x = torch.relu(x)
