@@ -59,8 +59,8 @@ class PolicyNetwork(nn.Module):
         self.hidden_size = hidden_size
 
         if recurrent:
-            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
-            self.lstm.flatten_parameters()
+            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True).flatten_parameters()
+            # self.lstm.flatten_parameters()
             self.linear1 = nn.Linear(hidden_size, num_actions)
         else:
             self.linear1 = nn.Linear(num_states, hidden_size)
@@ -94,7 +94,7 @@ class PolicyNetwork(nn.Module):
             # requires_grad_(True)
 
             state = state.view(batch_size, seq_size, obs_size)
-            x, (h_0, c_0) = self.lstm(state, hxs).flatten_parameters()
+            x, (h_0, c_0) = self.lstm(state, hxs)
             hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             x = torch.relu(x)
             x = torch.tanh(self.linear1(x))
