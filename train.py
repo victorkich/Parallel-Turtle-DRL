@@ -196,11 +196,9 @@ if __name__ == "__main__":
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
     list_saved_models = os.listdir(model_dir)
-    print(list_saved_models)
     higher = 0
     higher_model = None
     for saved_model in list_saved_models:
-        print(saved_model.split('_')[1])
         if higher < int(saved_model.split('_')[1]):
             higher = int(saved_model.split('_')[1])
             higher_model = saved_model
