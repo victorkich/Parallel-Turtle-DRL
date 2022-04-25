@@ -88,7 +88,8 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
 def logger(config, logs, training_on, update_step, global_episode, global_step, log_dir):
     # Initialize the SummaryWriter
     os.environ['COMET_API_KEY'] = config['api_key']
-    comet_ml.init(project_name=config['project_name'])
+    comet_ml.init(project_name=config['project_name'], workspace=f"{config['model']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+                                                                 f"_S{config['env_stage']}{'_LSTM' if config['recurrent_policy'] else ''}")
     writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
     writer.add_hparams(hparam_dict=config, metric_dict={})
     num_agents = config['num_agents']
@@ -184,7 +185,14 @@ if __name__ == "__main__":
         os.makedirs(results_dir)
     if config['test']:
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-        path_model = f"{experiment_dir}/{model_name}/local_episode_150_reward_200.000000.pt"
+        list_saved_models = os.listdir(f"{experiment_dir}/{model_name}/")
+        higher = 0
+        higher_model = None
+        for saved_model in list_saved_models:
+            if higher < int(saved_model.split('_')[1]):
+                higher = int(saved_model.split('_')[1])
+                higher_model = saved_model
+        path_model = f"{experiment_dir}/{model_name}/{higher_model}"
 
     # Data structures
     processes = []
@@ -210,8 +218,7 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Learner (neural net training process)
-    assert any(config['model'] == np.array(['PDDRL', 'PDSRL']))  # Only D4PG and DSAC
-    if config['model'] == 'PDDRL':
+    if config['model'] == 'PDDRL' or config['model'] == 'DDPG':
         if config['test']:
             try:
                 target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
@@ -241,20 +248,6 @@ if __name__ == "__main__":
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                 hidden_sizes=[config['dense_size'], config['dense_size']])
-        target_policy_net.share_memory()
-    elif config['model'] == 'DDPG':
-        if config['test']:
-            try:
-                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
-                target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
-            except:
-                target_policy_net = torch.load(path_model)
-                target_policy_net.to(config['device'])
-            target_policy_net.eval()
-        else:
-            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
-            policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
         target_policy_net.share_memory()
     elif config['model'] == 'SAC':
         if config['test']:

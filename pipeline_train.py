@@ -55,14 +55,18 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         except queue.Empty:
             pass
 
-        if logs[8] >= config['num_episodes']:
-            beta = config['priority_beta_end']
-        else:
-            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
-        batch = replay_buffer.sample(batch_size, beta=beta)
-        batch_queue.put_nowait(batch)
-        if len(replay_buffer) > config['replay_mem_size']:
-            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
+        try:
+            if logs[8] >= config['num_episodes']:
+                beta = config['priority_beta_end']
+            else:
+                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
+            batch = replay_buffer.sample(batch_size, beta=beta)
+            batch_queue.put_nowait(batch)
+            if len(replay_buffer) > config['replay_mem_size']:
+                replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
+        except:
+            time.sleep(0.1)
+            continue
 
         try:
             # Log data structures sizes
@@ -92,7 +96,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
     print("Starting log...")
-    while (global_episode.value < config['test_trials']) if config['test'] else (logs[8] <= config['num_episodes']):
+    while (global_episode.value < config['test_trials']) if config['test'] else (update_step.value <= config['num_steps_train']):#(logs[8] <= config['num_episodes']):
         try:
             if not config['test']:
                 step = update_step.value
