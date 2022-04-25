@@ -99,7 +99,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     fake_step = 0
     os.system('rosclean purge -y')
     print("Starting log...")
-    while (global_episode.value < config['test_trials']) if config['test'] else (update_step.value <= config['num_steps_train']):#(logs[8] <= config['num_episodes']):
+    while training_on.value if not config['test'] else (logs[8] <= config['test_trials']):
         try:
             if not config['test']:
                 step = update_step.value
