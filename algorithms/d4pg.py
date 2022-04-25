@@ -158,7 +158,7 @@ class LearnerD4PG(object):
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
         torch.set_num_threads(4)
         time.sleep(2)
-        pbar = tqdm(total=self.config['num_steps_train'], desc='Steps')
+        pbar = tqdm(total=self.config['num_steps_train'], desc='\rSteps')
         while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
