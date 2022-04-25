@@ -61,6 +61,7 @@ class Agent(object):
     def run(self, training_on, replay_queue, learner_w_queue, logs):
         colorama_init(autoreset=True)
         colors = dict(Fore.__dict__.items())
+        print('Colors:', colors.keys())
         color = colors.keys()[self.n_agent]
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
