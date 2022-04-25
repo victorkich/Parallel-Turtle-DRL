@@ -3,8 +3,10 @@
 import rospy
 import comet_ml
 from multiprocessing import set_start_method
+from colorama import init as colorama_init
 import torch.multiprocessing as torch_mp
 import multiprocessing as mp
+from colorama import Fore
 import numpy as np
 import queue
 import torch
@@ -26,7 +28,7 @@ from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
 
 
-def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, logs, experiment_dir):
+def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir):
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
@@ -95,6 +97,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=np.int)
     fake_step = 0
+    os.system('rosclean purge -y')
     print("Starting log...")
     while (global_episode.value < config['test_trials']) if config['test'] else (update_step.value <= config['num_steps_train']):#(logs[8] <= config['num_episodes']):
         try:
@@ -125,7 +128,8 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
             pass
 
     print("Writer closing...")
-    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
+    process_dir = f"{log_dir}/{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_" \
+                  f"{'P' if config['replay_memory_prioritized'] else 'N'}{'_LSTM' if config['recurrent_policy'] else ''}"
     if not os.path.exists(process_dir):
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
@@ -147,17 +151,20 @@ def learner_worker(config, training_on, policy, target_policy_net, learner_w_que
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
-                 replay_queue, logs, global_step):
+                 replay_queue, logs, global_step, update_step):
     agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
                   log_dir=experiment_dir, global_step=global_step)
-    agent.run(training_on, replay_queue, learner_w_queue, logs)
+    agent.run(training_on=training_on, replay_queue=replay_queue, learner_w_queue=learner_w_queue,
+              update_step=update_step, logs=logs)
 
 
 if __name__ == "__main__":
+    colorama_init(autoreset=True)
+    print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
+
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
     pipeline_configs = os.listdir(path + '/pipeline_configs')
-
 
     for pipeline_config in pipeline_configs:
         print('Starting new training for', pipeline_config, 'config file.')
@@ -188,16 +195,20 @@ if __name__ == "__main__":
         results_dir = path + f"/{config['results_path']}/"
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
-        if config['test']:
-            model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-            list_saved_models = os.listdir(f"{experiment_dir}/{model_name}/")
-            higher = 0
-            higher_model = None
-            for saved_model in list_saved_models:
-                if higher < int(saved_model.split('_')[1]):
-                    higher = int(saved_model.split('_')[1])
-                    higher_model = saved_model
-            path_model = f"{experiment_dir}/{model_name}/{higher_model}"
+
+        model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_" \
+                     f"{'P' if config['replay_memory_prioritized'] else 'N'}"
+        list_saved_models = os.listdir(f"{experiment_dir}/{model_name}/")
+        higher = 0
+        higher_model = None
+        for saved_model in list_saved_models:
+            if higher < int(saved_model.split('_')[1]):
+                higher = int(saved_model.split('_')[1])
+                higher_model = saved_model
+        path_model = f"{experiment_dir}/{model_name}/{higher_model}"
+        if config['num_steps_train'] >= higher and not config['test']:
+            print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}.\nSkipping this train out of the pipeline...")
+            continue
 
         # Data structures
         processes = []
@@ -219,7 +230,7 @@ if __name__ == "__main__":
         if not config['test']:
             batch_queue = mp.Queue(maxsize=config['batch_queue_size'])
             p = torch_mp.Process(target=sampler_worker, args=(config, replay_queue, batch_queue, replay_priorities_queue,
-                                                              training_on, global_episode, logs, experiment_dir))
+                                                              training_on, logs, experiment_dir))
             processes.append(p)
 
         # Learner (neural net training process)
@@ -269,7 +280,7 @@ if __name__ == "__main__":
                 policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
             target_policy_net.share_memory()
 
-        print('Algorithm:', config['model'], '- ' + 'P' if config['replay_memory_prioritized'] else 'N')
+        print('Algorithm:', config['model'], '-' + 'P' if config['replay_memory_prioritized'] else 'N')
         if not config['test']:
             p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                               learner_w_queue, replay_priorities_queue, batch_queue,
