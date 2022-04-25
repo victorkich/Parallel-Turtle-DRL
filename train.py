@@ -193,9 +193,11 @@ if __name__ == "__main__":
 
     model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
     list_saved_models = os.listdir(f"{experiment_dir}/{model_name}/")
+    print(list_saved_models)
     higher = 0
     higher_model = None
     for saved_model in list_saved_models:
+        print(saved_model.split('_')[1])
         if higher < int(saved_model.split('_')[1]):
             higher = int(saved_model.split('_')[1])
             higher_model = saved_model
