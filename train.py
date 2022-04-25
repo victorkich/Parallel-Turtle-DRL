@@ -192,7 +192,10 @@ if __name__ == "__main__":
         os.makedirs(results_dir)
 
     model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_{'P' if config['replay_memory_prioritized'] else 'N'}"
-    list_saved_models = os.listdir(f"{experiment_dir}/{model_name}/")
+    model_dir = f"{experiment_dir}/{model_name}/"
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+    list_saved_models = os.listdir(model_dir)
     print(list_saved_models)
     higher = 0
     higher_model = None
@@ -201,7 +204,7 @@ if __name__ == "__main__":
         if higher < int(saved_model.split('_')[1]):
             higher = int(saved_model.split('_')[1])
             higher_model = saved_model
-    path_model = f"{experiment_dir}/{model_name}/{higher_model}"
+    path_model = f"{model_dir}{higher_model}"
 
     # Data structures
     processes = []
