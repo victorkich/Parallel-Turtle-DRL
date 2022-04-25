@@ -83,8 +83,8 @@ class PolicyNetwork(nn.Module):
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
 
-            hxs = (torch.tensor(h_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
-                   torch.tensor(c_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
+                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
 
             state = state.view(batch_size, seq_size, obs_size)
             x, (h_0, c_0) = self.lstm(state, hxs)
