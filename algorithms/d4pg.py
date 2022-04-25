@@ -161,11 +161,9 @@ class LearnerD4PG(object):
         pbar = tqdm(total=self.config['num_steps_train'], desc='Steps')
         while update_step.value <= self.config['num_steps_train']:
             try:
-                sys.stdout.write("\033[F")  # back to previous line
-                sys.stdout.write("\033[K")  # clear line
-                pbar.update(0)
                 batch = batch_queue.get_nowait()
             except queue.Empty:
+                pbar.update(0)
                 time.sleep(0.01)
                 continue
 
