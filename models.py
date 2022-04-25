@@ -76,9 +76,9 @@ class PolicyNetwork(nn.Module):
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
-                else:
-                    h_0 = torch.Tensor(h_0)
-                    c_0 = torch.Tensor(c_0)
+                #else:
+                #    h_0 = torch.Tensor(h_0)
+                #    c_0 = torch.Tensor(c_0)
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
