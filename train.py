@@ -3,8 +3,10 @@
 import rospy
 import comet_ml
 from multiprocessing import set_start_method
+from colorama import init as colorama_init
 import torch.multiprocessing as torch_mp
 import multiprocessing as mp
+from colorama import Fore
 import numpy as np
 import queue
 import torch
@@ -24,6 +26,7 @@ from algorithms.sac import LearnerSAC
 from tensorboardX import SummaryWriter
 from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
+
 
 
 def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, global_episode, logs, experiment_dir):
@@ -155,6 +158,9 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 
 if __name__ == "__main__":
+    colorama_init(autoreset=True)
+    print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH------')
+
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
     with open(path + '/config.yml', 'r') as ymlfile:
