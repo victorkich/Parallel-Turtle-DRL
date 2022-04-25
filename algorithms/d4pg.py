@@ -8,7 +8,6 @@ import numpy as np
 import queue
 import torch
 import time
-import sys
 
 
 class LearnerD4PG(object):
@@ -158,12 +157,11 @@ class LearnerD4PG(object):
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
         torch.set_num_threads(4)
         pbar = tqdm(total=self.config['num_steps_train'], dynamic_ncols=True)
-        sys.stdout.write("\033[F")  # back to previous line
-        sys.stdout.write("\033[K")  # clear line
         while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
+                pbar.update(0)
                 time.sleep(0.01)
                 continue
 
