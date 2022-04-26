@@ -63,8 +63,7 @@ class Agent(object):
             target_param.data.copy_(w)
         del source
 
-    def run(self, training_on, replay_queue, learner_w_queue, update_step, logs):
-
+    def run(self, training_on, replay_queue, learner_w_queue, logs):
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11310 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))

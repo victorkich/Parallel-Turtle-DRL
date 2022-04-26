@@ -151,11 +151,10 @@ def learner_worker(config, training_on, policy, target_policy_net, learner_w_que
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
-                 replay_queue, logs, global_step, update_step):
+                 replay_queue, logs, global_step):
     agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
                   log_dir=experiment_dir, global_step=global_step)
-    agent.run(training_on=training_on, replay_queue=replay_queue, learner_w_queue=learner_w_queue,
-              update_step=update_step, logs=logs)
+    agent.run(training_on=training_on, replay_queue=replay_queue, learner_w_queue=learner_w_queue, logs=logs)
 
 
 if __name__ == "__main__":
@@ -292,7 +291,7 @@ if __name__ == "__main__":
 
         # Single agent for exploitation
         p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
-                                                        experiment_dir, training_on, replay_queue, logs, global_step))
+                                                        experiment_dir, training_on, replay_queue, logs))
         processes.append(p)
 
         # Agents (exploration processes)
@@ -300,13 +299,16 @@ if __name__ == "__main__":
             for i in range(1, config['num_agents']):
                 p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
                                                                 global_episode, i, "exploration", experiment_dir,
-                                                                training_on, replay_queue, logs, global_step))
+                                                                training_on, replay_queue, logs))
                 processes.append(p)
 
+        for p in processes:
+            p.daemon = True
         for p in processes:
             p.start()
         for p in processes:
             p.join()
         ticks.update(1)
         time.sleep(5)
+
     print("End.")
