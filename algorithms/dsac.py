@@ -94,11 +94,6 @@ class LearnerDSAC(object):
             obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
             h_0 = c_0 = None
 
-        if self.config['recurrent_policy']:
-            batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
-        else:
-            batch_size = self.config['batch_size']
-
         obs = np.asarray(obs)
         actions = np.asarray(actions)
         rewards = np.asarray(rewards)
@@ -119,8 +114,7 @@ class LearnerDSAC(object):
 
         # ------- Update critic -------
         # Get predicted next-state actions and Q values from target models
-        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, h_0=h_0, c_0=c_0,
-                                                                               reparameterize=True, return_log_prob=True)
+        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
         if self.use_automatic_entropy_tuning:
             alpha_loss = -(self.log_alpha.exp() * (log_pi + self.target_entropy).detach()).mean()
             self.alpha_optimizer.zero_grad()

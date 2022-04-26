@@ -32,10 +32,10 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
-    if config['recurrent_policy']:
-        batch_size = int(config['batch_size'] / config['sequence_size'])
-    else:
-        batch_size = config['batch_size']
+    # if config['recurrent_policy']:
+    #    batch_size = int(config['batch_size'] / config['sequence_size'])
+    # else:
+    batch_size = config['batch_size']
 
     while training_on.value:
         # (1) Transfer replays to global buffer
@@ -245,7 +245,7 @@ if __name__ == "__main__":
         if config['test']:
             try:
                 target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                   hidden_sizes=[config['dense_size'], config['dense_size']])
+                                                   hidden_sizes=[config['dense_size'], config['dense_size']], recurrent=False, lstm_cells=1)
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
@@ -253,10 +253,10 @@ if __name__ == "__main__":
             target_policy_net.eval()
         else:
             target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                   hidden_sizes=[config['dense_size'], config['dense_size']])
+                                                   hidden_sizes=[config['dense_size'], config['dense_size']], recurrent=False, lstm_cells=1)
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                hidden_sizes=[config['dense_size'], config['dense_size']])
+                                                hidden_sizes=[config['dense_size'], config['dense_size']], recurrent=False, lstm_cells=1)
         target_policy_net.share_memory()
     elif config['model'] == 'SAC':
         if config['test']:
