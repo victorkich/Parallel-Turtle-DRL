@@ -225,22 +225,24 @@ class QuantileMlp(nn.Module):
             num_quantiles=32,
             layer_norm=True,
             recurrent=False,
+            lstm_cells=1,
             **kwargs,
     ):
         super().__init__()
         self.layer_norm = layer_norm
         self.recurrent = recurrent
 
-        if not recurrent:
-            self.base_fc = []
-            last_size = input_size
-            for next_size in hidden_sizes[:-1]:
+        self.base_fc = []
+        last_size = input_size
+        for next_size in hidden_sizes[:-1]:
+            if recurrent:
+                self.base_fc += [nn.LSTM(input_size=last_size, hidden_size=next_size, num_layers=lstm_cells, batch_first=True),
+                                 nn.LayerNorm(next_size) if layer_norm else nn.Identity(), nn.ReLU(inplace=True)]
+            else:
                 self.base_fc += [nn.Linear(last_size, next_size), nn.LayerNorm(next_size) if layer_norm else nn.Identity(), nn.ReLU(inplace=True)]
-                last_size = next_size
-            self.base_fc = nn.Sequential(*self.base_fc)
-        else:
-            self.lstm = nn.LSTM(input_size=state_size, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
-            self.lstm.flatten_parameters()
+            last_size = next_size
+        self.base_fc = nn.Sequential(*self.base_fc)
+
         self.num_quantiles = num_quantiles
         self.embedding_size = embedding_size
         self.tau_fc = nn.Sequential(nn.Linear(embedding_size, last_size), nn.LayerNorm(last_size) if layer_norm else nn.Identity(), nn.Sigmoid())
@@ -257,16 +259,42 @@ class QuantileMlp(nn.Module):
         Calculate Quantile Value in Batch
         tau: quantile fractions, (N, T)
         """
-        h = torch.cat([state, action], dim=2 if self.config['recurrent_policy'] else 1)
-        h = self.base_fc(h)  # (N, C)
+        if self.recurrent:
+            if len(state.size()) == 3:
+                batch_size, seq_size, obs_size = state.size()
+                if h_0 is None and c_0 is None:
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+            else:
+                seq_size = 1
+                batch_size, obs_size = state.size()
+                if h_0 is None and c_0 is None:
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                else:
+                    h_0 = torch.Tensor(h_0)
+                    c_0 = torch.Tensor(c_0)
 
-        x = torch.cos(tau.unsqueeze(-1) * self.const_vec * np.pi)  # (N, T, E)
-        x = self.tau_fc(x)  # (N, T, C)
+            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
+                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+            # requires_grad_(True)
+            state = state.view(batch_size, seq_size, obs_size)
+            # self.lstm.flatten_parameters()
+            h = torch.cat([state, action], dim=2)
+            output, (h_0, c_0) = self.base_fc(h, hxs)
+            hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
+        else:
+            h = torch.cat([state, action], dim=1)
+            h = self.base_fc(h)  # (N, C)
 
-        h = torch.mul(x, h.unsqueeze(-2))  # (N, T, C)
-        h = self.merge_fc(h)  # (N, T, C)
-        output = self.last_fc(h).squeeze(-1)  # (N, T)
-        return output
+            x = torch.cos(tau.unsqueeze(-1) * self.const_vec * np.pi)  # (N, T, E)
+            x = self.tau_fc(x)  # (N, T, C)
+
+            h = torch.mul(x, h.unsqueeze(-2))  # (N, T, C)
+            h = self.merge_fc(h)  # (N, T, C)
+            hx = None
+            output = self.last_fc(h).squeeze(-1)  # (N, T)
+        return output, hx
 
 
 class Mlp(nn.Module):
