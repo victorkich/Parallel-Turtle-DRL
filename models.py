@@ -189,13 +189,13 @@ class PolicyNetwork2(nn.Module):
         super(PolicyNetwork2, self).to(device)
 
     def evaluate(self, state, epsilon=1e-6):
-        mu, log_std = self.forward(state)
+        mu, log_std, (h_0, c_0) = self.forward(state)
         std = log_std.exp()
         dist = Normal(0, 1)
         e = dist.sample().to(self.device)
         action = torch.tanh(mu + e * std)
         log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - action.pow(2) + epsilon)
-        return action, log_prob
+        return action, log_prob, (h_0, c_0)
 
     def get_action(self, state, exploitation=False):
         """
@@ -203,7 +203,7 @@ class PolicyNetwork2(nn.Module):
         a(s,e)= tanh(mu(s)+sigma(s)+e)
         """
         state = torch.FloatTensor(state).to(self.device)
-        mu, log_std = self.forward(state)
+        mu, log_std, (h_0, c_0) = self.forward(state)
         std = log_std.exp()
         dist = Normal(0, 1)
         e = dist.sample().to(self.device)
@@ -211,7 +211,7 @@ class PolicyNetwork2(nn.Module):
             action = torch.tanh(mu + e * std).cpu()
         else:
             action = torch.tanh(mu).cpu()
-        return action
+        return action, (h_0, c_0)
 
 
 class QuantileMlp(nn.Module):
@@ -224,10 +224,12 @@ class QuantileMlp(nn.Module):
             embedding_size=64,
             num_quantiles=32,
             layer_norm=True,
+            recurrent=False,
             **kwargs,
     ):
         super().__init__()
         self.layer_norm = layer_norm
+        self.recurrent = recurrent
 
         self.base_fc = []
         last_size = input_size
@@ -247,12 +249,12 @@ class QuantileMlp(nn.Module):
     def to(self, device):
         super(QuantileMlp, self).to(device)
 
-    def forward(self, state, action, tau, h_0=None, c_0=None):
+    def forward(self, state, action, tau):
         """
         Calculate Quantile Value in Batch
         tau: quantile fractions, (N, T)
         """
-        h = torch.cat([state, action], dim=1)
+        h = torch.cat([state, action], dim=2 if self.recurrent else 1)
         h = self.base_fc(h)  # (N, C)
 
         x = torch.cos(tau.unsqueeze(-1) * self.const_vec * np.pi)  # (N, T, E)
@@ -421,15 +423,17 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         action, _, _, _, _, _, _, _ = self.forward(obs_np)
         return action
 
-    def forward(self, obs, reparameterize=True, deterministic=False, return_log_prob=False):
+    def forward(self, obs, h_0=None, c_0=None, reparameterize=True, deterministic=False, return_log_prob=False):
         """
         :param obs: Observation
         :param deterministic: If True, do not sample
         :param return_log_prob: If True, return a sample and its log probability
         """
         h = obs
+        hx = None
         for i, fc in enumerate(self.fcs):
-            h = self.hidden_activation(fc(h))
+            h, hx = fc(h, h_0=h_0, c_0=c_0)
+            h = self.hidden_activation(h)
         mean = self.last_fc(h)
         if self.std is None:
             log_std = self.last_fc_log_std(h)
@@ -453,14 +457,14 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
                 else:
                     action, pre_tanh_value = tanh_normal.sample(return_pretanh_value=True)
                 log_prob = tanh_normal.log_prob(action, pre_tanh_value=pre_tanh_value)
-                log_prob = log_prob.sum(dim=1, keepdim=True)
+                log_prob = log_prob.sum(dim=2 if self.recurrent else 1, keepdim=True)
             else:
                 if reparameterize is True:
                     action = tanh_normal.rsample()
                 else:
                     action = tanh_normal.sample()
 
-        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value
+        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value, hx
 
 
 class ActorSAC(nn.Module):
@@ -540,4 +544,3 @@ class Critic(nn.Module):
         x = F.relu(self.l2(x))
         x = self.l3(x)
         return x
-

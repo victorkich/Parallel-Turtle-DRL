@@ -28,7 +28,7 @@ from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
 
 
-def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir):
+def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir, update_step):
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
@@ -61,7 +61,8 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             if logs[8] >= config['num_episodes']:
                 beta = config['priority_beta_end']
             else:
-                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
+                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
+                       (update_step.value / config['num_steps_train'])
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
@@ -223,7 +224,7 @@ if __name__ == "__main__":
     if not config['test']:
         batch_queue = mp.Queue(maxsize=config['batch_queue_size'])
         p = torch_mp.Process(target=sampler_worker, args=(config, replay_queue, batch_queue, replay_priorities_queue,
-                                                          training_on, logs, experiment_dir))
+                                                          training_on, logs, experiment_dir, update_step))
         processes.append(p)
 
     # Learner (neural net training process)

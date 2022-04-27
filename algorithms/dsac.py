@@ -38,10 +38,10 @@ class LearnerDSAC(object):
         M = config['dense_size']
 
         # value nets
-        self.zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
-        self.zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
-        self.target_zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
-        self.target_zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M])
+        self.zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M], recurrent=config['recurrent_policy'])
+        self.zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M], recurrent=config['recurrent_policy'])
+        self.target_zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M], recurrent=config['recurrent_policy'])
+        self.target_zf2 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M], recurrent=config['recurrent_policy'])
 
         # policy nets
         self.policy_net = policy_net
@@ -114,7 +114,7 @@ class LearnerDSAC(object):
 
         # ------- Update critic -------
         # Get predicted next-state actions and Q values from target models
-        new_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy_net(obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
+        new_actions, policy_mean, policy_log_std, log_pi, _, _, _, _, _ = self.policy_net(obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
         if self.use_automatic_entropy_tuning:
             alpha_loss = -(self.log_alpha.exp() * (log_pi + self.target_entropy).detach()).mean()
             self.alpha_optimizer.zero_grad()
@@ -126,7 +126,7 @@ class LearnerDSAC(object):
 
         # ------- Update ZF -------
         with torch.no_grad():
-            new_next_actions, _, _, new_log_pi, *_ = self.target_policy_net(next_obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
+            new_next_actions, _, _, new_log_pi, _, _, _, _, _ = self.target_policy_net(next_obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
