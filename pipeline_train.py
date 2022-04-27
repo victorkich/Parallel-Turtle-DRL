@@ -29,14 +29,14 @@ from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
 
 
-def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir):
+def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, training_on, logs, experiment_dir, update_step):
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
-    if config['recurrent_policy']:
-        batch_size = int(config['batch_size'] / config['sequence_size'])
-    else:
-        batch_size = config['batch_size']
+    # if config['recurrent_policy']:
+    #    batch_size = int(config['batch_size'] / config['sequence_size'])
+    # else:
+    batch_size = config['batch_size']
 
     while training_on.value:
         # (1) Transfer replays to global buffer
@@ -62,7 +62,8 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             if logs[8] >= config['num_episodes']:
                 beta = config['priority_beta_end']
             else:
-                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * (logs[8] / config['num_episodes'])
+                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
+                       (update_step.value / config['num_steps_train'])
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
             if len(replay_buffer) > config['replay_mem_size']:
@@ -200,16 +201,21 @@ if __name__ == "__main__":
 
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_" \
                      f"{'P' if config['replay_memory_prioritized'] else 'N'}"
-        list_saved_models = os.listdir(f"{experiment_dir}/{model_name}/")
+        model_dir = f"{experiment_dir}/{model_name}/"
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+        list_saved_models = os.listdir(model_dir)
         higher = 0
         higher_model = None
         for saved_model in list_saved_models:
             if higher < int(saved_model.split('_')[1]):
                 higher = int(saved_model.split('_')[1])
                 higher_model = saved_model
-        path_model = f"{experiment_dir}/{model_name}/{higher_model}"
+        path_model = f"{model_dir}{higher_model}"
         if config['num_steps_train'] >= higher and not config['test']:
-            print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}.\nSkipping this train out of the pipeline...")
+            print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
+                  f"\nSkipping this train out of the pipeline...")
+            ticks.update(1)
             continue
 
         # Data structures
@@ -232,29 +238,36 @@ if __name__ == "__main__":
         if not config['test']:
             batch_queue = mp.Queue(maxsize=config['batch_queue_size'])
             p = torch_mp.Process(target=sampler_worker, args=(config, replay_queue, batch_queue, replay_priorities_queue,
-                                                              training_on, logs, experiment_dir))
+                                                              training_on, logs, experiment_dir, update_step))
             processes.append(p)
 
         # Learner (neural net training process)
         if config['model'] == 'PDDRL' or config['model'] == 'DDPG':
             if config['test']:
                 try:
-                    target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
+                    target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                                      device=config['device'], recurrent=config['recurrent_policy'],
+                                                      lstm_cells=config['num_lstm_cell'])
                     target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
                 except:
                     target_policy_net = torch.load(path_model)
                     target_policy_net.to(config['device'])
                 target_policy_net.eval()
             else:
-                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
+                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                                  device=config['device'], recurrent=config['recurrent_policy'],
+                                                  lstm_cells=config['num_lstm_cell'])
                 policy_net = copy.deepcopy(target_policy_net)
-                policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
+                policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                               device=config['device'], recurrent=config['recurrent_policy'],
+                                               lstm_cells=config['num_lstm_cell'])
             target_policy_net.share_memory()
         elif config['model'] == 'PDSRL':
             if config['test']:
                 try:
                     target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                       hidden_sizes=[config['dense_size'], config['dense_size']])
+                                                           hidden_sizes=[config['dense_size'], config['dense_size']],
+                                                           recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
                     target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
                 except:
                     target_policy_net = torch.load(path_model)
@@ -262,10 +275,12 @@ if __name__ == "__main__":
                 target_policy_net.eval()
             else:
                 target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                       hidden_sizes=[config['dense_size'], config['dense_size']])
+                                                       hidden_sizes=[config['dense_size'], config['dense_size']],
+                                                       recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
                 policy_net = copy.deepcopy(target_policy_net)
                 policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                    hidden_sizes=[config['dense_size'], config['dense_size']])
+                                                    hidden_sizes=[config['dense_size'], config['dense_size']],
+                                                    recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
             target_policy_net.share_memory()
         elif config['model'] == 'SAC':
             if config['test']:
@@ -291,7 +306,7 @@ if __name__ == "__main__":
 
         # Single agent for exploitation
         p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
-                                                        experiment_dir, training_on, replay_queue, logs))
+                                                        experiment_dir, training_on, replay_queue, logs, global_step))
         processes.append(p)
 
         # Agents (exploration processes)
@@ -299,7 +314,7 @@ if __name__ == "__main__":
             for i in range(1, config['num_agents']):
                 p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
                                                                 global_episode, i, "exploration", experiment_dir,
-                                                                training_on, replay_queue, logs))
+                                                                training_on, replay_queue, logs, global_step))
                 processes.append(p)
 
         for p in processes:

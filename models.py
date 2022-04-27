@@ -333,8 +333,11 @@ class Mlp(nn.Module):
             state = state.view(batch_size, seq_size, obs_size)
             h = state
             for i, fc in enumerate(self.fcs):
-                fc.flatten_parameters()
-                h, (h_0, c_0) = fc(h, hxs)
+                if self.recurrent and not i:
+                    fc.flatten_parameters()
+                    h, (h_0, c_0) = fc(h, hxs)
+                else:
+                    h = fc(h)
                 if self.layer_norm and i < len(self.fcs) - 1:
                     h = self.layer_norms[i](h)
                 h = self.hidden_activation(h)
@@ -432,8 +435,10 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         h = obs
         hx = None
         for i, fc in enumerate(self.fcs):
-            h, hx = fc(h, h_0=h_0, c_0=c_0)
-            h = self.hidden_activation(h)
+            if self.recurrent and not i:
+                h, hx = fc(h, h_0=h_0, c_0=c_0)
+            else:
+                h = self.hidden_activation(h)
         mean = self.last_fc(h)
         if self.std is None:
             log_std = self.last_fc_log_std(h)

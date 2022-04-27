@@ -40,6 +40,7 @@ num_quantiles: 51
 sequence_size: 8
 recurrent_policy: 1
 num_lstm_cell: 1
+obs_noise: 0
 
 # Network parameters
 critic_learning_rate: 0.0005

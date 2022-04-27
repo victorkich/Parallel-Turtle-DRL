@@ -231,22 +231,29 @@ if __name__ == "__main__":
     if config['model'] == 'PDDRL' or config['model'] == 'DDPG':
         if config['test']:
             try:
-                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
+                target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                                  device=config['device'], recurrent=config['recurrent_policy'],
+                                                  lstm_cells=config['num_lstm_cell'])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
                 target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
-            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
+            target_policy_net = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                              device=config['device'], recurrent=config['recurrent_policy'],
+                                              lstm_cells=config['num_lstm_cell'])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'], recurrent=config['recurrent_policy'])
+            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                           device=config['device'], recurrent=config['recurrent_policy'],
+                                           lstm_cells=config['num_lstm_cell'])
         target_policy_net.share_memory()
     elif config['model'] == 'PDSRL':
         if config['test']:
             try:
                 target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                   hidden_sizes=[config['dense_size'], config['dense_size']], recurrent=False, lstm_cells=1)
+                                                       hidden_sizes=[config['dense_size'], config['dense_size']],
+                                                       recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
@@ -254,10 +261,12 @@ if __name__ == "__main__":
             target_policy_net.eval()
         else:
             target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                   hidden_sizes=[config['dense_size'], config['dense_size']], recurrent=False, lstm_cells=1)
+                                                   hidden_sizes=[config['dense_size'], config['dense_size']],
+                                                   recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                hidden_sizes=[config['dense_size'], config['dense_size']], recurrent=False, lstm_cells=1)
+                                                hidden_sizes=[config['dense_size'], config['dense_size']],
+                                                recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
         target_policy_net.share_memory()
     elif config['model'] == 'SAC':
         if config['test']:
