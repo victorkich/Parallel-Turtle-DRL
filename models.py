@@ -9,8 +9,7 @@ import abc
 
 class ValueNetwork(nn.Module):
     """Critic - return Q value from given states and actions. """
-    def __init__(self, num_states, num_actions, hidden_size, v_min, v_max,
-                 num_atoms, device='cuda', recurrent=False):
+    def __init__(self, num_states, num_actions, hidden_size, v_min, v_max, num_atoms, device='cuda', recurrent=False):
         """
         Args:
             num_states (int): state dimension
@@ -215,18 +214,8 @@ class PolicyNetwork2(nn.Module):
 
 
 class QuantileMlp(nn.Module):
-    def __init__(
-            self,
-            hidden_sizes,
-            output_size,
-            config,
-            input_size,
-            embedding_size=64,
-            num_quantiles=32,
-            layer_norm=True,
-            recurrent=False,
-            **kwargs,
-    ):
+    def __init__(self, hidden_sizes, output_size, config, input_size, embedding_size=64, num_quantiles=32,
+                 layer_norm=True, recurrent=False, **kwargs):
         super().__init__()
         self.layer_norm = layer_norm
         self.recurrent = recurrent
@@ -242,7 +231,7 @@ class QuantileMlp(nn.Module):
         self.embedding_size = embedding_size
         self.tau_fc = nn.Sequential(nn.Linear(embedding_size, last_size), nn.LayerNorm(last_size) if layer_norm else nn.Identity(), nn.Sigmoid())
         self.merge_fc = nn.Sequential(nn.Linear(last_size, hidden_sizes[-1]), nn.LayerNorm(hidden_sizes[-1]) if layer_norm else nn.Identity(), nn.ReLU(inplace=True))
-        self.last_fc = nn.Linear(hidden_sizes[-1], 1)
+        self.last_fc = nn.Linear(hidden_sizes[-1], output_size)
         self.const_vec = torch.from_numpy(np.arange(1, 1 + self.embedding_size)).to(config['device'])
         self.to(config['device'])
 
@@ -271,9 +260,6 @@ class Mlp(nn.Module):
                  output_activation=nn.Identity, hidden_init=fanin_init, b_init_value=0.1, layer_norm=False,
                  recurrent=False, lstm_cells=1, layer_norm_kwargs=None):
         super().__init__()
-
-        if layer_norm_kwargs is None:
-            layer_norm_kwargs = dict()
 
         self.input_size = input_size
         self.output_size = output_size
@@ -360,28 +346,7 @@ class Mlp(nn.Module):
             return output, hx
 
 
-class Policy(object, metaclass=abc.ABCMeta):
-    """
-    General policy interface.
-    """
-    @abc.abstractmethod
-    def get_action(self, observation):
-        """
-        :param observation:
-        :return: action, debug_dictionary
-        """
-        pass
-
-    def reset(self):
-        pass
-
-
-class ExplorationPolicy(Policy, metaclass=abc.ABCMeta):
-    def set_num_steps_total(self, t):
-        pass
-
-
-class TanhGaussianPolicy(Mlp, ExplorationPolicy):
+class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
     """
     Usage:
     ```
