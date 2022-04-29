@@ -387,21 +387,40 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         super(TanhGaussianPolicy, self).to(device)
 
     @torch.no_grad()
-    def get_action(self, obs_np, h_0=0.0, c_0=0.0):
+    def get_action(self, obs_np, h_0=None, c_0=None):
         action, _, _, _, _, _, _, _, hx = self.forward(obs_np, h_0=h_0, c_0=c_0)
         return action, hx
 
-    def forward(self, obs, h_0=0.0, c_0=0.0, reparameterize=True, deterministic=False, return_log_prob=False):
+    def forward(self, obs, h_0=None, c_0=None, reparameterize=True, deterministic=False, return_log_prob=False):
         """
         :param obs: Observation
         :param deterministic: If True, do not sample
         :param return_log_prob: If True, return a sample and its log probability
         """
         h = obs
-        hx = None
+        hxs = None
+        if self.recurrent:
+            if len(state.size()) == 3:
+                batch_size, seq_size, obs_size = h.size()
+                if h_0 is None and c_0 is None:
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+            else:
+                seq_size = 1
+                batch_size, obs_size = h.size()
+                if h_0 is None and c_0 is None:
+                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                else:
+                    h_0 = torch.Tensor(h_0)
+                    c_0 = torch.Tensor(c_0)
+
+            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
+                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
-                h, hx = fc(h, (h_0, c_0))
+                h, hx = fc(h, hxs)
             else:
                 h = self.hidden_activation(h)
         mean = self.last_fc(h)
