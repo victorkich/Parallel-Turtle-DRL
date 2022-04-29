@@ -387,11 +387,11 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         super(TanhGaussianPolicy, self).to(device)
 
     @torch.no_grad()
-    def get_action(self, obs_np, h_0=None, c_0=None):
+    def get_action(self, obs_np, h_0=0.0, c_0=0.0):
         action, _, _, _, _, _, _, _, hx = self.forward(obs_np, h_0=h_0, c_0=c_0)
         return action, hx
 
-    def forward(self, obs, h_0=None, c_0=None, reparameterize=True, deterministic=False, return_log_prob=False):
+    def forward(self, obs, h_0=0.0, c_0=0.0, reparameterize=True, deterministic=False, return_log_prob=False):
         """
         :param obs: Observation
         :param deterministic: If True, do not sample
