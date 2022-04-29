@@ -411,7 +411,6 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
                        c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
             else:
-                seq_size = 1
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, self.hidden_sizes[0]))
                     c_0 = torch.zeros((1, self.hidden_sizes[0]))
@@ -419,12 +418,14 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
 
-                hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
-                       c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
+                hxs = (h_0.clone().detach().to(self.device).view(1, -1).contiguous(),
+                       c_0.clone().detach().to(self.device).view(1, -1).contiguous())
                 print(hxs[0].shape)
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
+                print(h.shape)
+                print(hxs[0].shape)
                 h, hx = fc(h, hxs)
             else:
                 h = self.hidden_activation(h)
