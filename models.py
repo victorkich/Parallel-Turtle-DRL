@@ -407,7 +407,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
             else:
                 seq_size = 1
-                batch_size, obs_size = h.size()
+                batch_size = 1
+                obs_size = h.size()
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
                     c_0 = torch.zeros((1, batch_size, self.hidden_size))
