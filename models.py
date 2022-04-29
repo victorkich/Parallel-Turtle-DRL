@@ -418,8 +418,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
 
-                hxs = (h_0.clone().detach().to(self.device).view(1, -1).contiguous(),
-                       c_0.clone().detach().to(self.device).view(1, -1).contiguous())
+                hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
+                       c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
                 print(hxs[0].shape)
 
         for i, fc in enumerate(self.fcs):
@@ -427,7 +427,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 print(h.shape)
                 print(hxs[0].shape)
                 h, hx = fc(h, hxs)
-                print(h.shape)
+                print('Aqui:', h.shape)
             else:
                 h = self.hidden_activation(h)
         mean = self.last_fc(h)
