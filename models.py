@@ -419,10 +419,9 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
 
-                print(h_0.shape)
-                print(c_0.shape)
-                hxs = (h_0.clone().detach().to(self.device).view(seq_size, -1)[0, :].view(1, self.hidden_size).contiguous(),
-                       c_0.clone().detach().to(self.device).view(seq_size, -1)[0, :].view(1, self.hidden_size).contiguous())
+                hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
+                       c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
+                print(hxs[0].shape)
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
