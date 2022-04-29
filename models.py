@@ -427,6 +427,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 print(h.shape)
                 print(hxs[0].shape)
                 h, hx = fc(h, hxs)
+                print(h.shape)
             else:
                 h = self.hidden_activation(h)
         mean = self.last_fc(h)
