@@ -371,6 +371,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         self.device = config['device']
         self.log_std = None
         self.std = std
+        self.hidden_sizes = hidden_sizes
         if std is None:
             last_hidden_size = obs_dim
             if len(hidden_sizes) > 0:
@@ -404,15 +405,14 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
             if len(h.size()) == 3:
                 batch_size, seq_size, obs_size = h.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    h_0 = torch.zeros((1, batch_size, self.hidden_sizes[0]))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_sizes[0]))
             else:
                 seq_size = 1
                 batch_size = 1
-                obs_size = h.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    h_0 = torch.zeros((1, batch_size, self.hidden_sizes[0]))
+                    c_0 = torch.zeros((1, batch_size, self.hidden_sizes[0]))
                 else:
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
