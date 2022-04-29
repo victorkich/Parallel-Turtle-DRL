@@ -411,8 +411,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 seq_size = 1
                 batch_size = 1
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_sizes[0]))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_sizes[0]))
+                    h_0 = torch.zeros((1, self.hidden_sizes[0]))
+                    c_0 = torch.zeros((1, self.hidden_sizes[0]))
                 else:
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
