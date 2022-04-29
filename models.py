@@ -426,8 +426,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
             if self.recurrent and not i:
                 print(h.shape)
                 print(hxs[0].shape)
-                print('Uns:', h.unsqueeze(dim=0).shape)
-                h, hx = fc(h.unsqueeze(dim=0), hxs)
+                print('Uns:', h.unsqueeze(dim=1).shape)
+                h, hx = fc(h.unsqueeze(dim=1), hxs)
                 print('Aqui:', h.shape)
             else:
                 h = self.hidden_activation(h)
