@@ -400,7 +400,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         h = obs
         hxs = None
         if self.recurrent:
-            if len(state.size()) == 3:
+            if len(h.size()) == 3:
                 batch_size, seq_size, obs_size = h.size()
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, batch_size, self.hidden_size))
