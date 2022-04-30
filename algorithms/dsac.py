@@ -223,7 +223,7 @@ class LearnerDSAC(object):
         torch.set_num_threads(4)
         time.sleep(2)
         manager = enlighten.get_manager()
-        ticks = manager.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
+        ticks = manager.counter(total=self.config['num_steps_train'], desc="Training step", unit="ticks", color="red")
         while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
@@ -236,9 +236,6 @@ class LearnerDSAC(object):
             ticks.update(1)
             with update_step.get_lock():
                 update_step.value += 1
-
-            if update_step.value % 10000 == 0:
-                print("Training step ", update_step.value)
 
         with training_on.get_lock():
             training_on.value = 0

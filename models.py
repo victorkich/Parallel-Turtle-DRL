@@ -390,7 +390,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
     @torch.no_grad()
     def get_action(self, obs_np, h_0=None, c_0=None, deterministic=False):
-        action, _, _, _, _, _, _, _, hx = self.forward(obs_np, h_0=h_0, c_0=c_0, deterministic=deterministic)
+        _, action, _, _, _, _, _, _, hx = self.forward(obs_np, h_0=h_0, c_0=c_0, deterministic=deterministic)
         return action, hx
 
     def forward(self, obs, h_0=None, c_0=None, reparameterize=True, deterministic=False, return_log_prob=False):
