@@ -102,11 +102,15 @@ class LearnerD4PG(object):
         critic_value = critic_value.to(self.device)
 
         value_loss = self.value_criterion(critic_value, target_z_projected)
-        value_loss = value_loss.mean(axis=1)
+        value_loss = value_loss.mean(axis=2 if self.config['recurrent_policy'] else 1)
 
         # Update priorities in buffer
         if self.prioritized_replay:
-            td_error = value_loss.cpu().detach().numpy().flatten()
+            if self.config['recurrent_policy']:
+                prioritized_loss = value_loss.mean(axis=1)
+                td_error = value_loss.cpu().detach().numpy().flatten()
+            else:
+                td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
             if self.config['recurrent_policy']:
