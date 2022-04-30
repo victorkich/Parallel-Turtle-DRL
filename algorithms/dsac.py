@@ -140,7 +140,12 @@ class LearnerDSAC(object):
             print('target_z1_values:', target_z1_values.shape)
             target_z_values = torch.min(target_z1_values, target_z2_values) - alpha * new_log_pi
             print('rewards:', rewards.shape, 'terminals:', terminals.shape, 'target_z_values:', target_z_values.shape)
-            z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * self.discount * target_z_values
+            if self.config['recurrent_policy']:
+                terminals = terminals.view(self.config['batch_size'], self.config['sequence_size'], 1)
+                rewards = rewards.view(self.config['batch_size'], self.config['sequence_size'], 1)
+                z_target = self.reward_scale * rewards + (1. - terminals) * self.discount * target_z_values
+            else:
+                z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * self.discount * target_z_values
 
         tau, tau_hat, presum_tau = self.get_tau(actions)
         z1_pred = self.zf1(obs, actions, tau_hat)
