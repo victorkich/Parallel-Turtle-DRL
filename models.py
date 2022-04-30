@@ -411,7 +411,6 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
                 hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
                        c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
-                # print('h_0 shape:', hxs[0].shape)
             else:
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, self.hidden_sizes[0]))
@@ -422,14 +421,13 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
                 hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
                        c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
-                h = h.view(1, len(h)).unsqueeze(dim=1)
+                h = h.view(1, 1, len(h))  # .unsqueeze(dim=1)
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
                 fc.flatten_parameters()
-                # print('h shape:', h.shape)
                 h, (h_0, c_0) = fc(h, hxs)
-                hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
+                hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             else:
                 h = self.hidden_activation(h)
         mean = self.last_fc(h)
@@ -462,7 +460,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 else:
                     action = tanh_normal.sample()
 
-        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value, hx
+        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value, hxs
 
 
 class ActorSAC(nn.Module):
