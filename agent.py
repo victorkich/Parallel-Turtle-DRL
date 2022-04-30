@@ -95,7 +95,8 @@ class Agent(object):
             c_0 = None
             while not done:
                 if self.config['obs_noise']:
-                    noise = np.random.standard_normal(size=len(state))
+                    noise = np.random.normal(loc=0.0, scale=0.1, size=len(state))
+                    # noise = np.random.standard_normal(size=len(state))
                     state += noise
                 for s in range(len(state)):
                     if state[s] > 2.5:
@@ -185,8 +186,8 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            sys.stdout.write("\033[F")  # back to previous line
-            sys.stdout.write("\033[K")  # clear line
+            # sys.stdout.write("\033[F")  # back to previous line
+            # sys.stdout.write("\033[K")  # clear line
             print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
                   f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}/"
                   f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
