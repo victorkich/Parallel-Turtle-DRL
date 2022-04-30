@@ -409,9 +409,9 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
                     c_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
 
-                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(batch_size, 1, self.hidden_size).contiguous(),
-                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(batch_size, 1, self.hidden_size).contiguous())
-                print('h_0 shape:', hxs[0].shape)
+                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
+                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+                # print('h_0 shape:', hxs[0].shape)
             else:
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, self.hidden_sizes[0]))
@@ -427,7 +427,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
                 fc.flatten_parameters()
-                print('h shape:', h.shape)
+                # print('h shape:', h.shape)
                 h, (h_0, c_0) = fc(h, hxs)
                 hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             else:
