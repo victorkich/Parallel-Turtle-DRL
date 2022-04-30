@@ -58,21 +58,21 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         except queue.Empty:
             pass
 
-        try:
-            print('Batch queue 1:', batch_queue.qsize())
-            if logs[8] >= config['num_episodes']:
-                beta = config['priority_beta_end']
-            else:
-                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
-                       (update_step.value / config['num_steps_train'])
-            batch = replay_buffer.sample(batch_size, beta=beta)
-            batch_queue.put_nowait(batch)
-            print('Batch queue 2:', batch_queue.qsize())
-            if len(replay_buffer) > config['replay_mem_size']:
-                replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
-        except:
-            time.sleep(0.1)
-            continue
+        #try:
+        print('Batch queue 1:', batch_queue.qsize())
+        if logs[8] >= config['num_episodes']:
+            beta = config['priority_beta_end']
+        else:
+            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
+                   (update_step.value / config['num_steps_train'])
+        batch = replay_buffer.sample(batch_size, beta=beta)
+        batch_queue.put_nowait(batch)
+        print('Batch queue 2:', batch_queue.qsize())
+        if len(replay_buffer) > config['replay_mem_size']:
+            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
+        #except:
+        #    time.sleep(0.1)
+        #    continue
 
         try:
             # Log data structures sizes
