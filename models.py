@@ -422,7 +422,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
                 fc.flatten_parameters()
-                h, (h_0, c_0) = fc(h, hxs)
+                h, (h_0, c_0) = fc(h.unsqueeze(dim=1), hxs)
                 hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             else:
                 h = self.hidden_activation(h)
