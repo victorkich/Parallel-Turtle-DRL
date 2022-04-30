@@ -409,8 +409,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
                     c_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
 
-                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
-                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(batch_size, self.hidden_size).contiguous(),
+                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(batch_size, self.hidden_size).contiguous())
                 print('h_0 shape:', hxs[0].shape)
             else:
                 if h_0 is None and c_0 is None:
