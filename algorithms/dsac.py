@@ -160,7 +160,8 @@ class LearnerDSAC(object):
             replay_priority_queue.put((inds, weights_update))
             print(weights.shape)
             if self.config['recurrent_policy']:
-                weights = weights.view(self.config['batch_size'], self.config['sequence_size'], 1)
+                weights = weights.view(1, 1, -1)
+            print(weights.shape)
             value_loss_1 = zf1_loss * torch.tensor(weights).float().to(self.device)
             value_loss_2 = zf2_loss * torch.tensor(weights).float().to(self.device)
             zf1_loss = value_loss_1.mean()
