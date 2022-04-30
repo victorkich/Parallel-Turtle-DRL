@@ -41,6 +41,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         # (1) Transfer replays to global buffer
         time.sleep(0.1)
         n = replay_queue.qsize()
+        print('Replay queue:', n)
 
         for _ in range(n):
             replay = replay_queue.get()
@@ -58,6 +59,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
             pass
 
         try:
+            print('Batch queue 1:', batch_queue.qsize())
             if logs[8] >= config['num_episodes']:
                 beta = config['priority_beta_end']
             else:
@@ -65,6 +67,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                        (update_step.value / config['num_steps_train'])
             batch = replay_buffer.sample(batch_size, beta=beta)
             batch_queue.put_nowait(batch)
+            print('Batch queue 2:', batch_queue.qsize())
             if len(replay_buffer) > config['replay_mem_size']:
                 replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
         except:
