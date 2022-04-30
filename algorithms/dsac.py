@@ -74,7 +74,7 @@ class LearnerDSAC(object):
 
     def get_tau(self, actions):
         presum_tau = torch.zeros(len(actions), self.num_quantiles).to(self.device) + 1. / self.num_quantiles
-        tau = torch.cumsum(presum_tau, dim=2 if self.config['recurrent_policy'] else 1)  # (N, T), note that they are tau1...tauN in the paper
+        tau = torch.cumsum(presum_tau, dim=1)  # 2 if self.config['recurrent_policy'] else (N, T), note that they are tau1...tauN in the paper
         with torch.no_grad():
             tau_hat = torch.zeros_like(tau).to(self.device)
             if self.config['recurrent_policy']:
@@ -127,6 +127,7 @@ class LearnerDSAC(object):
         # ------- Update ZF -------
         with torch.no_grad():
             new_next_actions, _, _, new_log_pi, _, _, _, _, _ = self.target_policy_net(next_obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
+            print(new_next_actions.shape)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
