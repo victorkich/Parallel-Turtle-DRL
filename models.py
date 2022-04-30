@@ -421,10 +421,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
-                print(h.shape)
-                print(hxs[0].shape)
                 h, hx = fc(h.unsqueeze(dim=1), hxs)
-                print('Aqui:', h.shape)
             else:
                 h = self.hidden_activation(h)
         mean = self.last_fc(h)
