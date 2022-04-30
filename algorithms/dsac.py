@@ -73,8 +73,14 @@ class LearnerDSAC(object):
         self.clip_norm = config['clip_norm']
 
     def get_tau(self, actions):
-        presum_tau = torch.zeros(len(actions), self.num_quantiles).to(self.device) + 1. / self.num_quantiles
-        tau = torch.cumsum(presum_tau, dim=1)  # 2 if self.config['recurrent_policy'] else (N, T), note that they are tau1...tauN in the paper
+        if self.config['recurrent_policy']:
+            batch_size, seq_size, obs_size = actions.size()
+            presum_tau = torch.zeros(batch_size, seq_size, self.num_quantiles).to(self.device) + 1. / self.num_quantiles
+        else:
+            batch_size, obs_size = actions.size()
+            presum_tau = torch.zeros(batch_size, self.num_quantiles).to(self.device) + 1. / self.num_quantiles
+
+        tau = torch.cumsum(presum_tau, dim=2 if self.config['recurrent_policy'] else 1)  #  (N, T), note that they are tau1...tauN in the paper
         with torch.no_grad():
             tau_hat = torch.zeros_like(tau).to(self.device)
             if self.config['recurrent_policy']:
