@@ -133,11 +133,13 @@ class LearnerDSAC(object):
         # ------- Update ZF -------
         with torch.no_grad():
             new_next_actions, _, _, new_log_pi, _, _, _, _, _ = self.target_policy_net(next_obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
-            print(new_next_actions.shape)
             next_tau, next_tau_hat, next_presum_tau = self.get_tau(new_next_actions)
+            print('next_tau:', next_tau.shape, 'next_tau_hat:', next_tau_hat.shape, 'next_presum_tau:', next_presum_tau.shape)
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
+            print('target_z1_values:', target_z1_values.shape)
             target_z_values = torch.min(target_z1_values, target_z2_values) - alpha * new_log_pi
+            print('target_z_values:', target_z_values.shape)
             z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * self.discount * target_z_values
 
         tau, tau_hat, presum_tau = self.get_tau(actions)
