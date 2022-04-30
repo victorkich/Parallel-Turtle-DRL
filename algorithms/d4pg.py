@@ -61,11 +61,6 @@ class LearnerD4PG(object):
             state, action, reward, next_state, done, gamma, weights, inds = batch
             h_0 = c_0 = None
 
-        if self.config['recurrent_policy']:
-            batch_size = int(self.config['batch_size'] / self.config['sequence_size'])
-        else:
-            batch_size = self.config['batch_size']
-
         state = np.asarray(state)
         action = np.asarray(action)
         reward = np.asarray(reward)
@@ -101,7 +96,7 @@ class LearnerD4PG(object):
                                          v_max=self.v_max,
                                          delta_z=self.delta_z)
 
-        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(batch_size, -1, 51)
+        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(self.config['batch_size'], -1, 51)
 
         critic_value = self.value_net.get_probs(state, action)
         critic_value = critic_value.to(self.device)
