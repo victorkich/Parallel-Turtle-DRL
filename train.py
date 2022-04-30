@@ -158,6 +158,7 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 
 if __name__ == "__main__":
+    _ = os.system('clear')
     colorama_init(autoreset=True)
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
 
