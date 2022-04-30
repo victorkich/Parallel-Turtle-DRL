@@ -57,24 +57,15 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         except queue.Empty:
             pass
 
-        #try:
         if update_step.value >= config['num_steps_train']:
             beta = config['priority_beta_end']
         else:
             beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
                    (update_step.value / config['num_steps_train'])
-        #if config['recurrent_policy']:
-        #    batch = []
-        #    for _ in range(batch_size):
-        #        batch.append(replay_buffer.sample(config['sequence_size'], beta=beta))
-        #else:
         batch = replay_buffer.sample(batch_size, beta=beta)
         batch_queue.put_nowait(batch)
         if len(replay_buffer) > config['replay_mem_size']:
             replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
-        #except:
-        #    time.sleep(0.1)
-        #    continue
 
         try:
             # Log data structures sizes
