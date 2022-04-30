@@ -402,7 +402,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         h = obs
         hxs = None
         if self.recurrent:
-            print(h.size(), len(h.size()))
+            # print(h.size(), len(h.size()))
             if len(h.size()) == 3:
                 batch_size, seq_size, obs_size = h.size()
                 if h_0 is None and c_0 is None:
