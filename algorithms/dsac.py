@@ -161,7 +161,6 @@ class LearnerDSAC(object):
                 value_loss = torch.min(zf1_loss, zf2_loss)
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
-            print(weights_update.shape, inds.shape)
             replay_priority_queue.put((inds, weights_update))
             if self.config['recurrent_policy']:
                 w_shape = weights.shape[0]
