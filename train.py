@@ -285,7 +285,7 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Single agent for exploitation
-    p = torch_mp.Process(target=agent_worker, args=(config, policy_net, None, global_episode, 0, "exploitation",
+    p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
                                                     experiment_dir, training_on, replay_queue, logs, global_step))
     processes.append(p)
 
