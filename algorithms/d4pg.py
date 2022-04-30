@@ -8,7 +8,6 @@ import enlighten
 import queue
 import torch
 import time
-import sys
 
 
 class LearnerD4PG(object):
