@@ -420,13 +420,12 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
                 hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
                        c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
-                print(hxs[0].shape)
+                h = h.view(1, len(h))
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
                 print(h.shape)
                 print(hxs[0].shape)
-                print('Uns:', h.unsqueeze(dim=1).shape)
                 h, hx = fc(h.unsqueeze(dim=1), hxs)
                 print('Aqui:', h.shape)
             else:
