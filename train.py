@@ -298,8 +298,9 @@ if __name__ == "__main__":
             processes.append(p)
 
     for p in processes:
+        p.daemon = True
+    for p in processes:
         p.start()
-    print('Gameplay')
     for p in processes:
         p.join()
 
