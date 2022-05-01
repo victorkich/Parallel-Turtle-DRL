@@ -157,8 +157,12 @@ class LearnerD4PG(object):
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
         torch.set_num_threads(4)
         time.sleep(2)
+
         manager = enlighten.get_manager()
-        ticks = manager.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
+        status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
+        algorithm = f"{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}"
+        status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=self.config['stage'], status='Training')
+        ticks = manager.counter(total=self.config['num_steps_train'], desc="Training step", unit="ticks", color="red")
         while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
@@ -175,6 +179,7 @@ class LearnerD4PG(object):
         with training_on.get_lock():
             training_on.value = 0
 
+        status_bar.update(status='Ending')
         empty_torch_queue(self.learner_w_queue)
         empty_torch_queue(replay_priority_queue)
         torch.cuda.empty_cache()
