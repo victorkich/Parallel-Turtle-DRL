@@ -178,6 +178,6 @@ class LearnerD4PG(object):
         empty_torch_queue(self.learner_w_queue)
         empty_torch_queue(replay_priority_queue)
         torch.cuda.empty_cache()
-        time.sleep(1)
+        time.sleep(5)
         os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
         print("Exit learner.")
