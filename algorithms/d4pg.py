@@ -156,8 +156,8 @@ class LearnerD4PG(object):
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, manager_mp, logs):
         torch.set_num_threads(4)
         time.sleep(2)
-        #manager = manager_mp  # enlighten.get_manager()
-        ticks = manager_mp.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
+        manager = manager_mp.value  # enlighten.get_manager()
+        ticks = manager.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
         while update_step.value <= self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
