@@ -213,7 +213,6 @@ class Agent(object):
         if not self.config['test']:
             empty_torch_queue(replay_queue)
 
-        env.close()
         rospy.signal_shutdown(f"Rospy of agent {self.n_agent+1} is closed.")
         print(f"Agent {self.n_agent+1} done.")
 
