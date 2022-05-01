@@ -92,7 +92,7 @@ class Agent(object):
 
             h_0 = None
             c_0 = None
-            while not done:
+            while not done and training_on.value:
                 if self.config['obs_noise']:
                     noise = np.random.normal(loc=0.0, scale=0.1, size=len(state))
                     state += noise
@@ -216,8 +216,6 @@ class Agent(object):
         env.close()
         rospy.signal_shutdown(f"Rospy of agent {self.n_agent+1} is closed.")
         print(f"Agent {self.n_agent+1} done.")
-        if not self.n_agent:
-            os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
 
     def save(self, checkpoint_name):
         process_dir = f"{self.log_dir}/{self.config['model']}_{self.config['dense_size']}_A{self.config['num_agents']}_S" \
