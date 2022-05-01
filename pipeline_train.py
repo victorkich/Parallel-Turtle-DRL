@@ -154,7 +154,7 @@ if __name__ == "__main__":
     os.system('clear')
     colorama_init(autoreset=True)
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
-    running_envs = True
+    running_envs = False
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
@@ -178,6 +178,7 @@ if __name__ == "__main__":
                               'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
                 time.sleep(2)
             time.sleep(5)
+            running_envs = True
 
         if config['seed']:
             torch.manual_seed(config['random_seed'])
