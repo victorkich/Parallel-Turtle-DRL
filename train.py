@@ -208,6 +208,7 @@ if __name__ == "__main__":
     logs = mp.Array('d', np.zeros(6 + 3 * config['num_agents']))
     learner_w_queue = torch_mp.Queue(maxsize=config['num_agents'])
     replay_priorities_queue = mp.Queue(maxsize=config['replay_queue_size'])
+    torch_mp.Value()
 
     # Logger
     p = torch_mp.Process(target=logger, args=(config, logs, training_on, update_step, global_episode, global_step,

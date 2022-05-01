@@ -154,6 +154,7 @@ if __name__ == "__main__":
     os.system('clear')
     colorama_init(autoreset=True)
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
+    running_envs = True
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
@@ -165,17 +166,18 @@ if __name__ == "__main__":
             config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
         # Opening gazebo environments
-        for i in range(config['num_agents'] if not config['test'] else 1):
-            if not i:
-                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                          'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
-            else:
-                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                          'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
-            time.sleep(2)
-        time.sleep(5)
+        if not running_envs:
+            for i in range(config['num_agents'] if not config['test'] else 1):
+                if not i:
+                    os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                              'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                              'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                else:
+                    os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                              'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                              'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                time.sleep(2)
+            time.sleep(5)
 
         if config['seed']:
             torch.manual_seed(config['random_seed'])
@@ -194,18 +196,19 @@ if __name__ == "__main__":
         model_dir = f"{experiment_dir}/{model_name}/"
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
-        list_saved_models = os.listdir(model_dir)
-        higher = 0
-        higher_model = None
-        for saved_model in list_saved_models:
-            if higher < int(saved_model.split('_')[1]):
-                higher = int(saved_model.split('_')[1])
-                higher_model = saved_model
-        path_model = f"{model_dir}{higher_model}"
-        if config['num_steps_train'] >= higher and not config['test']:
-            print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
-                  f"\nSkipping this train out of the pipeline...")
-            continue
+        else:
+            list_saved_models = os.listdir(model_dir)
+            higher = 0
+            higher_model = None
+            for saved_model in list_saved_models:
+                if higher < int(saved_model.split('_')[1]):
+                    higher = int(saved_model.split('_')[1])
+                    higher_model = saved_model
+            path_model = f"{model_dir}{higher_model}"
+            if config['num_steps_train'] >= higher and not config['test']:
+                print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
+                      f"\nSkipping this train out of the pipeline...")
+                continue
 
         # Data structures
         processes = []
