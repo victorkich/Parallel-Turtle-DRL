@@ -5,7 +5,6 @@ import comet_ml
 from multiprocessing import set_start_method
 from colorama import init as colorama_init
 import torch.multiprocessing as torch_mp
-import torch.distributed as dist
 import multiprocessing as mp
 from colorama import Fore
 import numpy as np
@@ -303,10 +302,6 @@ if __name__ == "__main__":
         for p in processes:
             p.join()
     except KeyboardInterrupt:
-        print('Interrupted')
-        try:
-            dist.destroy_process_group()
-        except KeyboardInterrupt:
-            os.system('kill $(ps aux | grep "train.py" | grep -v grep | ' + "awk '{print $2}')")
+        os.system('kill $(ps aux | grep "train.py" | grep -v grep | ' + "awk '{print $2}')")
 
     print("End.")
