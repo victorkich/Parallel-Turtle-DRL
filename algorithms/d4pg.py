@@ -171,9 +171,6 @@ class LearnerD4PG(object):
             with update_step.get_lock():
                 update_step.value += 1
 
-            if update_step.value % 10000 == 0:
-                print("Training step ", update_step.value)
-
         with training_on.get_lock():
             training_on.value = 0
 

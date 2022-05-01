@@ -114,7 +114,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
                                                                         "episode": logs[2], "x": logs[3],
                                                                         "y": logs[4]}, global_step=global_step.value)
 
-            time.sleep(0.05)
+            time.sleep(0.1)
             writer.flush()
         except:
             print('Error on Logger!')
@@ -297,8 +297,6 @@ if __name__ == "__main__":
                                                             training_on, replay_queue, logs, global_step))
             processes.append(p)
 
-    for p in processes:
-        p.daemon = True
     for p in processes:
         p.start()
     for p in processes:
