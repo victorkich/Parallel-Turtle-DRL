@@ -153,10 +153,10 @@ class LearnerD4PG(object):
             logs[4] = value_loss.item()
             logs[5] = time.time() - update_time
 
-    def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, manager_mp, logs):
         torch.set_num_threads(4)
         time.sleep(2)
-        manager = enlighten.get_manager()
+        manager = manager_mp.value  # enlighten.get_manager()
         ticks = manager.counter(total=self.config['num_steps_train'], desc="Steps", unit="ticks", color="red")
         while update_step.value <= self.config['num_steps_train']:
             try:
