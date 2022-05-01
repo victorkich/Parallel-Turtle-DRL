@@ -6,6 +6,7 @@ import enlighten
 import queue
 import torch
 import time
+import os
 
 
 class LearnerDSAC(object):
@@ -219,9 +220,13 @@ class LearnerDSAC(object):
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
         torch.set_num_threads(4)
         time.sleep(2)
+
         manager = enlighten.get_manager()
+        status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
+        algorithm = f"{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}"
+        status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=str(self.config['env_stage']), status='Training')
         ticks = manager.counter(total=self.config['num_steps_train'], desc="Training step", unit="ticks", color="red")
-        while update_step.value <= self.config['num_steps_train']:
+        while update_step.value <= 1000  #  self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
@@ -237,7 +242,10 @@ class LearnerDSAC(object):
         with training_on.get_lock():
             training_on.value = 0
 
+        status_bar.update(status='Ending')
         empty_torch_queue(self.learner_w_queue)
         empty_torch_queue(replay_priority_queue)
-        time.sleep(1)
+        torch.cuda.empty_cache()
+        time.sleep(5)
+        os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
         print("Exit learner.")

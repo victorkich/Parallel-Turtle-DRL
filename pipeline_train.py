@@ -8,7 +8,6 @@ import torch.multiprocessing as torch_mp
 import multiprocessing as mp
 from colorama import Fore
 import numpy as np
-import enlighten
 import queue
 import torch
 import time
@@ -33,9 +32,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
     torch.set_num_threads(4)
     # Create replay buffer
     replay_buffer = create_replay_buffer(config, experiment_dir)
-    # if config['recurrent_policy']:
-    #    batch_size = int(config['batch_size'] / config['sequence_size'])
-    # else:
     batch_size = config['batch_size']
 
     while training_on.value:
@@ -58,19 +54,15 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         except queue.Empty:
             pass
 
-        try:
-            if logs[8] >= config['num_episodes']:
-                beta = config['priority_beta_end']
-            else:
-                beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
-                       (update_step.value / config['num_steps_train'])
-            batch = replay_buffer.sample(batch_size, beta=beta)
-            batch_queue.put_nowait(batch)
-            if len(replay_buffer) > config['replay_mem_size']:
-                replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
-        except:
-            time.sleep(0.1)
-            continue
+        if update_step.value >= config['num_steps_train']:
+            beta = config['priority_beta_end']
+        else:
+            beta = config['priority_beta_start'] + (config['priority_beta_end']-config['priority_beta_start']) * \
+                   (update_step.value / config['num_steps_train'])
+        batch = replay_buffer.sample(batch_size, beta=beta)
+        batch_queue.put_nowait(batch)
+        if len(replay_buffer) > config['replay_mem_size']:
+            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
 
         try:
             # Log data structures sizes
@@ -122,7 +114,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
                                                                         "episode": logs[2], "x": logs[3],
                                                                         "y": logs[4]}, global_step=global_step.value)
 
-            time.sleep(0.05)
+            time.sleep(0.1)
             writer.flush()
         except:
             print('Error on Logger!')
@@ -159,17 +151,15 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 
 if __name__ == "__main__":
+    os.system('clear')
     colorama_init(autoreset=True)
-    manager = enlighten.get_manager()
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
     pipeline_configs = os.listdir(path + '/pipeline_configs')
-    ticks = manager.counter(total=len(pipeline_configs), desc="Approaches", unit="ticks", color="blue")
 
     for pipeline_config in pipeline_configs:
-        ticks.update(0)
         print('Starting new training for', pipeline_config, 'config file.')
         with open(path + '/pipeline_configs/' + pipeline_config, 'r') as ymlfile:
             config = yaml.load(ymlfile, Loader=yaml.FullLoader)
@@ -215,7 +205,6 @@ if __name__ == "__main__":
         if config['num_steps_train'] >= higher and not config['test']:
             print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
                   f"\nSkipping this train out of the pipeline...")
-            ticks.update(1)
             continue
 
         # Data structures
@@ -323,7 +312,6 @@ if __name__ == "__main__":
             p.start()
         for p in processes:
             p.join()
-        ticks.update(1)
         time.sleep(5)
 
     print("End.")
