@@ -299,6 +299,7 @@ if __name__ == "__main__":
 
     for p in processes:
         p.start()
+    print('Gameplay')
     for p in processes:
         p.join()
 
