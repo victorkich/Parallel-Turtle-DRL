@@ -103,7 +103,8 @@ class LearnerD4PG(object):
 
         value_loss = self.value_criterion(critic_value, target_z_projected)
         print(value_loss.shape)
-        value_loss = value_loss.mean(axis=3 if self.config['recurrent_policy'] else 1)
+        value_loss = value_loss.mean(axis=1)
+        print(value_loss.shape)
 
         # Update priorities in buffer
         if self.prioritized_replay:
