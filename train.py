@@ -8,8 +8,6 @@ import torch.multiprocessing as torch_mp
 import multiprocessing as mp
 from colorama import Fore
 import numpy as np
-import enlighten
-import ctypes
 import queue
 import torch
 import time
@@ -133,7 +131,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
-                   manager_mp, update_step, logs, experiment_dir):
+                   update_step, logs, experiment_dir):
     if config['model'] == 'PDDRL':
         learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     elif config['model'] == 'PDSRL':
@@ -142,7 +140,7 @@ def learner_worker(config, training_on, policy, target_policy_net, learner_w_que
         learner = LearnerDDPG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     elif config['model'] == 'SAC':
         learner = LearnerSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    learner.run(training_on, batch_queue, replay_priority_queue, update_step, manager_mp, logs)
+    learner.run(training_on, batch_queue, replay_priority_queue, update_step, logs)
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
@@ -154,10 +152,6 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 if __name__ == "__main__":
     os.system('clear')
-    manager = enlighten.get_manager()
-    manager_mp = mp.Value(ctypes.py_object, manager)
-    status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
-    # status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program='Demo', stage='Loading', status='OKAY')
     colorama_init(autoreset=True)
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
 
@@ -287,7 +281,7 @@ if __name__ == "__main__":
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                           learner_w_queue, replay_priorities_queue, batch_queue,
-                                                          manager, update_step, logs, experiment_dir))
+                                                          update_step, logs, experiment_dir))
         processes.append(p)
 
     # Single agent for exploitation
@@ -303,13 +297,10 @@ if __name__ == "__main__":
                                                             training_on, replay_queue, logs, global_step))
             processes.append(p)
 
-    # status_bar.update(stage='Initializing', status='OKAY')
     for p in processes:
         p.daemon = True
     for p in processes:
         p.start()
-    # status_bar.update(stage='Training', status='OKAY')
     for p in processes:
         p.join()
-    # status_bar.update(stage='Train finished', status='OKAY')
     print("End.")
