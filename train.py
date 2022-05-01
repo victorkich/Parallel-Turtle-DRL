@@ -154,7 +154,7 @@ def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type,
 
 if __name__ == "__main__":
     os.system('clear')
-    manager = mp.Value(ctypes.py_object, enlighten.get_manager())
+    manager = mp.managers.SyncManager.Value(ctypes.py_object, enlighten.get_manager())
     status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
     # status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program='Demo', stage='Loading', status='OKAY')
     colorama_init(autoreset=True)
