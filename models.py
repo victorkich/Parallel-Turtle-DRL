@@ -87,8 +87,6 @@ class PolicyNetwork(nn.Module):
 
             hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
                    c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
-            # requires_grad_(True)
-
             state = state.view(batch_size, seq_size, obs_size)
             self.lstm.flatten_parameters()
             x, (h_0, c_0) = self.lstm(state, hxs)
@@ -275,7 +273,6 @@ class Mlp(nn.Module):
             if recurrent:
                 fc = nn.LSTM(input_size=in_size, hidden_size=next_size, num_layers=lstm_cells, batch_first=True)
                 self.hidden_size = next_size
-                # hidden_init(fc.weight)
             else:
                 fc = nn.Linear(in_size, next_size)
                 hidden_init(fc.weight)
@@ -316,7 +313,6 @@ class Mlp(nn.Module):
 
             hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
                    c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
-            # requires_grad_(True)
             state = state.view(batch_size, seq_size, obs_size)
             h = state
             for i, fc in enumerate(self.fcs):
@@ -422,7 +418,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
                 hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
                        c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
-                h = h.view(1, 1, len(h))  # .unsqueeze(dim=1)
+                h = h.view(1, 1, len(h))
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:

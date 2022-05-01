@@ -154,7 +154,6 @@ if __name__ == "__main__":
     os.system('clear')
     colorama_init(autoreset=True)
     print(Fore.RED + '------ PARALLEL DEEP REINFORCEMENT LEARNING USING PYTORCH ------'.center(100))
-    running_envs = False
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
@@ -166,19 +165,17 @@ if __name__ == "__main__":
             config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
         # Opening gazebo environments
-        if not running_envs:
-            for i in range(config['num_agents'] if not config['test'] else 1):
-                if not i:
-                    os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                              'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                              'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
-                else:
-                    os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                              'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                              'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
-                time.sleep(2)
-            time.sleep(5)
-            running_envs = True
+        for i in range(config['num_agents'] if not config['test'] else 1):
+            if not i:
+                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                          'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+            else:
+                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                          'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+            time.sleep(2)
+        time.sleep(5)
 
         if config['seed']:
             torch.manual_seed(config['random_seed'])
@@ -254,7 +251,6 @@ if __name__ == "__main__":
                 policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
                                                device=config['device'], recurrent=config['recurrent_policy'],
                                                lstm_cells=config['num_lstm_cell'])
-            target_policy_net.share_memory()
         elif config['model'] == 'PDSRL':
             if config['test']:
                 try:
@@ -274,7 +270,6 @@ if __name__ == "__main__":
                 policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                     hidden_sizes=[config['dense_size'], config['dense_size']],
                                                     recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
-            target_policy_net.share_memory()
         elif config['model'] == 'SAC':
             if config['test']:
                 try:
@@ -288,13 +283,12 @@ if __name__ == "__main__":
                 target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
                 policy_net = copy.deepcopy(target_policy_net)
                 policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
-            target_policy_net.share_memory()
+        target_policy_net.share_memory()
 
         print('Algorithm:', config['model'], '-' + 'P' if config['replay_memory_prioritized'] else 'N')
         if not config['test']:
-            p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
-                                                              learner_w_queue, replay_priorities_queue, batch_queue,
-                                                              update_step, logs, experiment_dir))
+            p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net, learner_w_queue,
+                                                              replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
             processes.append(p)
 
         # Single agent for exploitation
