@@ -212,7 +212,7 @@ if __name__ == "__main__":
     # Logger
     p = torch_mp.Process(target=logger, args=(config, logs, training_on, update_step, global_episode, global_step,
                                               experiment_dir if not config['test'] else results_dir))
-    # processes.append(p)
+    processes.append(p)
 
     # Data sampler
     if not config['test']:

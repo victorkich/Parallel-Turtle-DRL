@@ -120,11 +120,12 @@ class OUNoise(object):
 def empty_torch_queue(q):
     while True:
         try:
-            o = q.get_nowait()
-            del o
+            var = q.get_nowait()
+            del var
         except:
             break
     q.close()
+    print('Queue closed.')
 
 
 class ReplayBuffer(object):
