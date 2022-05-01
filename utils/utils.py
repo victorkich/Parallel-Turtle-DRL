@@ -125,7 +125,6 @@ def empty_torch_queue(q):
         except:
             break
     q.close()
-    print('Queue closed.')
 
 
 class ReplayBuffer(object):
