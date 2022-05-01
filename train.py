@@ -307,6 +307,6 @@ if __name__ == "__main__":
         try:
             dist.destroy_process_group()
         except KeyboardInterrupt:
-            os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
+            os.system('kill $(ps aux | grep "train.py" | grep -v grep | ' + "awk '{print $2}')")
 
     print("End.")
