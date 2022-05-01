@@ -108,6 +108,7 @@ class LearnerD4PG(object):
         if self.prioritized_replay:
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
+            print(inds.shape, weights_update.shape)
             replay_priority_queue.put((inds, weights_update))
             if self.config['recurrent_policy']:
                 w_shape = weights.shape[0]
