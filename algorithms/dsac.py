@@ -226,7 +226,7 @@ class LearnerDSAC(object):
         algorithm = f"{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}"
         status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=str(self.config['env_stage']), status='Training')
         ticks = manager.counter(total=self.config['num_steps_train'], desc="Training step", unit="ticks", color="red")
-        while update_step.value <= 1000  #  self.config['num_steps_train']:
+        while update_step.value <= 1000:  #  self.config['num_steps_train']:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
