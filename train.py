@@ -296,12 +296,10 @@ if __name__ == "__main__":
                                                             global_episode, i, "exploration", experiment_dir,
                                                             training_on, replay_queue, logs, global_step))
             processes.append(p)
-    try:
-        for p in processes:
-            p.start()
-        for p in processes:
-            p.join()
-    except KeyboardInterrupt:
-        os.system('kill $(ps aux | grep "train.py" | grep -v grep | ' + "awk '{print $2}')")
+
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
 
     print("End.")
