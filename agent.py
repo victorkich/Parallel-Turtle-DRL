@@ -184,10 +184,11 @@ class Agent(object):
 
             # Log metrics
             episode_timing = time.time() - ep_start_time
-            print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
-                  f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}/"
-                  f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
-                  f"[{np.float(episode_reward)}/200] Episode Timing: {round(episode_timing, 2)}s")
+            if training_on.value:
+                print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
+                      f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}/"
+                      f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
+                      f"[{np.float(episode_reward)}/200] Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
                 if not self.config['test']:
@@ -211,8 +212,8 @@ class Agent(object):
 
         if not self.config['test']:
             empty_torch_queue(replay_queue)
-        rospy.signal_shutdown(f"Agent {self.n_agent} done.")
-        print(f"Agent {self.n_agent} done.")
+        # rospy.signal_shutdown(f"Agent {self.n_agent+1} done.")
+        print(f"Agent {self.n_agent+1} done.")
 
     def save(self, checkpoint_name):
         process_dir = f"{self.log_dir}/{self.config['model']}_{self.config['dense_size']}_A{self.config['num_agents']}_S" \

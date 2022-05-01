@@ -176,4 +176,5 @@ class LearnerD4PG(object):
 
         empty_torch_queue(self.learner_w_queue)
         empty_torch_queue(replay_priority_queue)
+        time.sleep(1)
         print("Exit learner.")
