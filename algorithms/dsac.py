@@ -95,11 +95,7 @@ class LearnerDSAC(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        if self.config['recurrent_policy']:
-            obs, actions, rewards, next_obs, terminals, gamma, h_0, c_0, weights, inds = batch
-        else:
-            obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
-            h_0 = c_0 = None
+        obs, actions, rewards, next_obs, terminals, gamma, h_0, c_0, weights, inds = batch
 
         obs = np.asarray(obs)
         actions = np.asarray(actions)

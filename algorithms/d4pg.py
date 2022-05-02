@@ -56,11 +56,7 @@ class LearnerD4PG(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        if self.config['recurrent_policy']:
-            state, action, reward, next_state, done, gamma, h_0, c_0, weights, inds = batch
-        else:
-            state, action, reward, next_state, done, gamma, weights, inds = batch
-            h_0 = c_0 = None
+        state, action, reward, next_state, done, gamma, h_0, c_0, weights, inds = batch
 
         state = np.asarray(state)
         action = np.asarray(action)
