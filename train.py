@@ -165,11 +165,11 @@ if __name__ == "__main__":
         if not i:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                      'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
         else:
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                      'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
         time.sleep(2)
     time.sleep(5)
 
@@ -238,10 +238,8 @@ if __name__ == "__main__":
                                               device=config['device'], recurrent=config['recurrent_policy'],
                                               lstm_cells=config['num_lstm_cell'])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                           device=config['device'], recurrent=config['recurrent_policy'],
-                                           lstm_cells=config['num_lstm_cell'])
-        target_policy_net.share_memory()
+            policy_net_cpu = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'],
+                                           recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
     elif config['model'] == 'PDSRL':
         if config['test']:
             try:
@@ -261,7 +259,6 @@ if __name__ == "__main__":
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                 hidden_sizes=[config['dense_size'], config['dense_size']],
                                                 recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
-        target_policy_net.share_memory()
     elif config['model'] == 'SAC':
         if config['test']:
             try:
@@ -275,7 +272,7 @@ if __name__ == "__main__":
             target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
-        target_policy_net.share_memory()
+    policy_net.share_memory()
 
     print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}")
     if not config['test']:
@@ -285,7 +282,7 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Single agent for exploitation
-    p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
+    p = torch_mp.Process(target=agent_worker, args=(config, policy_net, None, global_episode, 0, "exploitation",
                                                     experiment_dir, training_on, replay_queue, logs, global_step))
     processes.append(p)
 

@@ -169,11 +169,11 @@ if __name__ == "__main__":
             if not i:
                 os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                           'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                          'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                          'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
             else:
                 os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                           'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                          'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11310 + i, 11340 + i, config['env_stage']))
+                          'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
             time.sleep(2)
         time.sleep(5)
 
@@ -285,7 +285,7 @@ if __name__ == "__main__":
                 policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
         target_policy_net.share_memory()
 
-        print('Algorithm:', config['model'], '-' + 'P' if config['replay_memory_prioritized'] else 'N')
+        print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}")
         if not config['test']:
             p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net, learner_w_queue,
                                                               replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
