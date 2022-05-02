@@ -244,4 +244,5 @@ class LearnerDSAC(object):
         torch.cuda.empty_cache()
         time.sleep(5)
         os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
+        os.system("kill $(ps aux | grep gzserver | grep -v grep | awk '{print $2}')")
         print("Exit learner.")
