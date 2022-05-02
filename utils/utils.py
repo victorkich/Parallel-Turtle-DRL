@@ -142,7 +142,7 @@ class ReplayBuffer(object):
     def __len__(self):
         return len(self._storage)
 
-    def add(self, obs_t, action, reward, obs_tp1, done, gamma, h_0, c_0):
+    def add(self, obs_t, action, reward, obs_tp1, done, gamma, h_0=None, c_0=None):
         data = (obs_t, action, reward, obs_tp1, done, gamma, h_0, c_0)
         self._storage.append(data)
         self._next_idx += 1
