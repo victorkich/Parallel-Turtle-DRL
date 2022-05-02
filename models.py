@@ -97,7 +97,7 @@ class PolicyNetwork(nn.Module):
             x = torch.relu(self.linear1(state))
             x = torch.relu(self.linear2(x))
             x = torch.tanh(self.linear3(x))
-            hx = None
+            hx = (None, None)
         return x, hx
 
     def to(self, device):
@@ -175,7 +175,7 @@ class PolicyNetwork2(nn.Module):
         else:
             x = F.relu(self.fc1(state), inplace=True)
             x = F.relu(self.fc2(x), inplace=True)
-            hx = None
+            hx = (None, None)
 
         mu = self.mu(x)
         log_std = self.log_std_linear(x)
@@ -336,7 +336,7 @@ class Mlp(nn.Module):
                 h = self.hidden_activation(h)
             preactivation = self.last_fc(h)
             output = self.output_activation(preactivation)
-            hx = None
+            hx = (None, None)
         if return_preactivations:
             return output, hx, preactivation
         else:
