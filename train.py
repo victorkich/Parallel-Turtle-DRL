@@ -272,7 +272,7 @@ if __name__ == "__main__":
             target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
-    policy_net.share_memory()
+    target_policy_net.share_memory()
 
     print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}")
     if not config['test']:
@@ -282,7 +282,7 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Single agent for exploitation
-    p = torch_mp.Process(target=agent_worker, args=(config, policy_net, None, global_episode, 0, "exploitation",
+    p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
                                                     experiment_dir, training_on, replay_queue, logs, global_step))
     processes.append(p)
 
