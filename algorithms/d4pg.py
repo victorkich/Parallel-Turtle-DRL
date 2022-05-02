@@ -93,7 +93,10 @@ class LearnerD4PG(object):
                                          v_max=self.v_max,
                                          delta_z=self.delta_z)
 
-        target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(self.config['batch_size'], -1, 51)
+        if self.config['recurrent_policy']:
+            target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(self.config['batch_size'], -1, 51)
+        else:
+            target_z_projected = torch.from_numpy(target_z_projected).float().to(self.device).view(self.config['batch_size'], 51)
 
         critic_value = self.value_net.get_probs(state, action)
         critic_value = critic_value.to(self.device)
