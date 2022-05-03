@@ -101,8 +101,13 @@ class Agent(object):
                         state[s] = 2.5
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
-                    action, (h_0, c_0) = self.actor.get_action(torch.Tensor(state).to(self.config['device']), h_0=h_0, c_0=c_0,
+                    action, hx = self.actor.get_action(torch.Tensor(state).to(self.config['device']), h_0=h_0, c_0=c_0,
                                                                exploitation=True if self.agent_type == "exploitation" else False)
+                    if hx is not None:
+                        (h_0, c_0) = hx
+                    else:
+                        h_0 = None
+                        c_0 = None
                     action = action.detach().cpu().numpy().flatten()
                 else:
                     action, (h_0, c_0) = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
