@@ -422,6 +422,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
+                print('Passou aqui!!')
                 fc.flatten_parameters()
                 h, (h_0, c_0) = fc(h, hxs)
                 hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
