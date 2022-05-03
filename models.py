@@ -426,6 +426,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 h, (h_0, c_0) = fc(h, hxs)
             else:
                 if self.recurrent:
+                    fc.flatten_parameters()
                     h, (h_0, c_0) = fc(h)
                 else:
                     h = fc(h)
