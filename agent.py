@@ -95,7 +95,7 @@ class Agent(object):
             c_0 = None
             while not done and training_on.value:
                 if self.config['obs_noise']:
-                    noise = np.random.normal(loc=0.0, scale=0.1, size=len(state))
+                    noise = np.random.normal(loc=0.0, scale=0.05, size=len(state))
                     state += noise
                 for s in range(len(state)):
                     if state[s] > 2.5:
