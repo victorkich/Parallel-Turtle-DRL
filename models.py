@@ -422,14 +422,16 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
-                print('Passou aqui!!')
                 fc.flatten_parameters()
                 h, (h_0, c_0) = fc(h, hxs)
-                hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             else:
-                h = fc(h)
-                print('H shape:', len(h[0]), len(h[1]))
+                if self.recurrent:
+                    h, (h_0, c_0) = fc(h)
+                else:
+                    h = fc(h)
             h = self.hidden_activation(h)
+        if self.recurrent:
+            hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
         mean = self.last_fc(h)
         if self.std is None:
             log_std = self.last_fc_log_std(h)
