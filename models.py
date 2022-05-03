@@ -433,6 +433,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
             h = self.hidden_activation(h)
         if self.recurrent:
             hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
+        print(h_0.shape, c_0.shape)
         mean = self.last_fc(h)
         if self.std is None:
             log_std = self.last_fc_log_std(h)
