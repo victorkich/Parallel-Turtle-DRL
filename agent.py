@@ -100,6 +100,8 @@ class Agent(object):
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
+                    if state[s] < 0.0:
+                        state[s] = 0.0
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
                     action, hx = self.actor.get_action(torch.Tensor(state).to(self.config['device']), h_0=h_0, c_0=c_0,
