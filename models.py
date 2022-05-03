@@ -428,7 +428,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             else:
                 h = fc(h)
-                h = self.hidden_activation(h)
+                print('H:', h)
+            h = self.hidden_activation(h)
         mean = self.last_fc(h)
         if self.std is None:
             log_std = self.last_fc_log_std(h)
