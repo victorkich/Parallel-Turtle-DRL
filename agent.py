@@ -52,10 +52,11 @@ class Agent(object):
         """Update local actor to the actor from learner. """
         if not training_on.value:
             return
-        #try:
-        source = learner_w_queue.get_nowait()
-        #except:
-        #    return
+        try:
+            source = learner_w_queue.get_nowait()
+        except:
+            print('Except on agent:', self.n_agent)
+            return
         target = self.actor
         for target_param, source_param in zip(target.parameters(), source):
             w = torch.tensor(source_param).float()
