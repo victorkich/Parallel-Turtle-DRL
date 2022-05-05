@@ -141,11 +141,11 @@ class LearnerD4PG(object):
 
         # Send updated learner to the queue
         if update_step.value % 100 == 0:
-            #try:
-            params = [p.data.cpu().detach().numpy() for p in self.policy_net.parameters()]
-            self.learner_w_queue.put_nowait(params)
-            #except:
-            #    pass
+            try:
+                params = [p.data.cpu().detach().numpy() for p in self.policy_net.parameters()]
+                self.learner_w_queue.put_nowait(params)
+            except:
+                pass
 
         # Logging
         with logs.get_lock():
