@@ -23,6 +23,7 @@ from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
 from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
+from utils.extract_and_compress import EAC
 from tensorboardX import SummaryWriter
 from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
@@ -127,7 +128,13 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
-    print("Writer closed!")
+    print(f"Writer closed!\nLoading data from {process_dir}/writer_data.json log...")
+    eac = EAC()
+    print('Extracting useful features from data...')
+    extracted_data = eac.extract()
+    print('Writing the new compressed data...')
+    eac.save_data(f"{process_dir}/writer_compressed_data.json")
+    print('Logger closed!')
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
