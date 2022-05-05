@@ -104,7 +104,9 @@ class Agent(object):
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
                     action, hx = self.actor.get_action(torch.Tensor(state).to(self.config['device']), h_0=h_0, c_0=c_0,
-                                                               exploitation=True if self.agent_type == "exploitation" else False)
+                                                       exploitation=True if self.agent_type == "exploitation" and not
+                                                       (self.config['recurrent_policy'] and
+                                                       self.config['replay_memory_prioritized']) else False)
                     if hx is not None:
                         (h_0, c_0) = hx
                     else:
