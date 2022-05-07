@@ -215,7 +215,8 @@ class Agent(object):
                     self.save(f"step_{self.global_step.value}_episode_{self.local_episode}")
 
                 rewards.append(episode_reward)
-                if self.agent_type == "exploration" and self.local_episode % self.config['update_agent_ep'] == 0:
+                if (self.agent_type == "exploration" or (self.config['recurrent_policy'] and self.config['replay_memory_prioritized'])) \
+                        and self.local_episode % self.config['update_agent_ep'] == 0:
                     self.update_actor_learner(learner_w_queue, training_on)
 
         if not self.config['test']:
