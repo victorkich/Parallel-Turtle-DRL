@@ -272,7 +272,7 @@ class Mlp(nn.Module):
         for i, next_size in enumerate(hidden_sizes):
             if recurrent and not i:
                 fc = nn.LSTM(input_size=in_size, hidden_size=next_size, num_layers=lstm_cells, batch_first=True)
-                fc.weight.data.uniform_(*hidden_init(self.lstm))
+                fc.weight.data.uniform_(*hidden_init(fc))
                 self.hidden_size = next_size
             else:
                 fc = nn.Linear(in_size, next_size)
