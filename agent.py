@@ -113,7 +113,7 @@ class Agent(object):
                     action = action.detach().cpu().numpy().flatten()
                 else:
                     action, (h_0, c_0) = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
-                    if self.agent_type == "exploration" or (self.config['recurrent_policy'] and self.config['replay_memory_prioritized']):
+                    if self.agent_type == "exploration":
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, num_steps).flatten()
                     else:
