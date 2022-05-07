@@ -143,11 +143,8 @@ class PolicyNetwork2(nn.Module):
         self.to(device)
 
     def reset_parameters(self):
-        if self.recurrent:
-            self.lstm.weight.data.uniform_(*hidden_init(self.lstm))
-        else:
-            self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
-            self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
+        self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
+        self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
         self.mu.weight.data.uniform_(-self.init_w, self.init_w)
         self.log_std_linear.weight.data.uniform_(-self.init_w, self.init_w)
 
@@ -272,7 +269,6 @@ class Mlp(nn.Module):
         for i, next_size in enumerate(hidden_sizes):
             if recurrent and not i:
                 fc = nn.LSTM(input_size=in_size, hidden_size=next_size, num_layers=lstm_cells, batch_first=True)
-                fc.weight.data.uniform_(*hidden_init(fc))
                 self.hidden_size = next_size
             else:
                 fc = nn.Linear(in_size, next_size)
