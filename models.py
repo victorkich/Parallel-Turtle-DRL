@@ -422,11 +422,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 fc.flatten_parameters()
                 h, (h_0, c_0) = fc(h, hxs)
             else:
-                if self.recurrent:
-                    fc.flatten_parameters()
-                    h, (h_0, c_0) = fc(h)
-                else:
-                    h = fc(h)
+                h = fc(h)
             h = self.hidden_activation(h)
         if self.recurrent:
             hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
