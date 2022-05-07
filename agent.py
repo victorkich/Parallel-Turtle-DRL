@@ -25,7 +25,7 @@ class Agent(object):
         self.action_low = [-1.5, -0.1]
         self.action_high = [1.5, 0.12]
         self.n_agent = n_agent
-        self.agent_type = agent_type
+        self.agent_type = agent_type if n_agent else 'exploitation'
         self.max_steps = config['max_ep_length']  # maximum number of steps per episode
         self.num_episode_save = config['num_episode_save']
         self.global_episode = global_episode
