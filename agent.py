@@ -178,8 +178,9 @@ class Agent(object):
                     break
 
                 num_steps += 1
-                with self.global_step.get_lock():
-                    self.global_step.value += 1
+                if self.n_agent:
+                    with self.global_step.get_lock():
+                        self.global_step.value += 1
 
                 if self.config['test']:
                     position = env.get_position()  # Get x and y turtlebot position to compute test charts
