@@ -165,9 +165,9 @@ class LearnerDSAC(object):
             value_loss_2 = zf2_loss * torch.tensor(weights).float().to(self.device)
             zf1_loss = value_loss_1.mean()
             zf2_loss = value_loss_2.mean()
-
-        zf1_loss = zf1_loss.mean()
-        zf2_loss = zf2_loss.mean()
+        else:
+            zf1_loss = zf1_loss.mean()
+            zf2_loss = zf2_loss.mean()
 
         self.zf1_optimizer.zero_grad()
         zf1_loss.backward()
