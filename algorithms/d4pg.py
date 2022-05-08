@@ -126,6 +126,8 @@ class LearnerD4PG(object):
         policy_loss = self.value_net.get_probs(state, policy_action)
         policy_loss = policy_loss * torch.from_numpy(self.value_net.z_atoms).float().to(self.device)
         policy_loss = torch.sum(policy_loss, dim=2 if self.config['recurrent_policy'] else 1)
+        if self.config['recurrent_policy']:
+            policy_loss = policy_loss.mean(axis=1)
         policy_loss = -policy_loss.mean()
 
         self.policy_optimizer.zero_grad()
