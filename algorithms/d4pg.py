@@ -100,14 +100,15 @@ class LearnerD4PG(object):
 
         critic_value = self.value_net.get_probs(state, action)
         critic_value = critic_value.to(self.device)
-
         value_loss = self.value_criterion(critic_value, target_z_projected)
+        if self.config['recurrent_policy']:
+            value_loss = torch.sum(value_loss, dim=2)
         value_loss = value_loss.mean(axis=1)
 
         # Update priorities in buffer
         if self.prioritized_replay:
-            if self.config['recurrent_policy']:
-                value_loss = value_loss.mean(axis=1)
+            # if self.config['recurrent_policy']:
+            #    value_loss = value_loss.mean(axis=1)
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
             replay_priority_queue.put((inds, weights_update))
