@@ -147,8 +147,10 @@ class LearnerDSAC(object):
         zf1_loss = self.zf_criterion(z1_pred, z_target, tau_hat, next_presum_tau)
         zf2_loss = self.zf_criterion(z2_pred, z_target, tau_hat, next_presum_tau)
         if self.config['recurrent_policy']:
-            zf1_loss = torch.sum(zf1_loss, dim=2)
-            zf2_loss = torch.sum(zf2_loss, dim=2)
+            zf1_loss = zf1_loss.mean(axies=2)
+            zf2_loss = zf2_loss.mean(axies=2)
+            #zf1_loss = torch.sum(zf1_loss, dim=2)
+            #zf2_loss = torch.sum(zf2_loss, dim=2)
         zf1_loss = zf1_loss.mean(axis=1)
         zf2_loss = zf2_loss.mean(axis=1)
         value_loss = torch.min(zf1_loss, zf2_loss)
