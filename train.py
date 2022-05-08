@@ -89,7 +89,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
     writer.add_hparams(hparam_dict=config, metric_dict={})
     num_agents = config['num_agents']
-    fake_local_eps = np.zeros(num_agents, dtype=np.int64)
+    fake_local_eps = np.zeros(num_agents, dtype=int)
     fake_step = 0
     os.system('rosclean purge -y')
     print("Starting log...")
