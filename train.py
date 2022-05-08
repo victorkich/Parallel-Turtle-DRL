@@ -260,11 +260,11 @@ if __name__ == "__main__":
             target_policy_net.eval()
         else:
             target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                   hidden_sizes=[86, config['dense_size']],
+                                                   hidden_sizes=[config['dense_size'], config['dense_size']],
                                                    recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                                hidden_sizes=[86, config['dense_size']],
+                                                hidden_sizes=[config['dense_size'], config['dense_size']],
                                                 recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
     elif config['model'] == 'SAC':
         if config['test']:
