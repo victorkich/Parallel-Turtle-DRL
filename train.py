@@ -279,7 +279,7 @@ if __name__ == "__main__":
             target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
-    target_policy_net.share_memory()
+    # target_policy_net.share_memory()
 
     print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}")
     if not config['test']:
