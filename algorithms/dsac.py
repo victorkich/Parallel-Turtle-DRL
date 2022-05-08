@@ -151,6 +151,7 @@ class LearnerDSAC(object):
         #    zf2_loss = zf2_loss.mean(axis=2)
         #    #zf1_loss = torch.sum(zf1_loss, dim=2)
         #    #zf2_loss = torch.sum(zf2_loss, dim=2)
+
         zf1_loss = zf1_loss.mean(axis=1)
         zf2_loss = zf2_loss.mean(axis=1)
         value_loss = torch.min(zf1_loss, zf2_loss)
