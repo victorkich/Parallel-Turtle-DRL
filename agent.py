@@ -25,7 +25,7 @@ class Agent(object):
         self.action_low = [-1.5, -0.1]
         self.action_high = [1.5, 0.12]
         self.n_agent = n_agent
-        self.agent_type = agent_type if n_agent else 'exploitation'
+        self.agent_type = agent_type
         self.max_steps = config['max_ep_length']  # maximum number of steps per episode
         self.num_episode_save = config['num_episode_save']
         self.global_episode = global_episode
@@ -54,6 +54,8 @@ class Agent(object):
             return
         try:
             source = learner_w_queue.get_nowait()
+            if not self.n_agent:
+                learner_w_queue.put_nowait(source)
         except:
             return
         target = self.actor
@@ -215,8 +217,7 @@ class Agent(object):
                     self.save(f"step_{self.global_step.value}_episode_{self.local_episode}")
 
                 rewards.append(episode_reward)
-                if (self.agent_type == "exploration" or (self.config['recurrent_policy'] and self.config['replay_memory_prioritized'])) \
-                        and self.local_episode % self.config['update_agent_ep'] == 0:
+                if self.local_episode % self.config['update_agent_ep'] == 0:
                     self.update_actor_learner(learner_w_queue, training_on)
 
         if not self.config['test']:

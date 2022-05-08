@@ -289,13 +289,8 @@ if __name__ == "__main__":
         processes.append(p)
 
     # Single agent for exploitation
-    if config['recurrent_policy'] and config['replay_memory_prioritized']:
-        p = torch_mp.Process(target=agent_worker,
-                             args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue, global_episode, 0, "exploration",
-                             experiment_dir, training_on, replay_queue, logs, global_step))
-    else:
-        p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
-                                                        experiment_dir, training_on, replay_queue, logs, global_step))
+    p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
+                         global_episode, 0, "exploitation", experiment_dir, training_on, replay_queue, logs, global_step))
     processes.append(p)
 
     # Agents (exploration processes)
