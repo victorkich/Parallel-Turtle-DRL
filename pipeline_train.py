@@ -23,6 +23,7 @@ from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
 from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
+from utils.extract_and_compress import EAC
 from tensorboardX import SummaryWriter
 from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
@@ -47,6 +48,9 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         if len(replay_buffer) < batch_size:
             continue
 
+        if len(replay_buffer) > config['replay_mem_size']:
+            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
+
         try:
             if config['replay_memory_prioritized']:
                 inds, weights = replay_priorities_queue.get_nowait()
@@ -61,8 +65,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                    (update_step.value / config['num_steps_train'])
         batch = replay_buffer.sample(batch_size, beta=beta)
         batch_queue.put_nowait(batch)
-        if len(replay_buffer) > config['replay_mem_size']:
-            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
 
         try:
             # Log data structures sizes
@@ -88,7 +90,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
     writer.add_hparams(hparam_dict=config, metric_dict={})
     num_agents = config['num_agents']
-    fake_local_eps = np.zeros(num_agents, dtype=np.int)
+    fake_local_eps = np.zeros(num_agents, dtype=int)
     fake_step = 0
     os.system('rosclean purge -y')
     print("Starting log...")
@@ -127,7 +129,13 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
-    print("Writer closed!")
+    print(f"Writer closed!\nLoading data from {process_dir}/writer_data.json log...")
+    eac = EAC()
+    print('Extracting useful features from data...')
+    extracted_data = eac.extract()
+    print('Writing the new compressed data...')
+    eac.save_data(f"{process_dir}/writer_compressed_data.json")
+    print('Logger closed!')
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
@@ -174,7 +182,7 @@ if __name__ == "__main__":
                 os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                           'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
                           'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
-            time.sleep(2)
+            time.sleep(1)
         time.sleep(5)
 
         if config['seed']:
@@ -283,17 +291,16 @@ if __name__ == "__main__":
                 target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
                 policy_net = copy.deepcopy(target_policy_net)
                 policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
-        target_policy_net.share_memory()
 
-        print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}")
+        print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}-{'LSTM' if config['recurrent_policy'] else ''}")
         if not config['test']:
             p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net, learner_w_queue,
                                                               replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
             processes.append(p)
 
         # Single agent for exploitation
-        p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, None, global_episode, 0, "exploitation",
-                                                        experiment_dir, training_on, replay_queue, logs, global_step))
+        p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
+                             global_episode, 0, "exploitation", experiment_dir, training_on, replay_queue, logs, global_step))
         processes.append(p)
 
         # Agents (exploration processes)

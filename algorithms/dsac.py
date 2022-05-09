@@ -225,7 +225,7 @@ class LearnerDSAC(object):
 
         manager = enlighten.get_manager()
         status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
-        algorithm = f"{self.config['model']}-{'P' if self.prioritized_replay else 'N'}"
+        algorithm = f"{self.config['model']}-{'P' if self.prioritized_replay else 'N'}-{'LSTM' if self.config['recurrent_policy'] else ''}"
         status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=str(self.config['env_stage']), status='Training')
         ticks = manager.counter(total=self.config['num_steps_train'], desc="Training step", unit="ticks", color="red")
         while update_step.value <= self.config['num_steps_train']:

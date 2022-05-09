@@ -178,7 +178,7 @@ if __name__ == "__main__":
             os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
                       'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
                       'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
-        time.sleep(2)
+        time.sleep(1)
     time.sleep(5)
 
     if config['seed']:
@@ -280,9 +280,8 @@ if __name__ == "__main__":
             target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
             policy_net = copy.deepcopy(target_policy_net)
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
-    # target_policy_net.share_memory()
 
-    print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}")
+    print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}-{'LSTM' if config['recurrent_policy'] else ''}")
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                           learner_w_queue, replay_priorities_queue, batch_queue,
