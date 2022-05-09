@@ -185,8 +185,8 @@ class LearnerDSAC(object):
 
         z1_new_actions = self.zf1(obs, new_actions, new_tau_hat)
         z2_new_actions = self.zf2(obs, new_actions, new_tau_hat)
-        q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=2 if self.config['recurrent_policy'] else 1, keepdim=True)
-        q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=2 if self.config['recurrent_policy'] else 1, keepdim=True)
+        q1_new_actions = torch.sum(new_presum_tau * z1_new_actions, dim=2 if self.config['recurrent_policy'] else 1)
+        q2_new_actions = torch.sum(new_presum_tau * z2_new_actions, dim=2 if self.config['recurrent_policy'] else 1)
         if self.config['recurrent_policy']:
             q1_new_actions = q1_new_actions.mean(axis=1)
             q2_new_actions = q2_new_actions.mean(axis=1)
