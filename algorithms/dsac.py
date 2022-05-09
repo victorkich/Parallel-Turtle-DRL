@@ -154,7 +154,7 @@ class LearnerDSAC(object):
         zf2_loss = zf2_loss.mean(axis=1)
         value_loss = torch.min(zf1_loss, zf2_loss)
 
-        # Update priorities in buffer 1
+        # Update priorities in buffer
         if self.prioritized_replay:
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.config['priority_epsilon']
