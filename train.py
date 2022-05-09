@@ -48,6 +48,9 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
         if len(replay_buffer) < batch_size:
             continue
 
+        if len(replay_buffer) > config['replay_mem_size']:
+            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
+
         try:
             if config['replay_memory_prioritized']:
                 inds, weights = replay_priorities_queue.get_nowait()
@@ -62,8 +65,6 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
                    (update_step.value / config['num_steps_train'])
         batch = replay_buffer.sample(batch_size, beta=beta)
         batch_queue.put_nowait(batch)
-        if len(replay_buffer) > config['replay_mem_size']:
-            replay_buffer.remove(len(replay_buffer)-config['replay_mem_size'])
 
         try:
             # Log data structures sizes
