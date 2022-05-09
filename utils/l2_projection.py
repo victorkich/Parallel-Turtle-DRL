@@ -7,15 +7,15 @@ import numpy as np
 def _l2_project(next_distr_v, rewards_v, dones_mask_t, gamma, delta_z, n_atoms, v_min, v_max):
     next_distr = next_distr_v.data.cpu().numpy()
     rewards = rewards_v.data.cpu().numpy()
-    dones_mask = dones_mask_t.cpu().numpy().astype(np.bool)
+    dones_mask = dones_mask_t.cpu().numpy().astype(bool)
     batch_size = len(rewards)
-    proj_distr = np.zeros((batch_size, n_atoms), dtype=np.float32)
+    proj_distr = np.zeros((batch_size, n_atoms), dtype=float)
 
     for atom in range(n_atoms):
         tz_j = np.minimum(v_max, np.maximum(v_min, rewards + (v_min + atom * delta_z) * gamma))
         b_j = (tz_j - v_min) / delta_z
-        l = np.floor(b_j).astype(np.int64)
-        u = np.ceil(b_j).astype(np.int64)
+        l = np.floor(b_j).astype(int)
+        u = np.ceil(b_j).astype(int)
         eq_mask = u == l
         proj_distr[eq_mask, l[eq_mask]] += next_distr[eq_mask, atom]
         ne_mask = u != l
@@ -26,8 +26,8 @@ def _l2_project(next_distr_v, rewards_v, dones_mask_t, gamma, delta_z, n_atoms, 
         proj_distr[dones_mask] = 0.0
         tz_j = np.minimum(v_max, np.maximum(v_min, rewards[dones_mask]))
         b_j = (tz_j - v_min) / delta_z
-        l = np.floor(b_j).astype(np.int64)
-        u = np.ceil(b_j).astype(np.int64)
+        l = np.floor(b_j).astype(int)
+        u = np.ceil(b_j).astype(int)
         eq_mask = u == l
         eq_dones = dones_mask.copy()
         eq_dones[dones_mask] = eq_mask
