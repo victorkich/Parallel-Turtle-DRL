@@ -96,8 +96,7 @@ class Agent(object):
             c_0 = None
             while not done and training_on.value:
                 if self.config['obs_noise']:
-                    noise = np.random.normal(loc=0.0, scale=0.05, size=len(state))
-                    state += noise
+                    state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
                 for s in range(len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
@@ -196,8 +195,8 @@ class Agent(object):
             episode_timing = time.time() - ep_start_time
             if training_on.value:
                 print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
-                      f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}/"
-                      f"{self.config['test_trials'] if self.config['test'] else self.config['num_episodes']}] Reward: "
+                      f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}"
+                      f"{('/' + self.config['test_trials']) if self.config['test'] else ''}] Reward: "
                       f"[{int(episode_reward)}/200] Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
