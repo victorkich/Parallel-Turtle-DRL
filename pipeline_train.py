@@ -129,12 +129,12 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
-    print(f"Writer closed!\nLoading data from {process_dir}/writer_data.json log...")
-    eac = EAC()
-    print('Extracting useful features from data...')
-    extracted_data = eac.extract()
-    print('Writing the new compressed data...')
-    eac.save_data(f"{process_dir}/writer_compressed_data.json")
+    # print(f"Writer closed!\nLoading data from {process_dir}/writer_data.json log...")
+    # eac = EAC()
+    # print('Extracting useful features from data...')
+    # extracted_data = eac.extract()
+    # print('Writing the new compressed data...')
+    # eac.save_data(f"{process_dir}/writer_compressed_data.json")
     print('Logger closed!')
 
 
@@ -317,6 +317,10 @@ if __name__ == "__main__":
             p.start()
         for p in processes:
             p.join()
-        time.sleep(5)
+
+        os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
+        os.system("kill $(ps aux | grep gzclient | grep -v grep | awk '{print $2}')")
+        os.system("kill $(ps aux | grep gzserver | grep -v grep | awk '{print $2}')")
+        time.sleep(25)
 
     print("End.")
