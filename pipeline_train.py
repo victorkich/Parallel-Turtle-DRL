@@ -172,19 +172,6 @@ if __name__ == "__main__":
         with open(path + '/pipeline_configs/' + pipeline_config, 'r') as ymlfile:
             config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-        # Opening gazebo environments
-        for i in range(config['num_agents'] if not config['test'] else 1):
-            if not i:
-                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                          'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
-            else:
-                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
-                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
-                          'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11311 + i, 11341 + i, config['env_stage']))
-            time.sleep(1)
-        time.sleep(5)
-
         if config['seed']:
             torch.manual_seed(config['random_seed'])
             np.random.seed(config['random_seed'])
@@ -215,6 +202,21 @@ if __name__ == "__main__":
                 print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
                       f"\nSkipping this train out of the pipeline...")
                 continue
+
+        # Opening gazebo environments
+        for i in range(config['num_agents'] if not config['test'] else 1):
+            if not i:
+                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                          'turtlebot3_gazebo turtlebot3_stage_{}_1.launch"'.format(11311 + i, 11341 + i,
+                                                                                   config['env_stage']))
+            else:
+                os.system('gnome-terminal --tab --working-directory=WORK_DIR -- zsh -c "export '
+                          'ROS_MASTER_URI=http://localhost:{}; export GAZEBO_MASTER_URI=http://localhost:{}; roslaunch '
+                          'turtlebot3_gazebo turtlebot3_stage_{}.launch"'.format(11311 + i, 11341 + i,
+                                                                                 config['env_stage']))
+            time.sleep(1)
+        time.sleep(5)
 
         # Data structures
         processes = []
