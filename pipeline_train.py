@@ -92,7 +92,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
     num_agents = config['num_agents']
     fake_local_eps = np.zeros(num_agents, dtype=int)
     fake_step = 0
-    os.system('rosclean purge -y')
+    # os.system('rosclean purge -y')
     print("Starting log...")
     while training_on.value if not config['test'] else (logs[8] <= config['test_trials']):
         try:
