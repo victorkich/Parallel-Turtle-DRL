@@ -300,14 +300,9 @@ if __name__ == "__main__":
                                                               replay_priorities_queue, batch_queue, update_step, logs, experiment_dir))
             processes.append(p)
 
-        # Single agent for exploitation
-        p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
-                             global_episode, 0, "exploitation", experiment_dir, training_on, replay_queue, logs, global_step))
-        processes.append(p)
-
         # Agents (exploration processes)
         if not config['test']:
-            for i in range(1, config['num_agents']):
+            for i in range(config['num_agents']):
                 p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
                                                                 global_episode, i, "exploration", experiment_dir,
                                                                 training_on, replay_queue, logs, global_step))
