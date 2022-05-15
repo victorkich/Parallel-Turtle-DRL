@@ -45,7 +45,7 @@ class ValueNetwork(nn.Module):
 class PolicyNetwork(nn.Module):
     """Actor - return action value given states. """
 
-    def __init__(self, num_states, num_actions, hidden_size, device='cuda', recurrent=False, lstm_cells=1):
+    def __init__(self, num_states, num_actions, hidden_size, device='cuda', recurrent=False, lstm_cells=1, lstm_dense=64):
         """
         Args:
             num_states (int): state dimension
@@ -58,8 +58,8 @@ class PolicyNetwork(nn.Module):
         self.hidden_size = hidden_size
 
         if recurrent:
-            self.lstm = nn.LSTM(input_size=num_states, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
-            self.linear1 = nn.Linear(hidden_size, hidden_size)
+            self.lstm = nn.LSTM(input_size=num_states, hidden_size=lstm_dense, num_layers=lstm_cells, batch_first=True)
+            self.linear1 = nn.Linear(lstm_dense, hidden_size)
             self.linear2 = nn.Linear(hidden_size, num_actions)
         else:
             self.linear1 = nn.Linear(num_states, hidden_size)
