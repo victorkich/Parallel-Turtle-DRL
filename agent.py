@@ -155,7 +155,7 @@ class Agent(object):
 
                 state = next_state
 
-                if done or num_steps == self.max_steps:
+                if done or num_steps >= self.max_steps:
                     # add rest of experiences remaining in buffer
                     if not self.config['test']:
                         while len(self.exp_buffer) != 0:
