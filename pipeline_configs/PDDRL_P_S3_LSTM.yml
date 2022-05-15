@@ -45,7 +45,7 @@ obs_noise: 0
 # Network parameters
 critic_learning_rate: 0.0005
 actor_learning_rate: 0.0005
-dense_size: 256  # size of the 2 hidden layers in networks
+dense_size: 64  # size of the 2 hidden layers in networks
 final_layer_init: 0.003
 num_atoms: 51  # number of atoms in output layer of distributed critic
 v_min: -20.0  # lower bound of critic value output distribution
