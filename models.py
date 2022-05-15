@@ -56,6 +56,7 @@ class PolicyNetwork(nn.Module):
         self.device = device
         self.recurrent = recurrent
         self.hidden_size = hidden_size
+        self.lstm_dense = lstm_dense
 
         if recurrent:
             self.lstm = nn.LSTM(input_size=num_states, hidden_size=lstm_dense, num_layers=lstm_cells, batch_first=True)
@@ -73,20 +74,20 @@ class PolicyNetwork(nn.Module):
             if len(state.size()) == 3:
                 batch_size, seq_size, obs_size = state.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
+                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
+                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
                 else:
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
 
-            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
-                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous(),
+                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous())
             state = state.view(batch_size, seq_size, obs_size)
             self.lstm.flatten_parameters()
             x, (h_0, c_0) = self.lstm(state, hxs)
@@ -365,6 +366,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         self.log_std = None
         self.std = std
         self.hidden_sizes = hidden_sizes
+        self.lstm_dense = lstm_cells
+
         if std is None:
             last_hidden_size = obs_dim
             if len(hidden_sizes) > 0:
@@ -403,8 +406,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
                     c_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
 
-                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
-                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous(),
+                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous())
             else:
                 if h_0 is None and c_0 is None:
                     h_0 = torch.zeros((1, self.hidden_sizes[0]))
