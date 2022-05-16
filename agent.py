@@ -18,9 +18,9 @@ class Agent(object):
     def __init__(self, config, policy, global_episode, global_step, n_agent=0, agent_type='exploration', log_dir=''):
         colorama_init(autoreset=True)
         self.colors = dict(Fore.__dict__.items())
-        self.color = list(self.colors.keys())[n_agent + 1]
+        self.color = list(self.colors.keys())[n_agent+1]
 
-        print(self.colors[self.color] + f"Initializing agent {n_agent}...")
+        print(self.colors[self.color] + f"Initializing agent {n_agent+1}...")
         self.config = config
         self.action_low = [-1.5, -0.1]
         self.action_high = [1.5, 0.12]
@@ -46,7 +46,7 @@ class Agent(object):
         self.ou_noise.reset()
 
         self.actor = policy
-        print(self.colors[self.color] + f"Started agent {n_agent} using {config['device']}")
+        print(self.colors[self.color] + f"Started agent {n_agent+1} using {config['device']}")
 
     def update_actor_learner(self, learner_w_queue, training_on):
         """Update local actor to the actor from learner. """
@@ -146,7 +146,7 @@ class Agent(object):
                                 if self.config['recurrent_policy'] and len(sequence_replay_buffer) < self.config['sequence_size']:
                                     sequence_replay_buffer.append([state_0, action_0, discounted_reward, next_state, done, gamma, h_0, c_0])
                                 elif self.config['recurrent_policy']:
-                                    replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(8)])
+                                    replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(self.config['sequence_size'])])
                                     sequence_replay_buffer = []
                                 else:
                                     replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
@@ -171,7 +171,7 @@ class Agent(object):
                                         while len(sequence_replay_buffer) < self.config['sequence_size']:
                                             sequence_replay_buffer.append([state_0, action_0, discounted_reward,
                                                                            next_state, done, gamma, h_0, c_0])
-                                        replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(8)])
+                                        replay_queue.put_nowait([[srb[i] for srb in sequence_replay_buffer] for i in range(self.config['sequence_size'])])
                                     else:
                                         replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma, h_0, c_0])
                                 except:
