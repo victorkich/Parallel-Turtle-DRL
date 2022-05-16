@@ -213,7 +213,7 @@ class Agent(object):
             if not self.config['test']:
                 time_to_save = self.local_episode % self.num_episode_save == 0
                 if self.agent_type == "exploitation" and (time_to_save or self.global_step.value >= self.config['num_steps_train']):
-                    self.save(f"step_{self.global_step.value}_episode_{self.local_episode}")
+                    self.save(f"step_{self.global_step.value}")
 
                 rewards.append(episode_reward)
                 if self.local_episode % self.config['update_agent_ep'] == 0:
