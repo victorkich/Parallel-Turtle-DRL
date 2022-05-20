@@ -191,7 +191,7 @@ if __name__ == "__main__":
             os.makedirs(model_dir)
         else:
             list_saved_models = os.listdir(model_dir)
-            higher = 1
+            higher = 0
             higher_model = None
             for saved_model in list_saved_models:
                 current = saved_model.split('_')[1].split('.')[0]
