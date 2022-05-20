@@ -268,7 +268,7 @@ if __name__ == "__main__":
                 try:
                     target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                            hidden_sizes=[config['lstm_dense'] if config['recurrent_policy'] else config['dense_size'], config['dense_size']],
-                                                           recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
+                                                           recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'], lstm_dense=config['lstm_dense'])
                     target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
                 except:
                     target_policy_net = torch.load(path_model)
@@ -277,11 +277,11 @@ if __name__ == "__main__":
             else:
                 target_policy_net = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                        hidden_sizes=[config['lstm_dense'] if config['recurrent_policy'] else config['dense_size'], config['dense_size']],
-                                                       recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
+                                                       recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'], lstm_dense=config['lstm_dense'])
                 policy_net = copy.deepcopy(target_policy_net)
                 policy_net_cpu = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                                     hidden_sizes=[config['lstm_dense'] if config['recurrent_policy'] else config['dense_size'], config['dense_size']],
-                                                    recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'])
+                                                    recurrent=config['recurrent_policy'], lstm_cells=config['num_lstm_cell'], lstm_dense=config['lstm_dense'])
         elif config['model'] == 'SAC':
             if config['test']:
                 try:

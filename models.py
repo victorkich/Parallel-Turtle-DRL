@@ -254,7 +254,7 @@ class QuantileMlp(nn.Module):
 class Mlp(nn.Module):
     def __init__(self, hidden_sizes, output_size, input_size, config, init_w=3e-3, hidden_activation=F.relu,
                  output_activation=nn.Identity, hidden_init=fanin_init, b_init_value=0.1, layer_norm=False,
-                 recurrent=False, lstm_cells=1, layer_norm_kwargs=None):
+                 recurrent=False, lstm_cells=1, lstm_dense=64, layer_norm_kwargs=None):
         super().__init__()
 
         self.input_size = input_size
@@ -265,6 +265,7 @@ class Mlp(nn.Module):
         self.fcs = []
         self.layer_norms = []
         self.recurrent = recurrent
+        self.lstm_dense = lstm_dense
         in_size = input_size
 
         for i, next_size in enumerate(hidden_sizes):
@@ -297,14 +298,14 @@ class Mlp(nn.Module):
             if len(state.size()) == 3:
                 batch_size, seq_size, obs_size = state.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
+                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
             else:
                 seq_size = 1
                 batch_size, obs_size = state.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
+                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
+                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
                 else:
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
@@ -359,8 +360,8 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         This is done because computing the log_prob can be a bit expensive.
     """
 
-    def __init__(self, hidden_sizes, obs_dim, action_dim, config, std=None, init_w=1e-3, recurrent=False, lstm_cells=1, **kwargs):
-        super().__init__(hidden_sizes, input_size=obs_dim, output_size=action_dim, config=config, init_w=init_w, recurrent=recurrent, lstm_cells=lstm_cells, **kwargs)
+    def __init__(self, hidden_sizes, obs_dim, action_dim, config, std=None, init_w=1e-3, recurrent=False, lstm_cells=1, lstm_dense=64, **kwargs):
+        super().__init__(hidden_sizes, input_size=obs_dim, output_size=action_dim, config=config, init_w=init_w, recurrent=recurrent, lstm_cells=lstm_cells, lstm_dense=lstm_dense, **kwargs)
         self.config = config
         self.device = config['device']
         self.log_std = None
@@ -403,15 +404,15 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
             if len(h.size()) == 3:
                 batch_size, seq_size, obs_size = h.size()
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
-                    c_0 = torch.zeros((batch_size, seq_size, self.hidden_sizes[0]))
+                    h_0 = torch.zeros((batch_size, seq_size, self.lstm_dense))
+                    c_0 = torch.zeros((batch_size, seq_size, self.lstm_dense))
 
                 hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous(),
                        c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous())
             else:
                 if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, self.hidden_sizes[0]))
-                    c_0 = torch.zeros((1, self.hidden_sizes[0]))
+                    h_0 = torch.zeros((1, self.lstm_dense))
+                    c_0 = torch.zeros((1, self.lstm_dense))
                 else:
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
