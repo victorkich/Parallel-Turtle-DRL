@@ -195,9 +195,10 @@ if __name__ == "__main__":
             higher_model = None
             for saved_model in list_saved_models:
                 current = saved_model.split('_')[1].split('.')[0]
-                if higher < int(current if current != 'data' else 0):
-                    higher = int(current if current != 'data' else 0)
-                    higher_model = saved_model
+                if current != 'data':
+                    if higher < int(current):
+                        higher = int(current)
+                        higher_model = saved_model
             path_model = f"{model_dir}{higher_model}"
             if config['num_steps_train'] >= higher and not config['test']:
                 print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
