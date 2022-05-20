@@ -419,7 +419,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
 
                 hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
                        c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
-                h = h.view(1, 1, len(h))
+                # h = h.view(1, 1, len(h))
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
