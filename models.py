@@ -270,8 +270,8 @@ class Mlp(nn.Module):
 
         for i, next_size in enumerate(hidden_sizes):
             if recurrent and not i:
-                fc = nn.LSTM(input_size=in_size, hidden_size=next_size, num_layers=lstm_cells, batch_first=True)
-                self.hidden_size = next_size
+                fc = nn.LSTM(input_size=in_size, hidden_size=self.lstm_dense, num_layers=lstm_cells, batch_first=True)
+                next_size = self.lstm_dense
             else:
                 fc = nn.Linear(in_size, next_size)
                 hidden_init(fc.weight)
@@ -310,8 +310,8 @@ class Mlp(nn.Module):
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
 
-            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous(),
-                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.hidden_size).contiguous())
+            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous(),
+                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size, self.lstm_dense).contiguous())
             state = state.view(batch_size, seq_size, obs_size)
             h = state
             for i, fc in enumerate(self.fcs):
