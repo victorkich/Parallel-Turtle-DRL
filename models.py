@@ -367,7 +367,7 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         self.log_std = None
         self.std = std
         self.hidden_sizes = hidden_sizes
-        self.lstm_dense = lstm_cells
+        self.lstm_dense = lstm_dense
 
         if std is None:
             last_hidden_size = obs_dim
@@ -417,9 +417,9 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                     h_0 = torch.Tensor(h_0)
                     c_0 = torch.Tensor(c_0)
 
-                hxs = (h_0.clone().detach().to(self.device).view(1, -1).contiguous(),
-                       c_0.clone().detach().to(self.device).view(1, -1).contiguous())
-                # h = h.view(1, 1, len(h))
+                hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
+                       c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
+                h = h.view(1, 1, len(h))
 
         for i, fc in enumerate(self.fcs):
             if self.recurrent and not i:
