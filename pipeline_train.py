@@ -185,7 +185,7 @@ if __name__ == "__main__":
             os.makedirs(results_dir)
 
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_" \
-                     f"{'P' if config['replay_memory_prioritized'] else 'N'}"
+                     f"{'P' if config['replay_memory_prioritized'] else 'N'}{'_LSTM' if config['recurrent_policy'] else ''}"
         model_dir = f"{experiment_dir}/{model_name}/"
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
