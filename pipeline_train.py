@@ -194,8 +194,8 @@ if __name__ == "__main__":
             higher = 0
             higher_model = None
             for saved_model in list_saved_models:
-                if higher < int(saved_model.split('_')[1]):
-                    higher = int(saved_model.split('_')[1])
+                if higher < int(saved_model.split('_')[1].split('.')[0]):
+                    higher = int(saved_model.split('_')[1].split('.')[0])
                     higher_model = saved_model
             path_model = f"{model_dir}{higher_model}"
             if config['num_steps_train'] >= higher and not config['test']:
