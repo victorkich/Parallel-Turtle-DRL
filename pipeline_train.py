@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
         model_name = f"{config['model']}_{config['dense_size']}_A{config['num_agents']}_S{config['env_stage']}_" \
                      f"{'P' if config['replay_memory_prioritized'] else 'N'}{'_LSTM' if config['recurrent_policy'] else ''}"
-        model_dir = f"{experiment_dir}/{model_name}/"
+        model_dir = f"{experiment_dir}{model_name}/"
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         else:
@@ -196,12 +196,10 @@ if __name__ == "__main__":
             for saved_model in list_saved_models:
                 current = saved_model.split('_')[1].split('.')[0]
                 if current != 'data':
-                    print('Current:', current)
                     if higher < int(current):
                         higher = int(current)
                         higher_model = saved_model
             path_model = f"{model_dir}{higher_model}"
-            print('Path model:', path_model)
             if config['num_steps_train'] >= higher and not config['test']:
                 print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
                       f"\nSkipping this train out of the pipeline...")
