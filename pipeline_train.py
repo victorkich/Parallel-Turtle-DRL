@@ -200,6 +200,8 @@ if __name__ == "__main__":
                         higher = int(current)
                         higher_model = saved_model
             path_model = f"{model_dir}{higher_model}"
+            print(config['num_steps_train'], '>=', higher)
+            print('Result:', config['num_steps_train'] >= higher)
             if config['num_steps_train'] >= higher and not config['test']:
                 print(f"{model_name} already has a trained model with steps >= {config['num_steps_train']}."
                       f"\nSkipping this train out of the pipeline...")
