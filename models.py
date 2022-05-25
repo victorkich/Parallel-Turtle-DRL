@@ -93,7 +93,7 @@ class PolicyNetwork(nn.Module):
             x, (h_0, c_0) = self.lstm(state, hxs)
             hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
             x = torch.relu(x)
-            x = torch.relu(self.linear1(x))
+            # x = torch.relu(self.linear1(x))
             x = torch.tanh(self.linear2(x))
         else:
             x = torch.relu(self.linear1(state))
