@@ -152,10 +152,11 @@ def learner_worker(config, training_on, policy, target_policy_net, learner_w_que
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
-                 replay_queue, logs, global_step):
+                 replay_queue, logs, global_step, update_step):
     agent = Agent(config=config, policy=policy, global_episode=global_episode, n_agent=i, agent_type=agent_type,
                   log_dir=experiment_dir, global_step=global_step)
-    agent.run(training_on=training_on, replay_queue=replay_queue, learner_w_queue=learner_w_queue, logs=logs)
+    agent.run(training_on=training_on, replay_queue=replay_queue, learner_w_queue=learner_w_queue, logs=logs,
+              update_step=update_step)
 
 
 if __name__ == "__main__":
@@ -165,7 +166,7 @@ if __name__ == "__main__":
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
-    pipeline_configs = np.sort(os.listdir(path + '/pipeline_configs'))
+    pipeline_configs = np.flip(np.sort(os.listdir(path + '/pipeline_configs')))
 
     for pipeline_config in pipeline_configs:
         print('Starting new training for', pipeline_config, 'config file.')
@@ -307,7 +308,7 @@ if __name__ == "__main__":
             for i in range(config['num_agents']):
                 p = torch_mp.Process(target=agent_worker, args=(config, copy.deepcopy(policy_net_cpu), learner_w_queue,
                                                                 global_episode, i, "exploration", experiment_dir,
-                                                                training_on, replay_queue, logs, global_step))
+                                                                training_on, replay_queue, logs, global_step, update_step))
                 processes.append(p)
 
         for p in processes:

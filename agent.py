@@ -64,7 +64,7 @@ class Agent(object):
             target_param.data.copy_(w)
         del source
 
-    def run(self, training_on, replay_queue, learner_w_queue, logs):
+    def run(self, training_on, replay_queue, learner_w_queue, logs, update_step):
         time.sleep(1)
         os.environ['ROS_MASTER_URI'] = "http://localhost:{}/".format(11311 + self.n_agent)
         rospy.init_node(self.config['env_name'].replace('-', '_') + "_w{}".format(self.n_agent))
@@ -213,7 +213,7 @@ class Agent(object):
             if not self.config['test']:
                 time_to_save = self.local_episode % self.num_episode_save == 0
                 if self.agent_type == "exploitation" and (time_to_save or self.global_step.value >= self.config['num_steps_train']):
-                    self.save(f"step_{self.global_step.value}")
+                    self.save(f"step_{update_step.value}")
 
                 rewards.append(episode_reward)
                 if self.local_episode % self.config['update_agent_ep'] == 0:
