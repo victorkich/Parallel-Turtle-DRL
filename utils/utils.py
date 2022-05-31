@@ -168,6 +168,7 @@ class ReplayBuffer(object):
         for h in h_0s:
             for z in h:
                 print(len(z))
+                print(z)
 
         return [np.array(obses_t, dtype=np.float32), np.array(actions, dtype=np.float32), np.array(rewards, dtype=np.float32),
                 np.array(obses_tp1, dtype=np.float32), np.array(dones, dtype=bool), np.array(gammas, dtype=np.float32),
