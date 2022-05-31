@@ -174,7 +174,7 @@ class Agent(object):
                     break
 
                 if hx is not None:
-                    h_0, c_0 = hx
+                    (h_0, c_0) = hx
                 else:
                     h_0 = np.zeros(self.config['lstm_dense'], dtype=np.float32)
                     c_0 = np.zeros(self.config['lstm_dense'], dtype=np.float32)
