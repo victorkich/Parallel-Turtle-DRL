@@ -92,8 +92,8 @@ class Agent(object):
             if self.config['recurrent_policy']:
                 sequence_replay_buffer = []
 
-            h_0 = np.zeros((1, self.config['lstm_dense']), dtype=np.float32)
-            c_0 = np.zeros((1, self.config['lstm_dense']), dtype=np.float32)
+            h_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
+            c_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
             while not done and training_on.value:
                 if self.config['obs_noise']:
                     state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
@@ -175,11 +175,11 @@ class Agent(object):
 
                 if hx is not None:
                     (h_0, c_0) = hx
-                    print('h_0:', h_0.shape, 'h_0:', h_0)
-                    print('c_0:', c_0.shape, 'c_0:', c_0)
+                    # print('h_0:', h_0.shape, 'h_0:', h_0)
+                    # print('c_0:', c_0.shape, 'c_0:', c_0)
                 else:
-                    h_0 = np.zeros((1, self.config['lstm_dense']), dtype=np.float32)
-                    c_0 = np.zeros((1, self.config['lstm_dense']), dtype=np.float32)
+                    h_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
+                    c_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
 
                 num_steps += 1
                 if self.n_agent:
