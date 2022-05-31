@@ -175,6 +175,8 @@ class Agent(object):
 
                 if hx is not None:
                     (h_0, c_0) = hx
+                    print('h_0:', h_0.shape, 'h_0:', h_0)
+                    print('c_0:', c_0.shape, 'c_0:', c_0)
                 else:
                     h_0 = np.zeros((1, self.config['lstm_dense']), dtype=np.float32)
                     c_0 = np.zeros((1, self.config['lstm_dense']), dtype=np.float32)
