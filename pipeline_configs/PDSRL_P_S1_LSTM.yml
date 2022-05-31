@@ -14,7 +14,7 @@ batch_size: 256
 num_episodes: 2000
 num_steps_train: 100000  # number of episodes from all agents
 max_ep_length: 500  # maximum number of steps per episode
-replay_mem_size: 50000  # maximum capacity of replay memory
+replay_mem_size: 100000  # maximum capacity of replay memory
 priority_alpha: 0.6  # 0.6 controls the randomness vs prioritisation of the prioritised sampling (0.0 = Uniform sampling, 1.0 = Greedy prioritisation)
 priority_beta_start: 0.4  # 0.4 starting value of beta - controls to what degree IS weights influence the gradient updates to correct for the bias introduces by priority sampling (0 - no correction, 1 - full correction)
 priority_beta_end: 1.0  # 1.0 beta will be linearly annelaed from its start value to this value thoughout training
@@ -35,12 +35,12 @@ reward_scale: 1.0
 clip_norm: 0.0
 use_automatic_entropy_tuning: 1
 num_quantiles: 51
-obs_noise: 0
+obs_noise: 1
 
 # LSTM parameters
 sequence_size: 8
 recurrent_policy: 1
-num_lstm_cell: 1
+num_lstm_cell: 2
 lstm_dense: 256
 
 # Network parameters
