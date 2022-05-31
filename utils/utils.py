@@ -162,8 +162,10 @@ class ReplayBuffer(object):
             obses_tp1.append(np.array(obs_tp1, copy=False))
             dones.append(done)
             gammas.append(gamma)
-            h_0s.append(np.array(h_0, copy=False))
-            c_0s.append(np.array(c_0, copy=False))
+
+        _, _, _, _, _, _, h_0, c_0 = self._storage[0]
+        h_0s.append(np.array(h_0, copy=False))
+        c_0s.append(np.array(c_0, copy=False))
 
         return [np.array(obses_t, dtype=np.float32), np.array(actions, dtype=np.float32), np.array(rewards, dtype=np.float32),
                 np.array(obses_tp1, dtype=np.float32), np.array(dones, dtype=bool), np.array(gammas, dtype=np.float32),
