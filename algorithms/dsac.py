@@ -86,7 +86,7 @@ class LearnerDSAC(object):
             batch_size, obs_size = actions.size()
             presum_tau = torch.zeros(batch_size, self.num_quantiles).to(self.device) + 1. / self.num_quantiles
 
-        tau = torch.cumsum(presum_tau, dim=2 if self.recurrent else 1)  #  (N, T), note that they are tau1...tauN in the paper
+        tau = torch.cumsum(presum_tau, dim=2 if self.recurrent else 1)
         with torch.no_grad():
             tau_hat = torch.zeros_like(tau).to(self.device)
             if self.recurrent:
