@@ -321,15 +321,18 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             transitions at the sampled idxes denoted by
             variable `idxes`.
         """
-        assert len(idxes) == len(priorities)
-        for idx, priority in zip(idxes, priorities):
-            if priority < 0:
-                priority = 0
-            assert 0 <= idx  # < len(self._storage)
-            idx = int(idx)
-            self._it_sum[idx] = priority ** self._alpha
-            self._it_min[idx] = priority ** self._alpha
-            self._max_priority = max(self._max_priority, priority)
+        # assert len(idxes) == len(priorities)
+        try:
+            for idx, priority in zip(idxes, priorities):
+                if priority < 0:
+                    priority = 0
+                assert 0 <= idx  # < len(self._storage)
+                idx = int(idx)
+                self._it_sum[idx] = priority ** self._alpha
+                self._it_min[idx] = priority ** self._alpha
+                self._max_priority = max(self._max_priority, priority)
+        except:
+            print('Error on update_priorities, but it keep running...')
 
     def dump(self, save_dir):
         fn = os.path.join(save_dir, "replay_buffer.pkl")
