@@ -36,7 +36,12 @@ class LearnerDSAC(object):
         self.soft_target_tau = config['tau']  # parameter for soft target network updates
         self.target_update_period = config['update_agent_ep']
         self.num_quantiles = config['num_quantiles']
+        self.recurrent = config['recurrent_policy']
+        self.sequence_size = config['sequence_size']
+        self.priority_epsilon = config['priority_epsilon']
         M = config['dense_size']
+        self.model = config['model']
+        self.env_stage = config['env_stage']
 
         # value nets
         self.zf1 = QuantileMlp(config=config, input_size=self.state_size + self.action_size, output_size=1, num_quantiles=self.num_quantiles, hidden_sizes=[M, M], recurrent=config['recurrent_policy'])
@@ -57,7 +62,7 @@ class LearnerDSAC(object):
 
         self.use_automatic_entropy_tuning = config['use_automatic_entropy_tuning']
         if self.use_automatic_entropy_tuning:
-            self.target_entropy = -torch.tensor(np.prod(config['action_dim']).item()).to(self.device)
+            self.target_entropy = -torch.tensor(np.prod(self.action_size).item()).to(self.device)
             self.log_alpha = torch.nn.Parameter(torch.tensor([0.0], requires_grad=True).to(self.device))
             self.alpha_optimizer = optim.Adam([self.log_alpha], lr=policy_lr)
         else:
@@ -74,17 +79,17 @@ class LearnerDSAC(object):
         self.clip_norm = config['clip_norm']
 
     def get_tau(self, actions):
-        if self.config['recurrent_policy']:
+        if self.recurrent:
             batch_size, seq_size, obs_size = actions.size()
             presum_tau = torch.zeros(batch_size, seq_size, self.num_quantiles).to(self.device) + 1. / self.num_quantiles
         else:
             batch_size, obs_size = actions.size()
             presum_tau = torch.zeros(batch_size, self.num_quantiles).to(self.device) + 1. / self.num_quantiles
 
-        tau = torch.cumsum(presum_tau, dim=2 if self.config['recurrent_policy'] else 1)  #  (N, T), note that they are tau1...tauN in the paper
+        tau = torch.cumsum(presum_tau, dim=2 if self.recurrent else 1)  #  (N, T), note that they are tau1...tauN in the paper
         with torch.no_grad():
             tau_hat = torch.zeros_like(tau).to(self.device)
-            if self.config['recurrent_policy']:
+            if self.recurrent:
                 tau_hat[:, :, 0:1] = tau[:, :, 0:1] / 2.
                 tau_hat[:, :, 1:] = (tau[:, :, 1:] + tau[:, :, :-1]) / 2.
             else:
@@ -134,9 +139,9 @@ class LearnerDSAC(object):
             target_z1_values = self.target_zf1(next_obs, new_next_actions, next_tau_hat)
             target_z2_values = self.target_zf2(next_obs, new_next_actions, next_tau_hat)
             target_z_values = torch.min(target_z1_values, target_z2_values) - alpha * new_log_pi
-            if self.config['recurrent_policy']:
-                terminals = terminals.view(self.config['batch_size'], self.config['sequence_size'], 1)
-                rewards = rewards.view(self.config['batch_size'], self.config['sequence_size'], 1)
+            if self.recurrent:
+                terminals = terminals.view(self.batch_size, self.sequence_size, 1)
+                rewards = rewards.view(self.batch_size, self.sequence_size, 1)
                 z_target = self.reward_scale * rewards + (1. - terminals) * self.discount * target_z_values
             else:
                 z_target = self.reward_scale * rewards.unsqueeze(1) + (1. - terminals.unsqueeze(1)) * self.discount * target_z_values
@@ -146,7 +151,7 @@ class LearnerDSAC(object):
         z2_pred = self.zf2(obs, actions, tau_hat)
         zf1_loss = self.zf_criterion(z1_pred, z_target, tau_hat, next_presum_tau)
         zf2_loss = self.zf_criterion(z2_pred, z_target, tau_hat, next_presum_tau)
-        # if self.config['recurrent_policy']:
+        # if self.recurrent:
         #     zf1_loss = torch.sum(zf1_loss, dim=2)
         #     zf2_loss = torch.sum(zf2_loss, dim=2)
 
@@ -157,9 +162,9 @@ class LearnerDSAC(object):
         # Update priorities in buffer
         if self.prioritized_replay:
             td_error = value_loss.cpu().detach().numpy().flatten()
-            weights_update = np.abs(td_error) + self.config['priority_epsilon']
+            weights_update = np.abs(td_error) + self.priority_epsilon
             replay_priority_queue.put((inds, weights_update))
-            if self.config['recurrent_policy']:
+            if self.recurrent:
                 w_shape = weights.shape[0]
                 weights = weights.reshape((w_shape, 1))
             zf1_loss *= torch.tensor(weights).float().to(self.device)
@@ -181,7 +186,7 @@ class LearnerDSAC(object):
 
         z1_new_actions = self.zf1(obs, new_actions, new_tau_hat)
         z2_new_actions = self.zf2(obs, new_actions, new_tau_hat)
-        if self.config['recurrent_policy']:
+        if self.recurrent:
             q1_new_actions = torch.sum((new_presum_tau * z1_new_actions).mean(axis=2), dim=1)
             q2_new_actions = torch.sum((new_presum_tau * z2_new_actions).mean(axis=2), dim=1)
         else:
@@ -192,7 +197,7 @@ class LearnerDSAC(object):
         policy_loss = (alpha * log_pi - q_new_actions).mean()
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
-        policy_grad = fast_clip_grad_norm(self.policy_net.parameters(), self.clip_norm)
+        _ = fast_clip_grad_norm(self.policy_net.parameters(), self.clip_norm)
         self.policy_optimizer.step()
 
         for target_param, param in zip(self.target_zf1.parameters(), self.zf1.parameters()):
@@ -224,10 +229,10 @@ class LearnerDSAC(object):
 
         manager = enlighten.get_manager()
         status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
-        algorithm = f"{self.config['model']}-{'P' if self.prioritized_replay else 'N'}-{'LSTM' if self.config['recurrent_policy'] else ''}"
-        status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=str(self.config['env_stage']), status='Training')
-        ticks = manager.counter(total=self.config['num_steps_train'], desc="Training step", unit="ticks", color="red")
-        while update_step.value <= self.config['num_steps_train']:
+        algorithm = f"{self.model}-{'P' if self.prioritized_replay else 'N'}-{'LSTM' if self.recurrent else ''}"
+        status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=str(self.env_stage), status='Training')
+        ticks = manager.counter(total=self.num_train_steps, desc="Training step", unit="ticks", color="red")
+        while update_step.value <= self.num_train_steps:
             try:
                 batch = batch_queue.get_nowait()
             except queue.Empty:
