@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
     # Loading configs from config.yaml
     path = os.path.dirname(os.path.abspath(__file__))
-    pipeline_configs = np.sort(os.listdir(path + '/pipeline_configs'))
+    pipeline_configs = np.flip(np.sort(os.listdir(path + '/pipeline_configs')))
 
     for pipeline_config in pipeline_configs:
         print('Starting new training for', pipeline_config, 'config file.')
