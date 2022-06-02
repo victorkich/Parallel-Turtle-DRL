@@ -152,7 +152,7 @@ class LearnerDSAC(object):
 
         zf1_loss = zf1_loss.mean(axis=1)
         zf2_loss = zf2_loss.mean(axis=1)
-        value_loss = torch.min(zf1_loss, zf2_loss)
+        value_loss = torch.min(zf1_loss.mean(), zf2_loss.mean())  # Added .mean in both losses
 
         # Update priorities in buffer
         if self.prioritized_replay:
