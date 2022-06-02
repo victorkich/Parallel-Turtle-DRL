@@ -222,6 +222,9 @@ class Agent(object):
                 if self.local_episode % self.config['update_agent_ep'] == 0:
                     self.update_actor_learner(learner_w_queue, training_on)
 
+        if self.agent_type == "exploitation":
+            self.save(f"step_{self.config['num_steps_train']}")
+
         if not self.config['test']:
             empty_torch_queue(replay_queue)
 
