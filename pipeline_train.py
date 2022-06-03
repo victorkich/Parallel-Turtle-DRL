@@ -85,6 +85,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
 
 def logger(config, logs, training_on, update_step, global_episode, global_step, log_dir):
     # Initialize the SummaryWriter
+    time.sleep(2)
     os.environ['COMET_API_KEY'] = config['api_key']
     comet_ml.init(project_name=config['project_name'])
     writer = SummaryWriter(comet_config={"disabled": True if config['disabled'] else False})
