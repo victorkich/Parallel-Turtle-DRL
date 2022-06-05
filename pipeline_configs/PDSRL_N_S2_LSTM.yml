@@ -1,6 +1,6 @@
 # Environment parameters
 env_name: TurtleBot3_Circuit_Simple-v0
-env_stage: 1  # gazebo turtlebot3 stage number
+env_stage: 2  # gazebo turtlebot3 stage number
 seed: 1
 random_seed: 2022
 num_agents: 5
@@ -11,8 +11,8 @@ max_action: 1.5
 # Training parameters
 model: PDSRL
 batch_size: 256
-num_episodes: 150
-num_steps_train: 100000  # number of episodes from all agents
+num_episodes: 500
+num_steps_train: 500000  # number of episodes from all agents
 max_ep_length: 500  # maximum number of steps per episode
 replay_mem_size: 100000  # maximum capacity of replay memory
 priority_alpha: 0.6  # 0.6 controls the randomness vs prioritisation of the prioritised sampling (0.0 = Uniform sampling, 1.0 = Greedy prioritisation)
