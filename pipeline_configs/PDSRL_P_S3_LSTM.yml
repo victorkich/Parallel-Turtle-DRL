@@ -1,6 +1,6 @@
 # Environment parameters
 env_name: TurtleBot3_Circuit_Simple-v0
-env_stage: 2  # gazebo turtlebot3 stage number
+env_stage: u  # gazebo turtlebot3 stage number
 seed: 1
 random_seed: 2022
 num_agents: 5
@@ -11,10 +11,10 @@ max_action: 1.5
 # Training parameters
 model: PDSRL
 batch_size: 256
-num_episodes: 500
-num_steps_train: 500000  # number of episodes from all agents
+num_episodes: 2000
+num_steps_train: 1000000  # number of episodes from all agents
 max_ep_length: 500  # maximum number of steps per episode
-replay_mem_size: 100000  # maximum capacity of replay memory
+replay_mem_size: 50000  # maximum capacity of replay memory
 priority_alpha: 0.6  # 0.6 controls the randomness vs prioritisation of the prioritised sampling (0.0 = Uniform sampling, 1.0 = Greedy prioritisation)
 priority_beta_start: 0.4  # 0.4 starting value of beta - controls to what degree IS weights influence the gradient updates to correct for the bias introduces by priority sampling (0 - no correction, 1 - full correction)
 priority_beta_end: 1.0  # 1.0 beta will be linearly annelaed from its start value to this value thoughout training
@@ -25,7 +25,7 @@ update_agent_ep: 1  # agent gets latest parameters from learner every update_age
 replay_queue_size: 32  # 1024  # queue with replays from all the agents
 batch_queue_size: 64  # queue with batches given to learner
 save_reward_threshold: 5
-replay_memory_prioritized: 0
+replay_memory_prioritized: 1
 num_episode_save: 50
 device: cuda
 action_prior: uniform
@@ -35,7 +35,7 @@ reward_scale: 1.0
 clip_norm: 0.0
 use_automatic_entropy_tuning: 1
 num_quantiles: 51
-obs_noise: 1
+obs_noise: 0
 
 # LSTM parameters
 sequence_size: 8
