@@ -139,7 +139,7 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
-                   update_step, logs, experiment_dir):
+                   update_step, global_episode, logs, experiment_dir):
     if config['model'] == 'PDDRL':
         learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     elif config['model'] == 'PDSRL':
@@ -148,7 +148,7 @@ def learner_worker(config, training_on, policy, target_policy_net, learner_w_que
         learner = LearnerDDPG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
     elif config['model'] == 'SAC':
         learner = LearnerSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    learner.run(training_on, batch_queue, replay_priority_queue, update_step, logs)
+    learner.run(training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs)
 
 
 def agent_worker(config, policy, learner_w_queue, global_episode, i, agent_type, experiment_dir, training_on,
@@ -286,7 +286,7 @@ if __name__ == "__main__":
     if not config['test']:
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                           learner_w_queue, replay_priorities_queue, batch_queue,
-                                                          update_step, logs, experiment_dir))
+                                                          update_step, global_episode, logs, experiment_dir))
         processes.append(p)
 
     # Single agent for exploitation

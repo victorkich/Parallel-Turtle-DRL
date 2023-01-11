@@ -39,7 +39,7 @@ obs_noise: 0
 
 # LSTM parameters
 sequence_size: 8
-recurrent_policy: 1
+recurrent_policy: 0
 num_lstm_cell: 1
 lstm_dense: 64
 
