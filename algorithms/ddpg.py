@@ -50,7 +50,7 @@ class LearnerDDPG(object):
         # inds = torch.FloatTensor(inds).flatten().to(self.device)
 
         # Compute the target Q value
-        target_Q = self.critic_target(next_state, self.actor_target(next_state))
+        target_Q = self.critic_target(next_state, self.actor_target(next_state)[0])
         target_Q = reward + (done * self.gamma * target_Q).detach()
 
         # Get current Q estimate
