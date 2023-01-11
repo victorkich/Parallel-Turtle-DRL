@@ -42,7 +42,7 @@ class LearnerDDPG(object):
         # Sample replay buffer
         x, u, r, y, d, gamma, weights, inds = replay_buffer
         state = torch.FloatTensor(x).to(self.device)
-        action = torch.FloatTensor(u).to(self.device)[0]
+        action = torch.FloatTensor(u).to(self.device)
         next_state = torch.FloatTensor(y).to(self.device)
         done = torch.FloatTensor(1-d).to(self.device).unsqueeze(1)
         reward = torch.FloatTensor(r).to(self.device).unsqueeze(1)
@@ -50,10 +50,13 @@ class LearnerDDPG(object):
         # inds = torch.FloatTensor(inds).flatten().to(self.device)
 
         # Compute the target Q value
-        target_Q = self.critic_target(next_state, self.actor_target(next_state)[0])
+        act_targ = self.actor_target(next_state)[0]
+        print("Shape act targ:", act_targ.shape)
+        target_Q = self.critic_target(next_state, act_targ)
         target_Q = reward + (done * self.gamma * target_Q).detach()
 
         # Get current Q estimate
+        print("Shape action:", action.shape)
         current_Q = self.critic(state, action)
 
         # Compute critic loss
