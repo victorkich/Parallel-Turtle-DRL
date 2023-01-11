@@ -536,7 +536,9 @@ class Critic(nn.Module):
         self.l3 = nn.Linear(hidden, 1)
 
     def forward(self, x, u):
-        x = torch.Tensor(x)
+        print("State:", type(x), x)
+        print("Action:", type(u), u)
+        # x = torch.Tensor(x)
         u = torch.Tensor(u)
         x = F.relu(self.l1(torch.cat((x, u), 1)))
         x = F.relu(self.l2(x))
