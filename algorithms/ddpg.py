@@ -42,7 +42,7 @@ class LearnerDDPG(object):
         # Sample replay buffer
         x, u, r, y, d, gamma, weights, inds = replay_buffer
         state = torch.FloatTensor(x).to(self.device)
-        action = torch.FloatTensor(u).to(self.device)
+        action = torch.FloatTensor(u).to(self.device)[0]
         next_state = torch.FloatTensor(y).to(self.device)
         done = torch.FloatTensor(1-d).to(self.device).unsqueeze(1)
         reward = torch.FloatTensor(r).to(self.device).unsqueeze(1)

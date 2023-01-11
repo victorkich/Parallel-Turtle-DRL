@@ -536,7 +536,7 @@ class Critic(nn.Module):
         self.l3 = nn.Linear(hidden, 1)
 
     def forward(self, x, u):
-        u = u[0]
+        # u = u[0]
         print(x.shape, u.shape)
         print("State:", type(x), x)
         print("Action:", type(u), u)
