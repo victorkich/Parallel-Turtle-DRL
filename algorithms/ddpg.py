@@ -67,7 +67,9 @@ class LearnerDDPG(object):
         self.critic_optimizer.step()
 
         # Compute actor loss
-        actor_loss = -self.critic(state, self.actor(state)).mean()
+        act_state = self.actor(state)[0]
+        print("Shape act state:", act_state.shape)
+        actor_loss = -self.critic(state, act_state).mean()
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()
