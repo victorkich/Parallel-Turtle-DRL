@@ -20,12 +20,13 @@ class LearnerSAC(object):
         self.learner_w_queue = learner_w_queue
 
         self.actor = policy_net
+        self.actor_target = target_policy_net
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config['actor_learning_rate'])
         self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
 
         self.Q_net = Q(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(self.device)
-        self.Q_optimizer = optim.Adam(self.Q_net.parameters(), lr=config['q_learning_rate'])
+        self.Q_optimizer = optim.Adam(self.Q_net.parameters(), lr=config['actor_learning_rate'])
         self.critic_target = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
 
         self.critic_criterion = nn.MSELoss()
@@ -34,7 +35,7 @@ class LearnerSAC(object):
 
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
             target_param.data.copy_(param.data)
-        for target_param, param in zip(self.target_policy_net.parameters(), self.actor.parameters()):
+        for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
             target_param.data.copy_(param.data)
 
     def select_action(self, state):
