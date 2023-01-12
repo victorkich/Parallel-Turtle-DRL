@@ -197,7 +197,7 @@ class PolicyNetwork2(nn.Module):
         returns the action based on a squashed gaussian policy. That means the samples are obtained according to:
         a(s,e)= tanh(mu(s)+sigma(s)+e)
         """
-        state = torch.FloatTensor(state).to(self.device)
+        state = state.to(self.device)
         mu, log_std, (h_0, c_0) = self.forward(state)
         std = log_std.exp()
         dist = Normal(0, 1)
