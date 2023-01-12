@@ -49,7 +49,7 @@ class LearnerSAC(object):
 
     def get_action_log_prob(self, state):
         min_Val = torch.tensor(1e-7).float()
-        batch_mu, batch_log_sigma = self.actor(state)
+        batch_mu, batch_log_sigma, _ = self.actor(state)
         batch_sigma = torch.exp(batch_log_sigma)
         dist = Normal(batch_mu, batch_sigma)
         z = dist.sample()
@@ -70,9 +70,9 @@ class LearnerSAC(object):
         done = torch.FloatTensor(1 - d).to(self.device)
 
         # Compute the target Q value
-        target_value = self.critic_target(next_state)
+        target_value = self.critic_target(next_state, self.actor(state)[0])
         next_q_value = reward + (1 - done) * self.config['discount_rate'] * target_value
-        excepted_value = self.actor(state)
+        excepted_value, _, _ = self.actor(state)
         excepted_Q = self.Q_net(state, action)
 
         # Get current Q estimate
