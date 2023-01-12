@@ -81,12 +81,12 @@ class LearnerSAC(object):
         next_value = excepted_new_Q - log_prob
 
         # Compute critic loss
-        print(excepted_value.shape, next_value.shape)
+        print("1:", excepted_value.shape, next_value.shape)
         critic_loss = self.critic_criterion(excepted_value, next_value.detach())  # J_V
         critic_loss = critic_loss.mean()
 
         # Compute Q loss. Single Q_net this is different from original paper
-        print(excepted_Q.shape, next_q_value.shape)
+        print("2:", excepted_Q.shape, next_q_value.shape)
         Q_loss = self.Q_criterion(excepted_Q, next_q_value.detach())  # J_Q
         Q_loss = Q_loss.mean()
 
