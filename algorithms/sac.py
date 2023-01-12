@@ -71,6 +71,9 @@ class LearnerSAC(object):
 
         # Compute the target Q value
         target_value = self.critic_target(next_state, self.actor(state)[0])
+        print("target_value:", target_value.shape)
+        print("done:", done.shape)
+        print("reward:", reward.shape)
         next_q_value = reward + (1 - done) * self.config['discount_rate'] * target_value
         excepted_value, _, _ = self.actor(state)
         excepted_Q = self.Q_net(state, action)
@@ -81,12 +84,10 @@ class LearnerSAC(object):
         next_value = excepted_new_Q - log_prob
 
         # Compute critic loss
-        print("1:", excepted_value.shape, next_value.shape)
         critic_loss = self.critic_criterion(excepted_value, next_value.detach())  # J_V
         critic_loss = critic_loss.mean()
 
         # Compute Q loss. Single Q_net this is different from original paper
-        print("2:", excepted_Q.shape, next_q_value.shape)
         Q_loss = self.Q_criterion(excepted_Q, next_q_value.detach())  # J_Q
         Q_loss = Q_loss.mean()
 
