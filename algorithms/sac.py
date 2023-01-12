@@ -71,9 +71,9 @@ class LearnerSAC(object):
 
         # Compute the target Q value
         target_value = self.critic_target(next_state, self.actor(state)[0])[0]
-        #print("target_value:", target_value.shape)
-        #print("done:", done.shape)
-        #print("reward:", reward.shape)
+        print("target_value:", target_value.shape)
+        print("done:", done.shape)
+        print("reward:", reward.shape)
         next_q_value = reward + (1 - done) * self.config['discount_rate'] * target_value
         excepted_value, _, _ = self.actor(state)
         excepted_Q = self.Q_net(state, action)
