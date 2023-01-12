@@ -70,7 +70,7 @@ class LearnerSAC(object):
         done = torch.FloatTensor(1 - d).to(self.device)
 
         # Compute the target Q value
-        target_value = self.critic_target(next_state, self.actor(state)[0]).squeeze(0)
+        target_value = self.critic_target(next_state, self.actor(state)[0]).squeeze(-1)
         print("target_value:", target_value.shape)
         print("done:", done.shape)
         print("reward:", reward.shape)
