@@ -192,7 +192,7 @@ class PolicyNetwork2(nn.Module):
         log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - action.pow(2) + epsilon)
         return action, log_prob, (h_0, c_0)
 
-    def get_action(self, state, exploitation=False):
+    def get_action(self, state, exploitation=False, h_0=None, c_0=None):
         """
         returns the action based on a squashed gaussian policy. That means the samples are obtained according to:
         a(s,e)= tanh(mu(s)+sigma(s)+e)
