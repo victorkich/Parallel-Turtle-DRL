@@ -61,7 +61,8 @@ class LearnerSAC(object):
         update_time = time.time()
 
         # Sample replay buffer
-        x, u, r, y, d, _ = replay_buffer.sample(self.batch_size)
+        x, u, r, y, d, gamma, weights, inds = replay_buffer
+        # x, u, r, y, d, _ = replay_buffer
         state = torch.FloatTensor(x).to(self.device)
         next_state = torch.FloatTensor(y).to(self.device)
         action = torch.FloatTensor(u).to(self.device)
