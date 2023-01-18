@@ -98,8 +98,8 @@ class Agent(object):
                 if self.config['obs_noise']:
                     state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
                 for s in range(len(state)):
-                    if state[s] > 2.5:
-                        state[s] = 2.5
+                    if state[s] > 3.5:
+                        state[s] = 3.5
                     if state[s] < 0.0:
                         state[s] = 0.0
 
