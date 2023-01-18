@@ -1,6 +1,6 @@
 # Environment parameters
 env_name: TurtleBot3_Circuit_Simple-v0
-env_stage: 2  # gazebo turtlebot3 stage number
+env_stage: 1  # gazebo turtlebot3 stage number
 seed: 1
 random_seed: 2022
 num_agents: 5
@@ -11,7 +11,7 @@ max_action: 1.5
 # Training parameters
 model: SAC
 batch_size: 256
-num_episodes: 1000
+num_episodes: 100
 num_steps_train: 100000  # number of episodes from all agents
 max_ep_length: 500  # maximum number of steps per episode
 replay_mem_size: 50000  # maximum capacity of replay memory
@@ -23,7 +23,7 @@ discount_rate: 0.99  # Discount rate (gamma) for future rewards
 n_step_return: 5  # number of future steps to collect experiences for N-step returns
 update_agent_ep: 1  # agent gets latest parameters from learner every update_agent_ep episodes
 replay_queue_size: 32  # 1024  # queue with replays from all the agents
-batch_queue_size: 64  # queue with batches given to learner
+batch_queue_size: 128  # queue with batches given to learner
 save_reward_threshold: 5
 replay_memory_prioritized: 0
 num_episode_save: 50
