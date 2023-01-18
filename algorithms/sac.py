@@ -3,6 +3,7 @@ from models import Critic, Q
 from torch.distributions import Normal
 import torch.optim as optim
 import torch.nn as nn
+import numpy as np
 import queue
 import torch
 import time
@@ -18,6 +19,8 @@ class LearnerSAC(object):
         self.device = config['device']
         self.save_dir = log_dir
         self.learner_w_queue = learner_w_queue
+        self.prioritized_replay = config['replay_memory_prioritized']
+        self.priority_epsilon = config['priority_epsilon']
 
         self.actor = policy_net
         self.actor_target = target_policy_net
@@ -57,7 +60,7 @@ class LearnerSAC(object):
         log_prob = dist.log_prob(z) - torch.log(1 - action.pow(2) + min_Val)
         return action, log_prob, z, batch_mu, batch_log_sigma
 
-    def _update_step(self, replay_buffer, update_step, logs):
+    def _update_step(self, replay_buffer, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
         # Sample replay buffer
@@ -87,6 +90,13 @@ class LearnerSAC(object):
 
         # Compute Q loss. Single Q_net this is different from original paper
         Q_loss = self.Q_criterion(excepted_Q, next_q_value.detach())  # J_Q
+
+        if self.prioritized_replay:
+            td_error = Q_loss.cpu().detach().numpy().flatten()
+            weights_update = np.abs(td_error) + self.priority_epsilon
+            replay_priority_queue.put((inds, weights_update))
+            Q_loss = Q_loss * torch.tensor(weights).float().to(self.device)
+
         Q_loss = Q_loss.mean()
 
         # Compute actor loss
@@ -144,7 +154,7 @@ class LearnerSAC(object):
                 time.sleep(0.01)
                 continue
 
-            self._update_step(batch, update_step, logs)
+            self._update_step(batch, replay_priority_queue, update_step, logs)
             with update_step.get_lock():
                 update_step.value += 1
 
