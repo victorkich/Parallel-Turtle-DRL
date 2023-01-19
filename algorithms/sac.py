@@ -95,7 +95,7 @@ class LearnerSAC(object):
             td_error = Q_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.priority_epsilon
             replay_priority_queue.put((inds, weights_update))
-            critic_loss = Q_loss * torch.tensor(weights).float().to(self.device)
+            Q_loss = Q_loss * torch.tensor(weights).float().to(self.device)
 
         Q_loss = Q_loss.mean()
 
