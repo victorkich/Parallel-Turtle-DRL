@@ -286,15 +286,16 @@ if __name__ == "__main__":
             policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
 
     print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}-{'LSTM' if config['recurrent_policy'] else ''}")
-    target_policy_net.share_memory()
+
     if not config['test']:
+        policy_net.share_memory()
         p = torch_mp.Process(target=learner_worker, args=(config, training_on, policy_net, target_policy_net,
                                                           learner_w_queue, replay_priorities_queue, batch_queue,
                                                           update_step, global_episode, logs, experiment_dir))
         processes.append(p)
 
     # Single agent for exploitation
-    p = torch_mp.Process(target=agent_worker, args=(config, target_policy_net, learner_w_queue,
+    p = torch_mp.Process(target=agent_worker, args=(config, policy_net, learner_w_queue,
                          global_episode, 0, "exploitation", experiment_dir, training_on, replay_queue, logs, global_step))
     processes.append(p)
 
