@@ -104,12 +104,6 @@ class LearnerSAC(object):
         pi_loss = log_prob * (log_prob - log_policy_target).detach()
         pi_loss = pi_loss.mean()
 
-        # Logging
-        with logs.get_lock():
-            logs[3] = critic_loss
-            logs[4] = Q_loss
-            logs[5] = time.time() - update_time
-
         # Optimize the critic. Mini batch gradient descent
         self.critic_optimizer.zero_grad()
         critic_loss.backward(retain_graph=True)
@@ -142,6 +136,12 @@ class LearnerSAC(object):
                 self.learner_w_queue.put(params)
             except:
                 pass
+
+        # Logging
+        with logs.get_lock():
+            logs[3] = pi_loss
+            logs[4] = Q_loss
+            logs[5] = time.time() - update_time
 
         self.num_training += 1
 
