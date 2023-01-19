@@ -125,6 +125,7 @@ class Agent(object):
                     reward = 200
                 episode_reward += reward
 
+                """
                 if not self.config['test']:
                     self.exp_buffer.append((state, action, reward))
 
@@ -149,8 +150,7 @@ class Agent(object):
                                     replay_queue.put_nowait([state_0, action_0, discounted_reward, next_state, done, gamma])
                             except:
                                 pass
-
-                state = next_state
+                """
 
                 if done or num_steps >= self.max_steps:
                     # add rest of experiences remaining in buffer
@@ -174,6 +174,8 @@ class Agent(object):
                                 except:
                                     pass
                     break
+
+                state = next_state
 
                 if hx is not None:
                     (h_0, c_0) = hx
