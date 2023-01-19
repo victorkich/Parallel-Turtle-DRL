@@ -86,15 +86,17 @@ class LearnerSAC(object):
 
         # Compute critic loss
         critic_loss = self.critic_criterion(excepted_value, next_value.detach())  # J_V
-        if self.prioritized_replay:
-            td_error = critic_loss.cpu().detach().numpy().flatten()
-            weights_update = np.abs(td_error) + self.priority_epsilon
-            replay_priority_queue.put((inds, weights_update))
-            critic_loss = critic_loss * torch.tensor(weights).float().to(self.device)
         critic_loss = critic_loss.mean()
 
         # Compute Q loss. Single Q_net this is different from original paper
         Q_loss = self.Q_criterion(excepted_Q, next_q_value.detach())  # J_Q
+
+        if self.prioritized_replay:
+            td_error = Q_loss.cpu().detach().numpy().flatten()
+            weights_update = np.abs(td_error) + self.priority_epsilon
+            replay_priority_queue.put((inds, weights_update))
+            critic_loss = Q_loss * torch.tensor(weights).float().to(self.device)
+
         Q_loss = Q_loss.mean()
 
         # Compute actor loss
