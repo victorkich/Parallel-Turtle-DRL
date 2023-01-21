@@ -61,6 +61,7 @@ class LearnerDDPG(object):
 
         # Compute critic loss
         critic_loss = F.mse_loss(current_Q, target_Q)
+        critic_loss = critic_loss.mean(axis=1)
 
         # Update priorities in buffer
         if self.prioritized_replay:
@@ -73,14 +74,18 @@ class LearnerDDPG(object):
             critic_loss = critic_loss * torch.tensor(weights).float().to(self.device)
 
         # Optimize the critic
+        critic_loss = critic_loss.mean()
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
 
         # Compute actor loss
-        actor_loss = -self.critic(state, self.actor(state)[0]).mean()
+        actor_loss = -self.critic(state, self.actor(state)[0])  # .mean()
 
         # Optimize the actor
+        actor_loss = torch.sum(actor_loss, dim=1)
+        actor_loss = -actor_loss.mean()
+
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
