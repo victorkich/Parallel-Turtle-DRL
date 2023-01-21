@@ -61,7 +61,7 @@ class LearnerDDPG(object):
 
         # Compute critic loss
         critic_loss = F.mse_loss(current_Q, target_Q)
-        critic_loss = critic_loss.mean(axis=1)
+        critic_loss = critic_loss.mean()
 
         # Update priorities in buffer
         if self.prioritized_replay:
