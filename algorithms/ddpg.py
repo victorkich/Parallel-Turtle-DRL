@@ -2,6 +2,7 @@ from utils.utils import empty_torch_queue
 from models import Critic
 import torch.nn.functional as F
 import torch.optim as optim
+import numpy as np
 import torch
 import queue
 import time
@@ -18,6 +19,8 @@ class LearnerDDPG(object):
         self.save_dir = log_dir
         self.learner_w_queue = learner_w_queue
         self.action_high = [1.5, 0.12]
+        self.priority_epsilon = config['priority_epsilon']
+        self.prioritized_replay = config['replay_memory_prioritized']
 
         self.actor = policy_net
         self.actor_target = target_policy_net
@@ -36,7 +39,7 @@ class LearnerDDPG(object):
         state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
         return self.actor(state).cpu().data.numpy().flatten()
 
-    def _update_step(self, replay_buffer, update_step, logs):
+    def _update_step(self, replay_buffer, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
         # Sample replay buffer
@@ -58,6 +61,17 @@ class LearnerDDPG(object):
 
         # Compute critic loss
         critic_loss = F.mse_loss(current_Q, target_Q)
+
+        # Update priorities in buffer
+        if self.prioritized_replay:
+            td_error = critic_loss.cpu().detach().numpy().flatten()
+            weights_update = np.abs(td_error) + self.priority_epsilon
+            replay_priority_queue.put((inds, weights_update))
+            # if self.recurrent:
+            #    w_shape = weights.shape[0]
+            #    weights = weights.reshape((w_shape, 1))
+            critic_loss = critic_loss * torch.tensor(weights).float().to(self.device)
+
         # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -104,7 +118,7 @@ class LearnerDDPG(object):
                 time.sleep(0.01)
                 continue
 
-            self._update_step(batch, update_step, logs)
+            self._update_step(batch, replay_priority_queue, update_step, logs)
             with update_step.get_lock():
                 update_step.value += 1
 
