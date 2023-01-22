@@ -72,8 +72,9 @@ class LearnerDDPG(object):
         next_state_action_values = self.critic_target(next_obs, next_action_batch.detach())
 
         # Compute the target
-        # reward_batch = reward_batch.unsqueeze(1)
-        # done_batch = done_batch.unsqueeze(1)
+        rewards = rewards.unsqueeze(1)
+        terminals = terminals.unsqueeze(1)
+        print('Rewards shape:', rewards.shape, 'terminal shape:', terminals.shape, 'next_action_batch shape:', next_action_batch.shape)
         expected_values = rewards + (1.0 - terminals) * self.gamma * next_state_action_values
 
         # expected_value = torch.clamp(expected_value, min_value, max_value)
