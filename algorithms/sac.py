@@ -60,28 +60,48 @@ class LearnerSAC(object):
         log_prob = dist.log_prob(z) - torch.log(1 - action.pow(2) + min_Val)
         return action, log_prob, z, batch_mu, batch_log_sigma
 
-    def _update_step(self, replay_buffer, replay_priority_queue, update_step, logs):
+    def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
         # Sample replay buffer
-        x, u, r, y, d, gamma, weights, inds = replay_buffer
+        obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
+        # x, u, r, y, d, gamma, weights, inds = replay_buffer
         # x, u, r, y, d, _ = replay_buffer
-        state = torch.FloatTensor(x).to(self.device)
-        next_state = torch.FloatTensor(y).to(self.device)
-        action = torch.FloatTensor(u).to(self.device)
-        reward = torch.FloatTensor(r).to(self.device)
-        done = torch.FloatTensor(1 - d).to(self.device)
 
+        obs = np.asarray(obs)
+        actions = np.asarray(actions)
+        rewards = np.asarray(rewards)
+        next_obs = np.asarray(next_obs)
+        terminals = np.asarray(terminals)
+        weights = np.asarray(weights)
+        inds = np.asarray(inds).flatten()
+
+        obs = torch.from_numpy(obs).float().to(self.device)
+        next_obs = torch.from_numpy(next_obs).float().to(self.device)
+        actions = torch.from_numpy(actions).float().to(self.device)
+        rewards = torch.from_numpy(rewards).float().to(self.device)
+        terminals = torch.from_numpy(terminals).float().to(self.device)
+
+        # state = torch.FloatTensor(x).to(self.device)
+        # next_state = torch.FloatTensor(y).to(self.device)
+        # action = torch.FloatTensor(u).to(self.device)
+        # reward = torch.FloatTensor(r).to(self.device)
+        # done = torch.FloatTensor(1 - d).to(self.device)
+
+        # -----------------------
+
+        # -------------------------------------
+        """
         # Compute the target Q value
-        target_value = self.critic_target(next_state, self.actor(state)[0]).squeeze(-1)
-        next_q_value = reward + (1 - done) * self.config['discount_rate'] * target_value
+        target_value = self.critic_target(next_obs, self.actor(obs)[0]).squeeze(-1)
+        next_q_value = rewards + (1 - terminals) * self.config['discount_rate'] * target_value
         next_q_value = next_q_value.unsqueeze(-1)
-        excepted_value, _, _ = self.actor(state)
-        excepted_Q = self.Q_net(state, action)
+        excepted_value, _, _ = self.actor(obs)
+        excepted_Q = self.Q_net(obs, actions)
 
         # Get current Q estimate
-        sample_action, log_prob, z, batch_mu, batch_log_sigma = self.get_action_log_prob(state)
-        excepted_new_Q = self.Q_net(state, sample_action)
+        sample_action, log_prob, z, batch_mu, batch_log_sigma = self.get_action_log_prob(obs)
+        excepted_new_Q = self.Q_net(obs, sample_action)
         next_value = excepted_new_Q - log_prob
 
         # Compute critic loss
@@ -121,6 +141,7 @@ class LearnerSAC(object):
         pi_loss.backward(retain_graph=True)
         nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
         self.actor_optimizer.step()
+        """
 
         # soft update
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
