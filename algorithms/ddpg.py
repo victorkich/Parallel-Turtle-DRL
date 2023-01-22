@@ -89,8 +89,8 @@ class LearnerDDPG(object):
             weights_update = np.abs(td_error) + self.priority_epsilon
             replay_priority_queue.put((inds, weights_update))
             value_loss = value_loss * torch.tensor(weights).float().to(self.device)
+            value_loss = value_loss.mean()
 
-        value_loss = value_loss.mean()
         value_loss.backward()
         self.critic_optimizer.step()
 
