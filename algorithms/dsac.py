@@ -118,13 +118,13 @@ class LearnerDSAC(object):
         actions = torch.from_numpy(actions).float().to(self.device)
         rewards = torch.from_numpy(rewards).float().to(self.device)
         terminals = torch.from_numpy(terminals).float().to(self.device)
-        h_0 = torch.from_numpy(h_0).float().to(self.device)
-        c_0 = torch.from_numpy(c_0).float().to(self.device)
+        # h_0 = torch.from_numpy(h_0).float().to(self.device)
+        # c_0 = torch.from_numpy(c_0).float().to(self.device)
 
         # ------- Update critic -------
         # Get predicted next-state actions and Q values from target models
         new_actions, policy_mean, policy_log_std, log_pi, _, _, _, _, _ = self.policy_net(obs, h_0=h_0, c_0=c_0, reparameterize=True, return_log_prob=True)
-        if self.use_automatic_entropy_tuning:
+        if self.use_autonp.asarray(c_0)matic_entropy_tuning:
             alpha_loss = -(self.log_alpha.exp() * (log_pi + self.target_entropy).detach()).mean()
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
