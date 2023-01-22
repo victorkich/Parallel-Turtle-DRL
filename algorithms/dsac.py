@@ -100,7 +100,8 @@ class LearnerDSAC(object):
     def _update_step(self, batch, replay_priority_queue, update_step, logs):
         update_time = time.time()
 
-        obs, actions, rewards, next_obs, terminals, gamma, h_0, c_0, weights, inds = batch
+        # obs, actions, rewards, next_obs, terminals, gamma, h_0, c_0, weights, inds = batch
+        obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
 
         obs = np.asarray(obs)
         actions = np.asarray(actions)
@@ -109,8 +110,8 @@ class LearnerDSAC(object):
         terminals = np.asarray(terminals)
         weights = np.asarray(weights)
         inds = np.asarray(inds).flatten()
-        h_0 = np.asarray(h_0)
-        c_0 = np.asarray(c_0)
+        h_0 = None
+        c_0 = None
 
         obs = torch.from_numpy(obs).float().to(self.device)
         next_obs = torch.from_numpy(next_obs).float().to(self.device)
