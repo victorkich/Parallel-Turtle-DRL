@@ -223,7 +223,7 @@ class LearnerDSAC(object):
             logs[4] = value_loss.mean().item()
             logs[5] = time.time() - update_time
 
-    def run(self, training_on, batch_queue, replay_priority_queue, update_step, logs):
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
         torch.set_num_threads(4)
         time.sleep(2)
 
