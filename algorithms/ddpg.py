@@ -88,9 +88,7 @@ class LearnerDDPG(object):
             td_error = value_loss.cpu().detach().numpy().flatten()
             weights_update = np.abs(td_error) + self.priority_epsilon
             replay_priority_queue.put((inds, weights_update))
-            print("A:", value_loss.shape, weights.shape)
             value_loss = value_loss * torch.tensor(weights).float().to(self.device)
-            print("B:", value_loss.shape)
 
         value_loss = value_loss.mean()
         value_loss.backward()
