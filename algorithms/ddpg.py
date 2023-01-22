@@ -68,7 +68,7 @@ class LearnerDDPG(object):
         # -------------------
 
         # Get the actions and the state values to compute the targets
-        next_action_batch = self.actor_target(next_obs)
+        next_action_batch = self.actor_target(next_obs)[0]
         next_state_action_values = self.critic_target(next_obs, next_action_batch.detach())
 
         # Compute the target
@@ -95,7 +95,7 @@ class LearnerDDPG(object):
 
         # Update the actor network
         self.actor_optimizer.zero_grad()
-        policy_loss = -self.critic(obs, self.actor(obs))
+        policy_loss = -self.critic(obs, self.actor(obs)[0])
         policy_loss = policy_loss.mean()
         policy_loss.backward()
         self.actor_optimizer.step()
