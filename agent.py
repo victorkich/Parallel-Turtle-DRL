@@ -95,8 +95,8 @@ class Agent(object):
             h_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
             c_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
             while not done and training_on.value:
-                if self.config['obs_noise']:
-                    state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
+                # if self.config['obs_noise']:
+                #     state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
 
                 # state[-1] = np.sqrt(32) / (state[-1] + 1)
 
@@ -116,8 +116,8 @@ class Agent(object):
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
                 next_state, reward, done, info = env.step(action)
-                if reward == 0:
-                    reward = -0.01
+                # if reward == 0:
+                #     reward = -0.01
                 if reward > 200:
                     reward = 200
                 episode_reward += reward
