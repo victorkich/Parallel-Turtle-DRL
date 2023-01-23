@@ -119,8 +119,6 @@ class Agent(object):
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
                 next_state, reward, done, info = env.step(action)
-                if reward == 0:
-                    reward = -0.01
                 if reward > 200:
                     reward = 200
                 episode_reward += reward
