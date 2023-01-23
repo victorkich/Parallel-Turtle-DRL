@@ -4,6 +4,8 @@ from torch.distributions import Normal
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np
+import os
+import enlighten
 import queue
 import torch
 import time
@@ -21,6 +23,10 @@ class LearnerSAC(object):
         self.learner_w_queue = learner_w_queue
         self.prioritized_replay = config['replay_memory_prioritized']
         self.priority_epsilon = config['priority_epsilon']
+        self.model = config['model']
+        self.env_stage = config['env_stage']
+        self.num_train_steps = config['num_steps_train']  # number of episodes from all agents
+        self.recurrent = config['recurrent_policy']
 
         self.actor = policy_net
         self.actor_target = target_policy_net
@@ -163,6 +169,42 @@ class LearnerSAC(object):
 
     def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
         torch.set_num_threads(4)
+        time.sleep(2)
+
+        manager = enlighten.get_manager()
+        status_format = '{program}{fill}Stage: {stage}{fill} Status {status}'
+        algorithm = f"{self.model}-{'P' if self.prioritized_replay else 'N'}-{'LSTM' if self.recurrent else ''}"
+        status_bar = manager.status_bar(status_format=status_format, color='bold_slategray', program=algorithm, stage=str(self.env_stage), status='Training')
+        ticks = manager.counter(total=self.num_train_steps, desc="Training step", unit="ticks", color="red")
+        while update_step.value <= self.num_train_steps:
+            try:
+                batch = batch_queue.get_nowait()
+            except:
+                ticks.update(0)
+                time.sleep(0.01)
+                continue
+
+            self._update_step(batch, replay_priority_queue, update_step, logs)
+            ticks.update(1)
+            with update_step.get_lock():
+                update_step.value += 1
+
+        with training_on.get_lock():
+            training_on.value = 0
+
+        status_bar.update(status='Ending')
+        empty_torch_queue(self.learner_w_queue)
+        empty_torch_queue(replay_priority_queue)
+        torch.cuda.empty_cache()
+        time.sleep(5)
+        os.system("kill $(ps aux | grep multiprocessing.spawn | grep -v grep | awk '{print $2}')")
+        os.system("kill $(ps aux | grep gzclient | grep -v grep | awk '{print $2}')")
+        os.system("kill $(ps aux | grep gzserver | grep -v grep | awk '{print $2}')")
+        print("Exit learner.")
+
+    """
+    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
+        torch.set_num_threads(4)
         while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
             try:
                 batch = batch_queue.get_nowait()
@@ -183,3 +225,4 @@ class LearnerSAC(object):
         empty_torch_queue(self.learner_w_queue)
         empty_torch_queue(replay_priority_queue)
         print("Exit learner.")
+    """
