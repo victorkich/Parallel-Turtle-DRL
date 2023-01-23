@@ -37,7 +37,7 @@ def sampler_worker(config, replay_queue, batch_queue, replay_priorities_queue, t
 
     while training_on.value:
         # (1) Transfer replays to global buffer
-        time.sleep(0.1)
+        time.sleep(0.02)
         n = replay_queue.qsize()
 
         for _ in range(n):
