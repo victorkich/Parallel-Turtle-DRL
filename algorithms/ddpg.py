@@ -37,8 +37,6 @@ class LearnerDDPG(object):
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
 
-        self.num_critic_update_iteration = 0
-        self.num_actor_update_iteration = 0
         self.num_training = 0
 
     def select_action(self, state):
@@ -140,9 +138,6 @@ class LearnerDDPG(object):
         for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
             target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
-        self.num_actor_update_iteration += 1
-        self.num_critic_update_iteration += 1
-
         # Send updated learner to the queue
         if update_step.value % 100 == 0:
             try:
@@ -169,7 +164,7 @@ class LearnerDDPG(object):
         while update_step.value <= self.num_train_steps:
             try:
                 batch = batch_queue.get_nowait()
-            except queue.Empty:
+            except:
                 ticks.update(0)
                 time.sleep(0.01)
                 continue
