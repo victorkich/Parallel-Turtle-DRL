@@ -98,7 +98,7 @@ class Agent(object):
                 if self.config['obs_noise']:
                     state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
 
-                state[-1] = np.sqrt(32) / (state[-1] + 1)
+                # state[-1] = np.sqrt(32) / (state[-1] + 1)
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
                     action, hx = self.actor.get_action(torch.Tensor(state).to(self.config['device']), h_0=h_0, c_0=c_0,
