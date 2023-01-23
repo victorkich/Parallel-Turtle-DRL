@@ -88,10 +88,6 @@ class LearnerSAC(object):
         # reward = torch.FloatTensor(r).to(self.device)
         # done = torch.FloatTensor(1 - d).to(self.device)
 
-        # -----------------------
-
-        # -------------------------------------
-        """
         # Compute the target Q value
         target_value = self.critic_target(next_obs, self.actor(obs)[0]).squeeze(-1)
         next_q_value = rewards + (1 - terminals) * self.config['discount_rate'] * target_value
@@ -126,22 +122,21 @@ class LearnerSAC(object):
 
         # Optimize the critic. Mini batch gradient descent
         self.critic_optimizer.zero_grad()
-        critic_loss.backward(retain_graph=True)
+        critic_loss.backward()
         nn.utils.clip_grad_norm_(self.critic.parameters(), 0.5)
         self.critic_optimizer.step()
 
         # Optimize the Q
         self.Q_optimizer.zero_grad()
-        Q_loss.backward(retain_graph=True)
+        Q_loss.backward()
         nn.utils.clip_grad_norm_(self.Q_net.parameters(), 0.5)
         self.Q_optimizer.step()
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()
-        pi_loss.backward(retain_graph=True)
+        pi_loss.backward()
         nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
         self.actor_optimizer.step()
-        """
 
         # soft update
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
