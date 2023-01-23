@@ -73,7 +73,10 @@ class Agent(object):
             goal = [test_goals(self.local_episode)]
         env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
+        if not self.config['test']:
+            self.ou_noise.reset()
 
+        local_steps = 0
         rewards = []
         while training_on.value if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
             episode_reward = 0
@@ -87,7 +90,6 @@ class Agent(object):
             state = env.reset(new_random_goals=True if not self.config['test'] else False, goal=goal)
             if not self.config['test']:
                 self.exp_buffer.clear()
-                self.ou_noise.reset()
             done = False
             if self.config['recurrent_policy']:
                 sequence_replay_buffer = []
@@ -108,7 +110,7 @@ class Agent(object):
                     action, hx = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
                     if self.agent_type == "exploration":
                         action = action.squeeze(0)
-                        action = self.ou_noise.get_action(action, num_steps).flatten()
+                        action = self.ou_noise.get_action(action, local_steps).flatten()
                     else:
                         action = action.detach().cpu().numpy().flatten()
 
@@ -181,6 +183,7 @@ class Agent(object):
                     c_0 = np.zeros((1, 1, self.config['lstm_dense']), dtype=np.float32)
 
                 num_steps += 1
+                local_steps += 1
                 if self.n_agent:
                     with self.global_step.get_lock():
                         self.global_step.value += 1
