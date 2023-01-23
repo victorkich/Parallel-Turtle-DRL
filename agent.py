@@ -97,11 +97,8 @@ class Agent(object):
             while not done and training_on.value:
                 if self.config['obs_noise']:
                     state += np.random.normal(loc=0.0, scale=0.05, size=len(state))
-                # for s in range(len(state)):
-                #    if state[s] > 3.5:
-                #        state[s] = 3.5
-                #    if state[s] < 0.0:
-                #        state[s] = 0.0
+
+                state[-1] = np.sqrt(32) / (state[-1] + 1)
 
                 if self.config['model'] == 'PDSRL' or self.config['model'] == 'SAC':
                     action, hx = self.actor.get_action(torch.Tensor(state).to(self.config['device']), h_0=h_0, c_0=c_0,
@@ -119,6 +116,8 @@ class Agent(object):
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
 
                 next_state, reward, done, info = env.step(action)
+                if reward == 0:
+                    reward = -0.01
                 if reward > 200:
                     reward = 200
                 episode_reward += reward
