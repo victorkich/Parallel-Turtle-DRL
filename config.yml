@@ -51,7 +51,7 @@ final_layer_init: 0.003
 num_atoms: 51  # number of atoms in output layer of distributed critic
 v_min: -20.0  # lower bound of critic value output distribution
 v_max: 200.0  # upper bound of critic value output distribution
-tau: 0.0001  # parameter for soft target network updates
+tau: 0.001  # parameter for soft target network updates
 
 # Comet parameters
 api_key: 53WlWYRLtr1QwZTbjazoEv35u
