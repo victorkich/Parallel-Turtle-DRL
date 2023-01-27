@@ -97,7 +97,7 @@ class LearnerSAC(object):
         # Compute the target Q value
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
-        target_value = self.critic_target(next_obs, self.actor(obs))[0]
+        target_value = self.critic_target(next_obs, self.actor(obs)[0])
         next_q_value = rewards + (1 - terminals) * self.config['discount_rate'] * target_value
         next_q_value = next_q_value.unsqueeze(-1)
         excepted_value, _, _ = self.actor(obs)
