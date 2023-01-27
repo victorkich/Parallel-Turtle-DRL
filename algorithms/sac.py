@@ -71,8 +71,6 @@ class LearnerSAC(object):
 
         # Sample replay buffer
         obs, actions, rewards, next_obs, terminals, gamma, weights, inds = batch
-        # x, u, r, y, d, gamma, weights, inds = replay_buffer
-        # x, u, r, y, d, _ = replay_buffer
 
         obs = np.asarray(obs)
         actions = np.asarray(actions)
@@ -88,18 +86,11 @@ class LearnerSAC(object):
         rewards = torch.from_numpy(rewards).float().to(self.device)
         terminals = torch.from_numpy(terminals).float().to(self.device)
 
-        # state = torch.FloatTensor(x).to(self.device)
-        # next_state = torch.FloatTensor(y).to(self.device)
-        # action = torch.FloatTensor(u).to(self.device)
-        # reward = torch.FloatTensor(r).to(self.device)
-        # done = torch.FloatTensor(1 - d).to(self.device)
-
         # Compute the target Q value
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
         target_value = self.critic_target(next_obs, self.actor(obs)[0])
         next_q_value = rewards + (1 - terminals) * self.config['discount_rate'] * target_value
-        next_q_value = next_q_value.unsqueeze(-1)
         excepted_value, _, _ = self.actor(obs)
         excepted_Q = self.Q_net(obs, actions)
 
@@ -107,8 +98,6 @@ class LearnerSAC(object):
         sample_action, log_prob, z, batch_mu, batch_log_sigma = self.get_action_log_prob(obs)
         excepted_new_Q = self.Q_net(obs, sample_action)
         next_value = excepted_new_Q - log_prob
-
-        print('Excepted value:', excepted_value.shape, 'Next value:', next_value.shape, 'Except Q:', excepted_Q.shape, 'Next Q value:', next_q_value.shape)
 
         # Compute critic loss
         critic_loss = self.critic_criterion(excepted_value, next_value.detach())  # J_V
