@@ -98,20 +98,17 @@ class LearnerSAC(object):
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
         target_value = self.critic_target(next_obs, self.actor(obs)[0])
-        print('Target_value:', target_value.shape, 'rewards:', rewards.shape, 'terminals:', terminals.shape)
         next_q_value = rewards + (1 - terminals) * self.config['discount_rate'] * target_value
         next_q_value = next_q_value.unsqueeze(-1)
         excepted_value, _, _ = self.actor(obs)
         excepted_Q = self.Q_net(obs, actions)
-
-        print("11111111111111")
 
         # Get current Q estimate
         sample_action, log_prob, z, batch_mu, batch_log_sigma = self.get_action_log_prob(obs)
         excepted_new_Q = self.Q_net(obs, sample_action)
         next_value = excepted_new_Q - log_prob
 
-        print("22222222222")
+        print('Excepted value:', excepted_value.shape, 'Next value:', next_value.shape, 'Except Q:', excepted_Q.shape, 'Next Q value:', next_q_value.shape)
 
         # Compute critic loss
         critic_loss = self.critic_criterion(excepted_value, next_value.detach())  # J_V
@@ -119,8 +116,6 @@ class LearnerSAC(object):
 
         # Compute Q loss. Single Q_net this is different from original paper
         Q_loss = self.Q_criterion(excepted_Q, next_q_value.detach())  # J_Q
-
-        print("333333333")
 
         if self.prioritized_replay:
             td_error = Q_loss.cpu().detach().numpy().flatten()
@@ -134,8 +129,6 @@ class LearnerSAC(object):
         log_policy_target = excepted_new_Q - excepted_value
         pi_loss = log_prob * (log_prob - log_policy_target).detach()
         pi_loss = pi_loss.mean()
-
-        print("4444444444")
 
         # Optimize the critic. Mini batch gradient descent
         self.critic_optimizer.zero_grad()
