@@ -1,6 +1,7 @@
 from utils.utils import empty_torch_queue
-from models import Critic, Q
+from models import DoubleQCritic
 from torch.distributions import Normal
+import torch.nn.functional as F
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np
@@ -30,12 +31,21 @@ class LearnerSAC(object):
         self.actor = policy_net
         self.actor_target = target_policy_net
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config['actor_learning_rate'])
-        self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
+
+        self.critic = DoubleQCritic(config['state_dim'], config['action_dim'], config['dense_size'], 1)
+        # self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
 
-        self.Q_net = Q(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(self.device)
-        self.Q_optimizer = optim.Adam(self.Q_net.parameters(), lr=config['actor_learning_rate'])
-        self.critic_target = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
+        # self.Q_net = Q(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(self.device)
+        # self.Q_optimizer = optim.Adam(self.Q_net.parameters(), lr=config['actor_learning_rate'])
+        self.critic_target = DoubleQCritic(config['state_dim'], config['action_dim'], config['dense_size'], 1)
+        # self.critic_target = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
+
+        self.learnable_temperature = config['use_automatic_entropy_tuning']
+        self.target_entropy = -2
+        self.init_temperature = 0.1
+        self.log_alpha = torch.tensor(np.log(self.init_temperature)).to(self.device)
+        self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=config['actor_learning_rate'])
 
         self.critic_criterion = nn.MSELoss()
         self.Q_criterion = nn.MSELoss()
@@ -54,6 +64,9 @@ class LearnerSAC(object):
         z = dist.sample()
         action = torch.tanh(z).detach().cpu().numpy()
         return action.item()
+
+    def alpha(self):
+        return self.log_alpha.exp()
 
     def get_action_log_prob(self, state):
         min_Val = torch.tensor(1e-7).float()
@@ -85,9 +98,11 @@ class LearnerSAC(object):
         rewards = torch.from_numpy(rewards).float().to(self.device)
         terminals = torch.from_numpy(terminals).float().to(self.device)
 
-        # Compute the target Q value
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
+
+        """
+        # Compute the target Q value
         target_value = self.critic_target(next_obs, self.actor(obs)[0])
         next_q_value = rewards + (1.0 - terminals) * self.gamma * target_value
         excepted_value, _, _ = self.actor(obs)
@@ -131,6 +146,50 @@ class LearnerSAC(object):
         self.actor_optimizer.zero_grad()
         pi_loss.backward()
         self.actor_optimizer.step()
+        """
+
+        dist = self.actor(next_obs)
+        next_action = dist.rsample()
+        log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
+        target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
+        target_V = torch.min(target_Q1, target_Q2) - self.alpha.detach() * log_prob
+        target_Q = rewards + ((1.0 - terminals) * self.gamma * target_V)
+        target_Q = target_Q.detach()
+
+        # get current Q estimates
+        current_Q1, current_Q2 = self.critic(obs, actions)
+        critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
+
+        if self.prioritized_replay:
+            td_error = critic_loss.cpu().detach().numpy().flatten()
+            weights_update = np.abs(td_error) + self.priority_epsilon
+            replay_priority_queue.put((inds, weights_update))
+            critic_loss = critic_loss * torch.tensor(weights).float().to(self.device)
+            critic_loss = critic_loss.mean()
+
+        # Optimize the critic
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
+
+        dist = self.actor(obs)
+        action = dist.rsample()
+        log_prob = dist.log_prob(action).sum(-1, keepdim=True)
+        actor_Q1, actor_Q2 = self.critic(obs, action)
+
+        actor_Q = torch.min(actor_Q1, actor_Q2)
+        actor_loss = (self.alpha.detach() * log_prob - actor_Q).mean()
+
+        # optimize the actor
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
+
+        if self.learnable_temperature:
+            self.log_alpha_optimizer.zero_grad()
+            alpha_loss = (self.alpha * (-log_prob - self.target_entropy).detach()).mean()
+            alpha_loss.backward()
+            self.log_alpha_optimizer.step()
 
         # soft update
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
@@ -149,8 +208,8 @@ class LearnerSAC(object):
 
         # Logging
         with logs.get_lock():
-            logs[3] = pi_loss
-            logs[4] = Q_loss
+            logs[3] = actor_loss
+            logs[4] = critic_loss
             logs[5] = time.time() - update_time
 
         self.num_training += 1

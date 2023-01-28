@@ -25,7 +25,7 @@ from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
 from utils.extract_and_compress import EAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
+from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2, DiagGaussianActor
 from agent import Agent
 
 
@@ -274,16 +274,16 @@ if __name__ == "__main__":
     elif config['model'] == 'SAC':
         if config['test']:
             try:
-                target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
+                target_policy_net = DiagGaussianActor(config['state_dim'], config['action_dim'], config['dense_size'], 1, [-config['max_action'], config['max_action']])
                 target_policy_net.load_state_dict(torch.load(path_model, map_location=config['device']))
             except:
                 target_policy_net = torch.load(path_model)
                 target_policy_net.to(config['device'])
             target_policy_net.eval()
         else:
-            target_policy_net = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
+            target_policy_net = DiagGaussianActor(config['state_dim'], config['action_dim'], config['dense_size'], 1, [-config['max_action'], config['max_action']])
             policy_net = copy.deepcopy(target_policy_net)
-            policy_net_cpu = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'])
+            policy_net_cpu = DiagGaussianActor(config['state_dim'], config['action_dim'], config['dense_size'], 1, [-config['max_action'], config['max_action']])
 
     print(f"Algorithm: {config['model']}-{'P' if config['replay_memory_prioritized'] else 'N'}-{'LSTM' if config['recurrent_policy'] else ''}")
 
