@@ -90,7 +90,7 @@ class LearnerSAC(object):
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
         target_value = self.critic_target(next_obs, self.actor(obs)[0])
-        next_q_value = rewards + (1 - terminals) * self.config['discount_rate'] * target_value
+        next_q_value = rewards + (1.0 - terminals) * self.config['discount_rate'] * target_value
         excepted_value, _, _ = self.actor(obs)
         excepted_Q = self.Q_net(obs, actions)
 
@@ -111,8 +111,7 @@ class LearnerSAC(object):
             weights_update = np.abs(td_error) + self.priority_epsilon
             replay_priority_queue.put((inds, weights_update))
             Q_loss = Q_loss * torch.tensor(weights).float().to(self.device)
-
-        Q_loss = Q_loss.mean()
+            Q_loss = Q_loss.mean()
 
         # Compute actor loss
         log_policy_target = excepted_new_Q - excepted_value
@@ -122,19 +121,16 @@ class LearnerSAC(object):
         # Optimize the critic. Mini batch gradient descent
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
-        nn.utils.clip_grad_norm_(self.critic.parameters(), 0.5)
         self.critic_optimizer.step()
 
         # Optimize the Q
         self.Q_optimizer.zero_grad()
         Q_loss.backward()
-        nn.utils.clip_grad_norm_(self.Q_net.parameters(), 0.5)
         self.Q_optimizer.step()
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()
         pi_loss.backward()
-        nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
         self.actor_optimizer.step()
 
         # soft update
@@ -194,28 +190,3 @@ class LearnerSAC(object):
         os.system("kill $(ps aux | grep gzclient | grep -v grep | awk '{print $2}')")
         os.system("kill $(ps aux | grep gzserver | grep -v grep | awk '{print $2}')")
         print("Exit learner.")
-
-    """
-    def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
-        torch.set_num_threads(4)
-        while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
-            try:
-                batch = batch_queue.get_nowait()
-            except queue.Empty:
-                time.sleep(0.01)
-                continue
-
-            self._update_step(batch, replay_priority_queue, update_step, logs)
-            with update_step.get_lock():
-                update_step.value += 1
-
-            if update_step.value % 10000 == 0:
-                print("Training step ", update_step.value)
-
-        with training_on.get_lock():
-            training_on.value = 0
-
-        empty_torch_queue(self.learner_w_queue)
-        empty_torch_queue(replay_priority_queue)
-        print("Exit learner.")
-    """

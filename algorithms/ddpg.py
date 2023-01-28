@@ -63,8 +63,6 @@ class LearnerDDPG(object):
         rewards = torch.from_numpy(rewards).float().to(self.device)
         terminals = torch.from_numpy(terminals).float().to(self.device)
 
-        # -------------------
-
         # Get the actions and the state values to compute the targets
         next_action_batch = self.actor_target(next_obs)[0]
         next_state_action_values = self.critic_target(next_obs, next_action_batch.detach())
@@ -73,8 +71,6 @@ class LearnerDDPG(object):
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
         expected_values = rewards + (1.0 - terminals) * self.gamma * next_state_action_values
-
-        # expected_value = torch.clamp(expected_value, min_value, max_value)
 
         # Update the critic network
         self.critic_optimizer.zero_grad()
@@ -98,38 +94,6 @@ class LearnerDDPG(object):
         policy_loss = policy_loss.mean()
         policy_loss.backward()
         self.actor_optimizer.step()
-
-        # ---------------------
-
-        """
-        # Compute the target Q value
-        target_Q = self.critic_target(next_state, self.actor_target(next_state)[0])
-        target_Q = reward + (done * self.gamma * target_Q).detach()
-
-        # Get current Q estimate
-        current_Q = self.critic(state, action)
-
-        # Compute critic loss
-        critic_loss = F.mse_loss(current_Q, target_Q)
-        critic_loss = critic_loss.mean()
-
-        # Optimize the critic
-        critic_loss = critic_loss.mean()
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
-
-        # Compute actor loss
-        actor_loss = -self.critic(state, self.actor(state)[0])  # .mean()
-
-        # Optimize the actor
-        actor_loss = torch.sum(actor_loss, dim=1)
-        actor_loss = -actor_loss.mean()
-
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self.actor_optimizer.step()
-        """
 
         # Update the frozen target models
         for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
@@ -186,26 +150,3 @@ class LearnerDDPG(object):
         os.system("kill $(ps aux | grep gzclient | grep -v grep | awk '{print $2}')")
         os.system("kill $(ps aux | grep gzserver | grep -v grep | awk '{print $2}')")
         print("Exit learner.")
-
-    """def run(self, training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs):
-        torch.set_num_threads(4)
-        while global_episode.value <= self.config['num_agents'] * self.config['num_episodes']:
-            try:
-                batch = batch_queue.get_nowait()
-            except queue.Empty:
-                time.sleep(0.01)
-                continue
-
-            self._update_step(batch, replay_priority_queue, update_step, logs)
-            with update_step.get_lock():
-                update_step.value += 1
-
-            if update_step.value % 10000 == 0:
-                print("Training step ", update_step.value)
-
-        with training_on.get_lock():
-            training_on.value = 0
-
-        empty_torch_queue(self.learner_w_queue)
-        empty_torch_queue(replay_priority_queue)
-        print("Exit learner.")"""
