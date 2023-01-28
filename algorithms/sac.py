@@ -65,6 +65,7 @@ class LearnerSAC(object):
         action = torch.tanh(z).detach().cpu().numpy()
         return action.item()
 
+    @property
     def alpha(self):
         return self.log_alpha.exp()
 
