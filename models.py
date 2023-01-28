@@ -598,7 +598,6 @@ class SquashedNormal(torch.distributions.transformed_distribution.TransformedDis
         transforms = [TanhTransform()]
         super().__init__(self.base_dist, transforms)
 
-    @property
     def mean(self):
         mu = self.loc
         for tr in self.transforms:
