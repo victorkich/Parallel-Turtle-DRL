@@ -674,8 +674,8 @@ class DiagGaussianActor(nn.Module):
         if exploitation:
             return mu, hx
 
-        dist = SquashedNormal(mu, std).mean()
-        return dist, hx
+        dist = SquashedNormal(mu, std)
+        return dist.mean(), hx
 
 
 class DoubleQCritic(nn.Module):
