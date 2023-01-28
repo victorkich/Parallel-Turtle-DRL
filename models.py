@@ -658,7 +658,7 @@ class DiagGaussianActor(nn.Module):
         dist = SquashedNormal(mu, std)
         return dist
 
-    def get_action(self, obs, exploitation=False):
+    def get_action(self, obs, exploitation=False, h_0=None, c_0=None):
         mu, log_std = self.trunk(obs).chunk(2, dim=-1)
 
         # constrain log_std inside [log_std_min, log_std_max]
