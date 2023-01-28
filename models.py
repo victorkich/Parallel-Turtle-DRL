@@ -655,7 +655,7 @@ class DiagGaussianActor(nn.Module):
         self.outputs['std'] = std
 
         dist = SquashedNormal(mu, std)
-        return dist
+        return dist.mean()
 
     def get_action(self, obs, exploitation=False, h_0=None, c_0=None):
         mu, log_std = self.trunk(obs).chunk(2, dim=-1)
