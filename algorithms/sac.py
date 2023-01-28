@@ -172,7 +172,7 @@ class LearnerSAC(object):
         critic_loss.backward()
         self.critic_optimizer.step()
 
-        dist  = self.actor(obs)
+        dist = self.actor(obs)
         action = dist.rsample()
         log_prob = dist.log_prob(action).sum(-1, keepdim=True)
         actor_Q1, actor_Q2 = self.critic(obs, action)
