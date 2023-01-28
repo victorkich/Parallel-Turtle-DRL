@@ -5,7 +5,6 @@ import torch.optim as optim
 import numpy as np
 import enlighten
 import torch
-import queue
 import time
 import os
 
@@ -106,7 +105,7 @@ class LearnerDDPG(object):
         if update_step.value % 100 == 0:
             try:
                 params = [p.data.cpu().detach().numpy() for p in self.actor.parameters()]
-                self.learner_w_queue.put(params)
+                self.learner_w_queue.put_nowait(params)
             except:
                 pass
 

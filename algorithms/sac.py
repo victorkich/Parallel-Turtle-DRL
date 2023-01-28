@@ -6,7 +6,6 @@ import torch.nn as nn
 import numpy as np
 import os
 import enlighten
-import queue
 import torch
 import time
 
@@ -90,7 +89,7 @@ class LearnerSAC(object):
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
         target_value = self.critic_target(next_obs, self.actor(obs)[0])
-        next_q_value = rewards + (1.0 - terminals) * self.config['discount_rate'] * target_value
+        next_q_value = rewards + (1.0 - terminals) * self.gamma * target_value
         excepted_value, _, _ = self.actor(obs)
         excepted_Q = self.Q_net(obs, actions)
 
@@ -135,16 +134,16 @@ class LearnerSAC(object):
 
         # soft update
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
-            target_param.data.copy_(target_param * (1 - self.config['tau']) + param * self.config['tau'])
+            target_param.data.copy_(target_param * (1 - self.tau) + param * self.tau)
 
         for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
-            target_param.data.copy_(target_param * (1 - self.config['tau']) + param * self.config['tau'])
+            target_param.data.copy_(target_param * (1 - self.tau) + param * self.tau)
 
         # Send updated learner to the queue
         if update_step.value % 100 == 0:
             try:
                 params = [p.data.cpu().detach().numpy() for p in self.actor.parameters()]
-                self.learner_w_queue.put(params)
+                self.learner_w_queue.put_nowait(params)
             except:
                 pass
 
