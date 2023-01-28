@@ -632,11 +632,11 @@ class DiagGaussianActor(nn.Module):
     """torch.distributions implementation of a diagonal Gaussian policy."""
 
     def __init__(self, obs_dim, action_dim, hidden_dim, hidden_depth,
-                 log_std_bounds):
+                 log_std_bounds, device='cuda'):
         super().__init__()
 
         self.log_std_bounds = log_std_bounds
-        self.trunk = mlp(obs_dim, hidden_dim, 2 * action_dim, hidden_depth)
+        self.trunk = mlp(obs_dim, hidden_dim, 2 * action_dim, hidden_depth).to(device)
 
         self.outputs = dict()
         self.apply(weight_init)
@@ -681,11 +681,11 @@ class DiagGaussianActor(nn.Module):
 
 class DoubleQCritic(nn.Module):
     """Critic network, employes double Q-learning."""
-    def __init__(self, obs_dim, action_dim, hidden_dim, hidden_depth):
+    def __init__(self, obs_dim, action_dim, hidden_dim, hidden_depth, device='cuda'):
         super().__init__()
 
-        self.Q1 = mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth)
-        self.Q2 = mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth)
+        self.Q1 = mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth).to(device)
+        self.Q2 = mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth).to(device)
 
         self.outputs = dict()
         self.apply(weight_init)
