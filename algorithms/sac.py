@@ -45,6 +45,7 @@ class LearnerSAC(object):
         self.target_entropy = -2
         self.init_temperature = 0.1
         self.log_alpha = torch.tensor(np.log(self.init_temperature)).to(self.device)
+        self.log_alpha.requires_grad = True
         self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=config['actor_learning_rate'])
 
         self.critic_criterion = nn.MSELoss()
