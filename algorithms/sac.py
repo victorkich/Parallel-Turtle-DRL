@@ -33,13 +33,8 @@ class LearnerSAC(object):
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=config['actor_learning_rate'])
 
         self.critic = DoubleQCritic(config['state_dim'], config['action_dim'], config['dense_size'], 1)
-        # self.critic = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
-        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
-
-        # self.Q_net = Q(config['state_dim'], config['action_dim'], hidden=config['dense_size']).to(self.device)
-        # self.Q_optimizer = optim.Adam(self.Q_net.parameters(), lr=config['actor_learning_rate'])
         self.critic_target = DoubleQCritic(config['state_dim'], config['action_dim'], config['dense_size'], 1)
-        # self.critic_target = Critic(config['state_dim'], config['action_dim'], config['dense_size']).to(self.device)
+        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=config['critic_learning_rate'])
 
         self.learnable_temperature = config['use_automatic_entropy_tuning']
         self.target_entropy = -2
@@ -102,53 +97,6 @@ class LearnerSAC(object):
 
         rewards = rewards.unsqueeze(1)
         terminals = terminals.unsqueeze(1)
-
-        """
-        # Compute the target Q value
-        target_value = self.critic_target(next_obs, self.actor(obs)[0])
-        next_q_value = rewards + (1.0 - terminals) * self.gamma * target_value
-        excepted_value, _, _ = self.actor(obs)
-        excepted_Q = self.Q_net(obs, actions)
-
-        # Get current Q estimate
-        sample_action, log_prob, z, batch_mu, batch_log_sigma = self.get_action_log_prob(obs)
-        excepted_new_Q = self.Q_net(obs, sample_action)
-        next_value = excepted_new_Q - log_prob
-
-        # Compute critic loss
-        critic_loss = self.critic_criterion(excepted_value, next_value.detach())  # J_V
-        critic_loss = critic_loss.mean()
-
-        # Compute Q loss. Single Q_net this is different from original paper
-        Q_loss = self.Q_criterion(excepted_Q, next_q_value.detach())  # J_Q
-
-        if self.prioritized_replay:
-            td_error = Q_loss.cpu().detach().numpy().flatten()
-            weights_update = np.abs(td_error) + self.priority_epsilon
-            replay_priority_queue.put((inds, weights_update))
-            Q_loss = Q_loss * torch.tensor(weights).float().to(self.device)
-            Q_loss = Q_loss.mean()
-
-        # Compute actor loss
-        log_policy_target = excepted_new_Q - excepted_value
-        pi_loss = log_prob * (log_prob - log_policy_target).detach()
-        pi_loss = pi_loss.mean()
-
-        # Optimize the critic. Mini batch gradient descent
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
-
-        # Optimize the Q
-        self.Q_optimizer.zero_grad()
-        Q_loss.backward()
-        self.Q_optimizer.step()
-
-        # Optimize the actor
-        self.actor_optimizer.zero_grad()
-        pi_loss.backward()
-        self.actor_optimizer.step()
-        """
 
         dist = self.actor(next_obs)
         next_action = dist.rsample()
