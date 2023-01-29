@@ -1,7 +1,7 @@
 from utils.utils import empty_torch_queue
-from models import Critic
 import torch.nn.functional as F
 import torch.optim as optim
+from models import Critic
 import numpy as np
 import enlighten
 import torch

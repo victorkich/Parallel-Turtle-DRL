@@ -1,14 +1,14 @@
 from utils.utils import empty_torch_queue
-from models import DoubleQCritic
 from torch.distributions import Normal
+from models import DoubleQCritic
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np
-import os
 import enlighten
 import torch
 import time
+import os
 
 
 class LearnerSAC(object):

@@ -72,7 +72,7 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
         ax.set_xlim([0, x_lim[directory[3]]])
         ax.set_ylim([-21, 201])
         ax.grid()
-        plt.savefig("{}.pdf".format(sel), format="pdf", bbox_inches="tight")
+        plt.savefig("{}.pdf".format(sel), format="pdf", bbox_inches="tight", backend='pgf')
         plt.show()
         fig, ax = plt.subplots()
     
