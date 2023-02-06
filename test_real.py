@@ -115,9 +115,9 @@ while True:
         elif any(algorithm == algorithms_sel[[1, 3]]):
             actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                        hidden_sizes=[config['dense_size'], config['dense_size']])
-        elif algorithm == algorithms_sel[5, 7]:
+        elif any(algorithm == algorithms_sel[5, 7]):
             actor = DiagGaussianActor(config['state_dim'], config['action_dim'], config['dense_size'], 2,
-                                                  [-config['max_action'], config['max_action']])
+                                      [-config['max_action'], config['max_action']])
         try:
             actor.load_state_dict(torch.load(model_fn, map_location=config['device']))
         except:
