@@ -160,7 +160,7 @@ while True:
             # state[-2] = -state[-2]
 
             if algorithm != '9':
-                if algorithm == '2' or algorithm == '4':
+                if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
                     action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
                 else:
                     action = actor.get_action(np.array(state))
@@ -214,4 +214,6 @@ while True:
             pickle.dump(values, fp)
         if RECORD:
             out.release()
+        slots[int(value)] = 'Reward: [{episode_reward}/20] Steps: [{num_steps}/{max_steps}] ' \
+                            'Episode Timing: {round(episode_timing, 2)}s'
     print('Episode done!')
