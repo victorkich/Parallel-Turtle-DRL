@@ -26,9 +26,6 @@ state = None
 frame = None
 font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
-RECORD = False
-if RECORD:
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
 # Hyper parameters
 episodes = 12
@@ -79,6 +76,13 @@ def getImage(image):
 
 
 sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
+
+RECORD = True
+awn_record = input("Do you wanna record your tests? [Y/n]")
+if awn_record == 'n':
+    RECORD = False
+if RECORD:
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
 path_results = path + '/real_results'
 if not os.path.exists(path_results):
@@ -146,9 +150,10 @@ while True:
             out = cv2.VideoWriter(path_results + '/{}_{}_S{}_episode{}.mp4'.format(translator[int(algorithm)][0],
                                                                                    translator[int(algorithm)][1],
                                                                                    env, value), fourcc, 20.0, (720, 720))
-            out.write(frame)
         while True:
             start = time.time()
+            if RECORD:
+                out.write(frame)
             print('Num steps:', num_steps)
             # if state is not None:
             #    for s in range(len(state)):
