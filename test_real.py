@@ -75,7 +75,7 @@ def getImage(image):
     if cv2.waitKey(1) & 0xFF == ord('q'):
         pass
 
-
+print('PASSOU AQUI')
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage,  getImage, tcp_nodelay=True, queue_size=1, buff_size=2**26)
 
 RECORD = True
