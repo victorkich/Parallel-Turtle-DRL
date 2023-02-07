@@ -42,11 +42,8 @@ with open(path + '/config.yml', 'r') as ymlfile:
 env = input('Which environment are you running? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
-print('PASSOU AQUI 1')
 _ = env_real.reset()
-print('PASSOU AQUI 2')
 real_ttb = rf.RealTtb(config, path, output=(720, 720))
-print('PASSOU AQUI 3')
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=155, pfov=110)
 
 
@@ -57,15 +54,15 @@ def getImage(image):
         lidar = rospy.wait_for_message('/scan', LaserScan, timeout=1)
     except:
         pass
-    frame = bridge.compressed_imgmsg_to_cv2(image)
-    frame = imutils.rotate_bound(frame, 2)
-    frame = defisheye.convert(frame)
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    image = bridge.compressed_imgmsg_to_cv2(image)
+    # frame = imutils.rotate_bound(frame, 2)
+    image = defisheye.convert(image)
+    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
         lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
-        angle, distance, frame = real_ttb.get_angle_distance(frame, lidar, green_magnitude=1.0)
+        angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
         distance += 0.10
     except:
         pass
