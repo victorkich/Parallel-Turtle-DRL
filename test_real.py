@@ -3,17 +3,16 @@
 import rospy
 from utils import range_finder as rf
 import gym_turtlebot3
-from models import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
+from models_oldtimes import PolicyNetwork, TanhGaussianPolicy
+from models import DiagGaussianActor
 from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
-from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import CompressedImage
 from tempfile import TemporaryFile
 from cv_bridge import CvBridge
 import numpy as np
 import pickle
-import imutils
 import torch
 import yaml
 import time
@@ -21,7 +20,6 @@ import gym
 import cv2
 import os
 
-TURTLE = '003'
 bridge = CvBridge()
 state = None
 frame = None
