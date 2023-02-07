@@ -73,7 +73,6 @@ def getImage(image):
     if cv2.waitKey(1) & 0xFF == ord('q'):
         pass
 
-print('PASSOU AQUI')
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage,  getImage, tcp_nodelay=True, queue_size=1, buff_size=2**26)
 
 RECORD = True
@@ -116,11 +115,15 @@ while True:
         if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
             actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         elif any(algorithm == algorithms_sel[[1, 3]]):
-            actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
-                                       hidden_sizes=[config['dense_size'], config['dense_size']])
+            actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                  device=config['device'])
+            #actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
+            #                           hidden_sizes=[config['dense_size'], config['dense_size']])
         elif any(algorithm == algorithms_sel[5, 7]):
-            actor = DiagGaussianActor(config['state_dim'], config['action_dim'], config['dense_size'], 2,
-                                      [-config['max_action'], config['max_action']])
+            actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                  device=config['device'])
+            #actor = DiagGaussianActor(config['state_dim'], config['action_dim'], config['dense_size'], 2,
+            #                          [-config['max_action'], config['max_action']])
         try:
             actor.load_state_dict(torch.load(model_fn, map_location=config['device']))
         except:
