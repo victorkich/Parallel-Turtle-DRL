@@ -57,7 +57,7 @@ def getImage(image):
         lidar = rospy.wait_for_message('/scan', LaserScan, timeout=1)
     except:
         pass
-    frame = bridge.compressed_imgmsg_to_cv2(image, desired_encoding='passthrough')
+    frame = bridge.compressed_imgmsg_to_cv2(image)
     frame = imutils.rotate_bound(frame, 2)
     frame = defisheye.convert(frame)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
