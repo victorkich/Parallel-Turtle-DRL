@@ -8,6 +8,7 @@ from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import CompressedImage
 from tempfile import TemporaryFile
 from cv_bridge import CvBridge
 import numpy as np
@@ -43,17 +44,17 @@ rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 _ = env_real.reset()
 real_ttb = rf.RealTtb(config, path, output=(720, 720))
-defisheye = Defisheye(dtype='linear', format='fullframe', fov=100, pfov=90)
+defisheye = Defisheye(dtype='linear', format='fullframe', fov=155, pfov=110)
 
 
 def getImage(image):
     global state
     global frame
     try:
-        lidar = rospy.wait_for_message('scan', LaserScan, timeout=1)
+        lidar = rospy.wait_for_message('/scan', LaserScan, timeout=1)
     except:
         pass
-    frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
+    frame = bridge.compressed_imgmsg_to_cv2(image, desired_encoding='passthrough')
     frame = imutils.rotate_bound(frame, 2)
     frame = defisheye.convert(frame)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -75,7 +76,7 @@ def getImage(image):
         pass
 
 
-sub_image = rospy.Subscriber('/usb_cam/image_raw', Image, getImage, queue_size=1)
+sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage,  getImage, tcp_nodelay=True, queue_size=1, buff_size=2**26)
 
 RECORD = True
 awn_record = input("Do you wanna record your tests? [Y/n]")
