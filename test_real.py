@@ -50,7 +50,7 @@ def getImage(image):
     global state
     global frame
     try:
-        lidar = rospy.wait_for_message('scan_' + TURTLE, LaserScan, timeout=1)
+        lidar = rospy.wait_for_message('scan', LaserScan, timeout=1)
     except:
         pass
     frame = bridge.imgmsg_to_cv2(image, desired_encoding='passthrough')
