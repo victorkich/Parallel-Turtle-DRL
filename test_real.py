@@ -79,7 +79,7 @@ print('PASSOU AQUI')
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage,  getImage, tcp_nodelay=True, queue_size=1, buff_size=2**26)
 
 RECORD = True
-awn_record = input("Do you wanna record your tests? [Y/n]")
+awn_record = input("Do you wanna record your tests? [Y/n]\n")
 if awn_record == 'n':
     RECORD = False
 if RECORD:
@@ -112,7 +112,7 @@ while True:
         # for i, l in enumerate(list_dir):
         #    print(i, l)
 
-        print('Loaded:', list_dir[-2])
+        print('Loaded:', list_dir)
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
@@ -137,7 +137,7 @@ while True:
         print('Current Slots:')
         for i, slot in enumerate(slots):
             print(i, '- slot:', slot)
-        value = input("Press [slot number] to start the test or press [q] to quit...")
+        value = input("Press [slot number] to start the test or press [q] to quit...\n")
         if value.lower() == 'q':
             break
 
