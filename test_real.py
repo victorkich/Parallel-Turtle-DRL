@@ -169,9 +169,10 @@ while True:
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
-                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
-                else:
                     action = actor.get_action(np.array(state))
+                else:
+                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']),
+                                                                deterministic=True)
                 action = action.detach().cpu().numpy().flatten()
             else:
                 action = b2.get_action(state)
