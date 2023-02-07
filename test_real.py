@@ -141,6 +141,8 @@ while True:
         if value.lower() == 'q':
             break
 
+        print(state)
+
         real_ttb.cleanPath()
         episode_reward = 0
         lidar_list = list()
