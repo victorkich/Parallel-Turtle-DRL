@@ -23,9 +23,8 @@ from algorithms.dsac import LearnerDSAC
 from algorithms.d4pg import LearnerD4PG
 from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
-from utils.extract_and_compress import EAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2, DiagGaussianActor
+from models import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
 from agent import Agent
 
 
@@ -132,25 +131,22 @@ def logger(config, logs, training_on, update_step, global_episode, global_step, 
         os.makedirs(process_dir)
     writer.export_scalars_to_json(f"{process_dir}/writer_data.json")
     writer.close()
-    print(f"Writer closed!\nLoading data from {process_dir}/writer_data.json log...")
-    eac = EAC()
-    # print('Extracting useful features from data...')
-    # extracted_data = eac.extract()
-    print('Writing the new compressed data...')
-    eac.save_data(f"{process_dir}/writer_compressed_data.json")
     print('Logger closed!')
 
 
 def learner_worker(config, training_on, policy, target_policy_net, learner_w_queue, replay_priority_queue, batch_queue,
                    update_step, global_episode, logs, experiment_dir):
-    if config['model'] == 'PDDRL':
-        learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    elif config['model'] == 'PDSRL':
-        learner = LearnerDSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    elif config['model'] == 'DDPG':
-        learner = LearnerDDPG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
-    elif config['model'] == 'SAC':
-        learner = LearnerSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+    match config['model']:
+        case 'PDDRL':
+            learner = LearnerD4PG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+        case 'PDSRL':
+            learner = LearnerDSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+        case 'DDPG':
+            learner = LearnerDDPG(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+        case 'SAC':
+            learner = LearnerSAC(config, policy, target_policy_net, learner_w_queue, log_dir=experiment_dir)
+        case _:
+            print("No one model has been matched!")
     learner.run(training_on, batch_queue, replay_priority_queue, update_step, global_episode, logs)
 
 

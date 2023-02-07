@@ -37,7 +37,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 with open(path + '/config.yml', 'r') as ymlfile:
     config = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-env = input('Which environment are you running? [1 | 2 | l | u]:\n')
+env = input('Which environment are you testing? [1 | 2 | l | u]:\n')
 rospy.init_node(config['env_name'].replace('-', '_') + "_test_real")
 env_real = gym.make(config['env_name'], env_stage=env.lower(), observation_mode=0, continuous=True, test_real=True)
 _ = env_real.reset()
@@ -53,9 +53,7 @@ def getImage(image):
     except:
         pass
     image = bridge.compressed_imgmsg_to_cv2(image)
-    # frame = imutils.rotate_bound(frame, 2)
     image = defisheye.convert(image)
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
@@ -74,7 +72,8 @@ def getImage(image):
         pass
 
 
-sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage,  getImage, tcp_nodelay=True, queue_size=1, buff_size=2**26)
+sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True,
+                             queue_size=1, buff_size=2 ** 26)
 
 RECORD = True
 awn_record = input("Do you wanna record your tests? [Y/n]\n")
@@ -89,14 +88,15 @@ if not os.path.exists(path_results):
 
 time.sleep(1)
 translator = {1: ['PDDRL', 'N'], 2: ['PDSRL', 'N'], 3: ['PDDRL', 'P'], 4: ['PDSRL', 'P'], 5: ['DDPG', 'N'],
-              6: ['SAC', 'N'], 7: ['BUG2', 'N']}
-algorithms_sel = np.array(['1', '2', '3', '4', '5', '6', '7', 'e', 'r'])
+              6: ['SAC', 'N'], 7: ['DDPG', 'P'], 8: ['SAC', 'P'], 9: ['BUG2', 'N']}
+algorithms_sel = np.array(['1', '2', '3', '4', '5', '6', '7', '8', '9', 'e', 'r'])
 while True:
     algorithm = ""
     while not any(algorithm.lower() == algorithms_sel):
         print('Choose the algorithm or exit the test:')
-        algorithm = input('1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->DDPG-P | 8->SAC-P | 9->BUG2 | '
-                          'e->exit | r->reset\n')
+        algorithm = input(
+            '1->PDDRL | 2->PDSRL | 3->PDDRL-P | 4->PDSRL-P | 5->DDPG | 6->SAC | 7->DDPG-P | 8->SAC-P | 9->BUG2 | '
+            'e->exit | r->reset\n')
     if algorithm.lower() == 'e':
         break
     if algorithm.lower() == 'r':
@@ -105,16 +105,15 @@ while True:
 
     if algorithm != '9':
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}"
-        list_dir = sorted(os.listdir(process_dir))[-2]
+        list_dir = sorted(os.listdir(process_dir))[-1]
         model_fn = f"{process_dir}/{list_dir}"
-        # for i, l in enumerate(list_dir):
-        #    print(i, l)
-
-        print('Loaded:', f"{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}")
+        print('Loaded:',
+              f"{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}")
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
-            actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+            actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
+                                  device=config['device'])
         elif any(algorithm == algorithms_sel[[1, 3]]):
             actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                        hidden_sizes=[config['dense_size'], config['dense_size']])
@@ -133,9 +132,9 @@ while True:
     slots = [None] * episodes
     while True:
         print('Current Slots:')
-        for i, slot in enumerate(slots):
-            print(i, '- slot:', slot)
-        value = input("Press [slot number] to start the test or press [q] to quit...\n")
+        for e, slot in enumerate(slots):
+            print(e, '- slot:', slot)
+        value = input("Press [slot number] to start the test or press [q] to quit:\n")
         if value.lower() == 'q':
             break
 
@@ -150,7 +149,8 @@ while True:
         if RECORD:
             out = cv2.VideoWriter(path_results + '/{}_{}_S{}_episode{}.mp4'.format(translator[int(algorithm)][0],
                                                                                    translator[int(algorithm)][1],
-                                                                                   env, value), fourcc, 20.0, (720, 720))
+                                                                                   env, value), fourcc, 20.0,
+                                  (720, 720))
         while True:
             start = time.time()
             if RECORD:
@@ -162,8 +162,6 @@ while True:
             #            state[s] = 2.5
 
             print('State:', state)
-            # state[:24] = list(reversed(state[:24]))
-            # state[-2] = -state[-2]
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
@@ -185,9 +183,7 @@ while True:
                 out.write(frame)
             done = False
             reward = 0
-            # for i in range(len(state[:24])):
-            #    if state[i] == 0.0:
-            #        state[i] = 1.0
+
             if state[-1] < 0.3:
                 done = True
                 reward = 200
@@ -217,7 +213,8 @@ while True:
         # Save log file
         values = [episode_reward, episode_timing, value, num_steps, real_ttb.pts, lidar_list]
         with open(path_results + '/{}_{}_S{}_episode{}.pkl'.format(translator[int(algorithm)][0],
-                                                                   translator[int(algorithm)][1], env, value), "wb") as fp:
+                                                                   translator[int(algorithm)][1], env, value),
+                  "wb") as fp:
             pickle.dump(values, fp)
         if RECORD:
             out.release()
