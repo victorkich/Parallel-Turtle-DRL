@@ -89,6 +89,7 @@ def getImage(img):
 
 def getScan(msg):
     global scan
+    print('Pei')
     scan = msg
 
 
