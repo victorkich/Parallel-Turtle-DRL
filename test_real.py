@@ -58,8 +58,8 @@ while scan is None:
 def get_state(return_old=False):
     global old_state
     global frame
-    state = old_state
-    while not return_old and state is None:
+    state = None
+    while state is None:
         try:
             scan = rospy.wait_for_message('/scan', LaserScan, timeout=15)
         except:
