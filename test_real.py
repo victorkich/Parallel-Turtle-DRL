@@ -44,19 +44,23 @@ _ = env_real.reset()
 real_ttb = rf.RealTtb(config, path, output=(720, 720))
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=155, pfov=110)
 
+scan = None
+while scan is None:
+    try:
+        scan = rospy.wait_for_message('/scan', LaserScan, timeout=10)
+    except:
+        time.sleep(0.1)
+        pass
+
 
 def getImage(image):
     global state
     global frame
-    try:
-        lidar = rospy.wait_for_message('/scan', LaserScan, timeout=10)
-    except:
-        pass
 
     image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(image))
     angle = distance = None
     try:
-        lidar = np.array(lidar.ranges)
+        lidar = np.array(scan.ranges)
         lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
         distance += 0.10
@@ -152,6 +156,12 @@ while True:
             start = time.time()
             if RECORD:
                 out.write(frame)
+
+            try:
+                scan = rospy.wait_for_message('/scan', LaserScan, timeout=10)
+            except:
+                pass
+
             print('Num steps:', num_steps)
             if state is not None:
                 for s in range(2, len(state)):
