@@ -71,8 +71,7 @@ def getImage(image):
         pass
 
 
-sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True,
-                             queue_size=1, buff_size=2 ** 26)
+sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
 
 RECORD = True
 awn_record = input("Do you wanna record your tests? [Y/n]\n")
