@@ -160,10 +160,11 @@ while True:
             if RECORD:
                 out.write(frame)
             print('Num steps:', num_steps)
-            # if state is not None:
-            #    for s in range(len(state)):
-            #        if state[s] > 2.5:
-            #            state[s] = 2.5
+            if state is not None:
+                for s in range(2, len(state)):
+                    if state[s] > 2.5:
+                        state[s] = 2.5
+            print('State:', state[2:])
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
@@ -178,8 +179,8 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            # action[0] /= 2
-            # action[1] /= 1.2
+            action[0] *= 0.8
+            action[1] *= 0.8
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
