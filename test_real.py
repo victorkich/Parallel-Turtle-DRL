@@ -95,8 +95,8 @@ while True:
         process_dir = f"{path}/saved_models/{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}"
         list_dir = sorted(os.listdir(process_dir))[-2]
         model_fn = f"{process_dir}/{list_dir}"
-        print('Loaded:',
-              f"{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}")
+        print('Model Loaded:',
+              f"{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}/{list_dir}")
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
@@ -214,7 +214,7 @@ while True:
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
-        print(f"Agent: [Test] Episode: [{value}/{episodes}] Reward: [{episode_reward}/20] "
+        print(f"Agent: [Test] Episode: [{value}/{episodes}] Reward: [{episode_reward}/200] "
               f"Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s")
 
         # Save log file
@@ -225,5 +225,5 @@ while True:
             pickle.dump(values, fp)
         if RECORD:
             out.release()
-        slots[int(value)] = f'Reward: [{episode_reward}/20] Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s'
+        slots[int(value)] = f'Reward: [{episode_reward}/200] Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s'
     print('Episode done!')
