@@ -24,6 +24,7 @@ state = None
 frame = None
 scan = None
 image = None
+old_state = None
 font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
 
@@ -53,6 +54,27 @@ while scan is None:
         time.sleep(0.1)
         pass
 
+
+def get_state(return_old=False):
+    global old_state
+    state = old_state
+    while not return_old and state is None:
+        try:
+            scan = rospy.wait_for_message('/scan', LaserScan, timeout=15)
+        except:
+            pass
+
+        try:
+            lidar = np.array(scan.ranges)
+            lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+            angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
+            distance += 0.10
+        except:
+            pass
+
+        if not angle is None and not distance is None:
+            state = np.hstack([lidar, angle, distance])
+    return state
 
 def getImage(img):
     # global state
@@ -138,26 +160,14 @@ while True:
                                                                                    env, value), fourcc, 20.0,
                                   (720, 720))
         angle = distance = None
+
+        state = get_state()
         while True:
             start = time.time()
             if RECORD:
                 out.write(frame)
 
-            try:
-                scan = rospy.wait_for_message('/scan', LaserScan, timeout=20)
-            except:
-                pass
-
-            try:
-                lidar = np.array(scan.ranges)
-                lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
-                angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
-                distance += 0.10
-            except:
-                pass
-
-            if not angle is None and not distance is None:
-                state = np.hstack([lidar, angle, distance])
+            state = get_state(return_old=True)
 
             print('Num steps:', num_steps)
             if state is not None:
