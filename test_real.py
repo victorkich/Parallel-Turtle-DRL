@@ -164,7 +164,7 @@ while True:
                 for s in range(2, len(state)):
                     if state[s] > 2.5:
                         state[s] = 2.5
-            print('State:', state[2:])
+                print('State:', state[2:])
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
