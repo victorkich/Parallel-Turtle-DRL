@@ -184,7 +184,8 @@ if __name__ == "__main__":
     higher = 0
     higher_model = None
     for saved_model in list_saved_models:
-        print(saved_model)
+        if saved_model == 'writer_data.json':
+            continue
         if higher < int(saved_model.split('_')[1].split('.')[0]):
             higher = int(saved_model.split('_')[1].split('.')[0])
             higher_model = saved_model
