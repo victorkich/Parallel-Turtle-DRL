@@ -189,7 +189,7 @@ while True:
             print('State:', state)
 
             if algorithm != '9':
-                if any(algorithm == algorithms_sel[[0, 2,]]):
+                if any(algorithm == algorithms_sel[[0, 2]]):
                     action = actor.get_action(np.array(state))
                 elif any(algorithm == algorithms_sel[[4, 6]]):
                     action, hx = actor.get_action(np.array(state))
