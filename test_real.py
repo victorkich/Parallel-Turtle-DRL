@@ -186,7 +186,7 @@ while True:
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
                     action = actor.get_action(np.array(state))
                 elif any(algorithm == algorithms_sel[[5, 7]]):
-                    action, hx = actor.get_action(torch.Tensor(state).to(config['device']), h_0=None, c_0=None, exploitation=False)
+                    action, hx = actor.get_action(torch.Tensor(state).to(config['device']), h_0=None, c_0=None, exploitation=True)
                 else:
                     action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']),
                                                                 deterministic=True)
