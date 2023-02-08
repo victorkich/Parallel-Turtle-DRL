@@ -23,6 +23,7 @@ bridge = CvBridge()
 state = None
 frame = None
 scan = None
+image = None
 font = cv2.FONT_HERSHEY_SIMPLEX
 outfile = TemporaryFile()
 
@@ -53,23 +54,12 @@ while scan is None:
         pass
 
 
-def getImage(image):
-    global state
-    global frame
-    global scan
+def getImage(img):
+    # global state
+    # global frame
+    global image
 
-    image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(image))
-    angle = distance = None
-    try:
-        lidar = np.array(scan.ranges)
-        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
-        angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
-        distance += 0.10
-    except:
-        pass
-
-    if not angle is None and not distance is None:
-        state = np.hstack([lidar, angle, distance])
+    image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(img))
 
     # Display the resulting frame
     cv2.imshow('frame', frame)
@@ -153,6 +143,7 @@ while True:
                                                                                    translator[int(algorithm)][1],
                                                                                    env, value), fourcc, 20.0,
                                   (720, 720))
+        angle = distance = None
         while True:
             start = time.time()
             if RECORD:
@@ -163,6 +154,17 @@ while True:
                 print('Scan:', scan.ranges)
             except:
                 pass
+
+            try:
+                lidar = np.array(scan.ranges)
+                lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+                angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
+                distance += 0.10
+            except:
+                pass
+
+            if not angle is None and not distance is None:
+                state = np.hstack([lidar, angle, distance])
 
             print('Num steps:', num_steps)
             if state is not None:
