@@ -9,6 +9,7 @@ from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import CompressedImage
 from tempfile import TemporaryFile
 from cv_bridge import CvBridge
+from models2 import PolicyNetwork as PolicyNetwork2
 from models import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor  # Bug sem sentido algum
 import numpy as np
 import pickle
@@ -184,6 +185,8 @@ while True:
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
                     action = actor.get_action(np.array(state))
+                elif any(algorithm == algorithms_sel[[5, 7]]):
+                    action, hx = actor.get_action(torch.Tensor(state).to(config['device']), h_0=None, c_0=None, exploitation=False)
                 else:
                     action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']),
                                                                 deterministic=True)
