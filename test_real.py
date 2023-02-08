@@ -176,10 +176,15 @@ while True:
 
             state = get_state()
             print('Num steps:', num_steps)
-            if state is not None and not any(algorithm == algorithms_sel[[4, 5, 6, 7]]):
-                for s in range(0, len(state)-2):
-                    if state[s] > 2.5:
-                        state[s] = 2.5
+            if state is not None:
+                if not any(algorithm == algorithms_sel[[4, 5, 6, 7]]):
+                    for s in range(0, len(state)-2):
+                        if state[s] > 2.5:
+                            state[s] = 2.5
+                else:
+                    for s in range(0, len(state)-2):
+                        if state[s] > 3.5:
+                            state[s] = 3.5
 
             print('State:', state)
 
