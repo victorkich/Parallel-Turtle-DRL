@@ -184,7 +184,8 @@ while True:
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
-                    action = actor.get_action(np.array(state))
+                    action, hx = actor.get_action(np.array(state))
+                    print(action, hx)
                 elif any(algorithm == algorithms_sel[[5, 7]]):
                     action, hx = actor.get_action(torch.Tensor(state).to(config['device']), h_0=None, c_0=None, exploitation=True)
                 else:
