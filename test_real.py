@@ -205,8 +205,8 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] *= 0.75
-            action[1] *= 0.75
+            action[0] *= 1.15
+            action[1] *= 1.15
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
