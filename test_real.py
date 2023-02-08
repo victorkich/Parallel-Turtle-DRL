@@ -58,13 +58,7 @@ def getImage(img):
     # global state
     # global frame
     global image
-
     image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(img))
-
-    # Display the resulting frame
-    cv2.imshow('frame', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        pass
 
 
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
@@ -211,10 +205,13 @@ while True:
             else:
                 num_steps += 1
 
+            # Display the resulting frame
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                pass
             print('Step timing:', time.time() - start)
             fps = round(1 / (time.time() - start))
             print('FPS:', fps)
-            time.sleep(0.1)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
