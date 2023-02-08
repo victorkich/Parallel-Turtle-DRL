@@ -109,6 +109,7 @@ while True:
         model_fn = f"{process_dir}/{list_dir}"
         print('Loaded:',
               f"{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}")
+        print('Model fn:', model_fn)
 
         # Loading neural network model
         if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
