@@ -56,6 +56,7 @@ while scan is None:
 def getImage(image):
     global state
     global frame
+    global scan
 
     image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(image))
     angle = distance = None
@@ -158,7 +159,8 @@ while True:
                 out.write(frame)
 
             try:
-                scan = rospy.wait_for_message('/scan', LaserScan, timeout=10)
+                scan = rospy.wait_for_message('/scan', LaserScan, timeout=20)
+                print('Scan:', scan.ranges)
             except:
                 pass
 
