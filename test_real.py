@@ -226,7 +226,7 @@ while True:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 pass
             print('Step timing:', time.time() - start)
-            time.sleep(0.1)
+            time.sleep(0.05)
             fps = round(1 / (time.time() - start))
             print('FPS:', fps)
 
