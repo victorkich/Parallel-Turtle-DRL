@@ -59,6 +59,7 @@ def get_state(return_old=False):
     global old_state
     global frame
     state = None
+    angle = distance = None
     while state is None:
         #try:
         #    scan = rospy.wait_for_message('/scan', LaserScan, timeout=15)
@@ -78,6 +79,7 @@ def get_state(return_old=False):
             old_state = state
     return state
 
+
 def getImage(img):
     # global state
     # global frame
@@ -89,8 +91,9 @@ def getScan(msg):
     global scan
     scan = msg
 
-sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
+
 sub_scan = rospy.Subscriber('/scan', LaserScan, getScan, tcp_nodelay=True, queue_size=1)
+sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
 
 RECORD = True
 awn_record = input("Do you wanna record your tests? [Y/n]\n")
