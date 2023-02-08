@@ -74,6 +74,7 @@ def get_state(return_old=False):
 
         if not angle is None and not distance is None:
             state = np.hstack([lidar, angle, distance])
+            old_state = state
     return state
 
 def getImage(img):
