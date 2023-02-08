@@ -112,11 +112,12 @@ class Agent(object):
                     if self.config['test']:
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, local_steps).flatten()
-                    if self.agent_type == "exploration":
-                        action = action.squeeze(0)
-                        action = self.ou_noise.get_action(action, local_steps).flatten()
                     else:
-                        action = action.detach().cpu().numpy().flatten()
+                        if self.agent_type == "exploration":
+                            action = action.squeeze(0)
+                            action = self.ou_noise.get_action(action, local_steps).flatten()
+                        else:
+                            action = action.detach().cpu().numpy().flatten()
 
                 action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
