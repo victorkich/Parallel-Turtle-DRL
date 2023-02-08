@@ -93,7 +93,7 @@ def getScan(msg):
     scan = msg
 
 
-sub_scan = rospy.Subscriber('/scan', LaserScan, getScan, tcp_nodelay=True, queue_size=1)
+sub_scan = rospy.Subscriber('/scan', LaserScan, getScan, queue_size=1)
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
 
 RECORD = True
