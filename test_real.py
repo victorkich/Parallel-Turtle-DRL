@@ -163,8 +163,7 @@ while True:
         if RECORD:
             out = cv2.VideoWriter(path_results + '/{}_{}_S{}_episode{}.mp4'.format(translator[int(algorithm)][0],
                                                                                    translator[int(algorithm)][1],
-                                                                                   env, value), fourcc, 20.0,
-                                  (720, 720))
+                                                                                   env, value), fourcc, 20.0, (720, 720))
         angle = distance = None
 
         state = get_state()
@@ -222,7 +221,6 @@ while True:
                 num_steps += 1
 
             # Display the resulting frame
-            cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 pass
             print('Step timing:', time.time() - start)
