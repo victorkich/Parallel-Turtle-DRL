@@ -48,11 +48,10 @@ def getImage(image):
     global state
     global frame
     try:
-        lidar = rospy.wait_for_message('/scan', LaserScan, timeout=1)
+        lidar = rospy.wait_for_message('/scan', LaserScan)
     except:
         pass
-    image = bridge.compressed_imgmsg_to_cv2(image)
-    image = defisheye.convert(image)
+    image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(image))
     angle = distance = None
     try:
         lidar = np.array(lidar.ranges)
