@@ -1,6 +1,6 @@
 from utils.utils import empty_torch_queue
 from torch.distributions import Normal
-from models import DoubleQCritic
+from models2 import DoubleQCritic
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.nn as nn

@@ -25,7 +25,7 @@ from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
 from utils.extract_and_compress import EAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
+from models2 import PolicyNetwork, TanhGaussianPolicy, PolicyNetwork2
 from agent import Agent
 
 

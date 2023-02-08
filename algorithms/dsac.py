@@ -1,5 +1,5 @@
 from utils.utils import empty_torch_queue, fast_clip_grad_norm, quantile_regression_loss
-from models import QuantileMlp
+from models2 import QuantileMlp
 import torch.optim as optim
 import numpy as np
 import enlighten

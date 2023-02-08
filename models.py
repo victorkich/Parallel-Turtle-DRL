@@ -4,14 +4,14 @@ import torch.nn.functional as F
 import torch.nn as nn
 import numpy as np
 import torch
-import math
 import abc
 
 
 class ValueNetwork(nn.Module):
     """Critic - return Q value from given states and actions. """
 
-    def __init__(self, num_states, num_actions, hidden_size, v_min, v_max, num_atoms, device='cuda', recurrent=False):
+    def __init__(self, num_states, num_actions, hidden_size, v_min, v_max,
+                 num_atoms, device='cuda'):
         """
         Args:
             num_states (int): state dimension
@@ -23,7 +23,6 @@ class ValueNetwork(nn.Module):
             init_w:
         """
         super(ValueNetwork, self).__init__()
-        self.recurrent = recurrent
 
         self.linear1 = nn.Linear(num_states + num_actions, hidden_size)
         self.linear2 = nn.Linear(hidden_size, hidden_size)
@@ -34,21 +33,20 @@ class ValueNetwork(nn.Module):
         self.to(device)
 
     def forward(self, state, action):
-        x = torch.cat([state, action], 2 if self.recurrent else 1)
+        x = torch.cat([state, action], 1)
         x = torch.relu(self.linear1(x))
         x = torch.relu(self.linear2(x))
         x = self.linear3(x)
         return x
 
     def get_probs(self, state, action):
-        return torch.softmax(self.forward(state, action), dim=2 if self.recurrent else 1)
+        return torch.softmax(self.forward(state, action), dim=1)
 
 
 class PolicyNetwork(nn.Module):
     """Actor - return action value given states. """
 
-    def __init__(self, num_states, num_actions, hidden_size, device='cuda', recurrent=False, lstm_cells=1,
-                 lstm_dense=64):
+    def __init__(self, num_states, num_actions, hidden_size, device='cuda'):
         """
         Args:
             num_states (int): state dimension
@@ -57,70 +55,32 @@ class PolicyNetwork(nn.Module):
         """
         super(PolicyNetwork, self).__init__()
         self.device = device
-        self.recurrent = recurrent
-        self.hidden_size = hidden_size
-        self.lstm_dense = lstm_dense
 
-        if recurrent:
-            self.lstm = nn.LSTM(input_size=num_states, hidden_size=lstm_dense, num_layers=lstm_cells, batch_first=True)
-            # self.linear1 = nn.Linear(lstm_dense, hidden_size)
-            self.linear2 = nn.Linear(lstm_dense, num_actions)
-        else:
-            self.linear1 = nn.Linear(num_states, hidden_size)
-            self.linear2 = nn.Linear(hidden_size, hidden_size)
-            self.linear3 = nn.Linear(hidden_size, num_actions)
+        self.linear1 = nn.Linear(num_states, hidden_size)
+        self.linear2 = nn.Linear(hidden_size, hidden_size)
+        self.linear3 = nn.Linear(hidden_size, num_actions)
 
         self.to(device)
 
-    def forward(self, state, h_0=None, c_0=None):
-        if self.recurrent:
-            if len(state.size()) == 3:
-                batch_size, seq_size, obs_size = state.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
-                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
-            else:
-                seq_size = 1
-                batch_size, obs_size = state.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
-                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
-                else:
-                    h_0 = torch.Tensor(h_0)
-                    c_0 = torch.Tensor(c_0)
-
-            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                     self.lstm_dense).contiguous(),
-                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                     self.lstm_dense).contiguous())
-            state = state.view(batch_size, seq_size, obs_size)
-            self.lstm.flatten_parameters()
-            x, (h_0, c_0) = self.lstm(state, hxs)
-            hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
-            x = torch.relu(x)
-            # x = torch.relu(self.linear1(x))
-            x = torch.tanh(self.linear2(x))
-        else:
-            x = torch.relu(self.linear1(state))
-            x = torch.relu(self.linear2(x))
-            x = torch.tanh(self.linear3(x))
-            hx = (None, None)
-        return x, hx
+    def forward(self, state):
+        x = torch.relu(self.linear1(state))
+        x = torch.relu(self.linear2(x))
+        x = torch.tanh(self.linear3(x))
+        return x
 
     def to(self, device):
         super(PolicyNetwork, self).to(device)
 
-    def get_action(self, state, h_0=None, c_0=None):
+    def get_action(self, state):
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
-        action, hx = self.forward(state, h_0=h_0, c_0=c_0)
-        return action, hx
+        action = self.forward(state)
+        return action
 
 
 class PolicyNetwork2(nn.Module):
     """Actor for SAC - return action value given states. """
 
-    def __init__(self, state_size, action_size, device, hidden_size=32, init_w=3e-3, log_std_min=-20, log_std_max=2,
-                 recurrent=False, lstm_cells=1):
+    def __init__(self, state_size, action_size, device, hidden_size=32, init_w=3e-3, log_std_min=-20, log_std_max=2):
         """Initialize parameters and build model.
         Params
         ======
@@ -135,13 +95,9 @@ class PolicyNetwork2(nn.Module):
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.device = device
-        self.recurrent = recurrent
 
-        if recurrent:
-            self.lstm = nn.LSTM(input_size=state_size, hidden_size=hidden_size, num_layers=lstm_cells, batch_first=True)
-        else:
-            self.fc1 = nn.Linear(state_size, hidden_size)
-            self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc1 = nn.Linear(state_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
 
         self.mu = nn.Linear(hidden_size, action_size)
         self.log_std_linear = nn.Linear(hidden_size, action_size)
@@ -154,58 +110,34 @@ class PolicyNetwork2(nn.Module):
         self.mu.weight.data.uniform_(-self.init_w, self.init_w)
         self.log_std_linear.weight.data.uniform_(-self.init_w, self.init_w)
 
-    def forward(self, state, h_0=None, c_0=None):
-        if self.recurrent:
-            if len(state.size()) == 3:
-                batch_size, seq_size, obs_size = state.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
-            else:
-                seq_size = 1
-                batch_size, obs_size = state.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.hidden_size))
-                    c_0 = torch.zeros((1, batch_size, self.hidden_size))
-
-            hxs = (torch.tensor(h_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                  self.hidden_size).contiguous(),
-                   torch.tensor(c_0).to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                  self.hidden_size).contiguous())
-
-            state = state.view(batch_size, seq_size, obs_size)
-            x, (h_0, c_0) = self.lstm(state, hxs)
-            hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
-            x = torch.relu(x)
-        else:
-            x = F.relu(self.fc1(state), inplace=True)
-            x = F.relu(self.fc2(x), inplace=True)
-            hx = (None, None)
-
+    def forward(self, state):
+        x = F.relu(self.fc1(state), inplace=True)
+        x = F.relu(self.fc2(x), inplace=True)
         mu = self.mu(x)
+
         log_std = self.log_std_linear(x)
         log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
-        return mu, log_std, hx
+        return mu, log_std
 
     def to(self, device):
         super(PolicyNetwork2, self).to(device)
 
     def evaluate(self, state, epsilon=1e-6):
-        mu, log_std, (h_0, c_0) = self.forward(state)
+        mu, log_std = self.forward(state)
         std = log_std.exp()
         dist = Normal(0, 1)
         e = dist.sample().to(self.device)
         action = torch.tanh(mu + e * std)
         log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - action.pow(2) + epsilon)
-        return action, log_prob, (h_0, c_0)
+        return action, log_prob
 
-    def get_action(self, state, exploitation=False, h_0=None, c_0=None):
+    def get_action(self, state, exploitation=False):
         """
         returns the action based on a squashed gaussian policy. That means the samples are obtained according to:
         a(s,e)= tanh(mu(s)+sigma(s)+e)
         """
-        state = state.to(self.device)
-        mu, log_std, (h_0, c_0) = self.forward(state)
+        state = torch.FloatTensor(state).to(self.device)
+        mu, log_std = self.forward(state)
         std = log_std.exp()
         dist = Normal(0, 1)
         e = dist.sample().to(self.device)
@@ -213,15 +145,23 @@ class PolicyNetwork2(nn.Module):
             action = torch.tanh(mu + e * std).cpu()
         else:
             action = torch.tanh(mu).cpu()
-        return action, (h_0, c_0)
+        return action
 
 
 class QuantileMlp(nn.Module):
-    def __init__(self, hidden_sizes, output_size, config, input_size, embedding_size=64, num_quantiles=32,
-                 layer_norm=True, recurrent=False, **kwargs):
+    def __init__(
+            self,
+            hidden_sizes,
+            output_size,
+            config,
+            input_size,
+            embedding_size=64,
+            num_quantiles=32,
+            layer_norm=True,
+            **kwargs,
+    ):
         super().__init__()
         self.layer_norm = layer_norm
-        self.recurrent = recurrent
 
         self.base_fc = []
         last_size = input_size
@@ -230,7 +170,6 @@ class QuantileMlp(nn.Module):
                              nn.ReLU(inplace=True)]
             last_size = next_size
         self.base_fc = nn.Sequential(*self.base_fc)
-
         self.num_quantiles = num_quantiles
         self.embedding_size = embedding_size
         self.tau_fc = nn.Sequential(nn.Linear(embedding_size, last_size),
@@ -238,7 +177,7 @@ class QuantileMlp(nn.Module):
         self.merge_fc = nn.Sequential(nn.Linear(last_size, hidden_sizes[-1]),
                                       nn.LayerNorm(hidden_sizes[-1]) if layer_norm else nn.Identity(),
                                       nn.ReLU(inplace=True))
-        self.last_fc = nn.Linear(hidden_sizes[-1], output_size)
+        self.last_fc = nn.Linear(hidden_sizes[-1], 1)
         self.const_vec = torch.from_numpy(np.arange(1, 1 + self.embedding_size)).to(config['device'])
         self.to(config['device'])
 
@@ -250,7 +189,7 @@ class QuantileMlp(nn.Module):
         Calculate Quantile Value in Batch
         tau: quantile fractions, (N, T)
         """
-        h = torch.cat([state, action], dim=2 if self.recurrent else 1)
+        h = torch.cat([state, action], dim=1)
         h = self.base_fc(h)  # (N, C)
 
         x = torch.cos(tau.unsqueeze(-1) * self.const_vec * np.pi)  # (N, T, E)
@@ -265,8 +204,11 @@ class QuantileMlp(nn.Module):
 class Mlp(nn.Module):
     def __init__(self, hidden_sizes, output_size, input_size, config, init_w=3e-3, hidden_activation=F.relu,
                  output_activation=nn.Identity, hidden_init=fanin_init, b_init_value=0.1, layer_norm=False,
-                 recurrent=False, lstm_cells=1, lstm_dense=64, layer_norm_kwargs=None):
+                 layer_norm_kwargs=None):
         super().__init__()
+
+        if layer_norm_kwargs is None:
+            layer_norm_kwargs = dict()
 
         self.input_size = input_size
         self.output_size = output_size
@@ -275,19 +217,13 @@ class Mlp(nn.Module):
         self.layer_norm = layer_norm
         self.fcs = []
         self.layer_norms = []
-        self.recurrent = recurrent
-        self.lstm_dense = lstm_dense
         in_size = input_size
 
         for i, next_size in enumerate(hidden_sizes):
-            if recurrent and not i:
-                fc = nn.LSTM(input_size=in_size, hidden_size=self.lstm_dense, num_layers=lstm_cells, batch_first=True)
-                next_size = self.lstm_dense
-            else:
-                fc = nn.Linear(in_size, next_size)
-                hidden_init(fc.weight)
-                fc.bias.data.fill_(b_init_value)
+            fc = nn.Linear(in_size, next_size)
             in_size = next_size
+            hidden_init(fc.weight)
+            fc.bias.data.fill_(b_init_value)
             self.__setattr__("fc{}".format(i), fc)
             self.fcs.append(fc)
 
@@ -299,63 +235,50 @@ class Mlp(nn.Module):
         self.last_fc = nn.Linear(in_size, output_size)
         self.last_fc.weight.data.uniform_(-init_w, init_w)
         self.last_fc.bias.data.uniform_(-init_w, init_w)
+
         self.to(config['device'])
 
     def to(self, device):
         super(Mlp, self).to(device)
 
-    def forward(self, state, return_preactivations=False, h_0=None, c_0=None):
-        if self.recurrent:
-            if len(state.size()) == 3:
-                batch_size, seq_size, obs_size = state.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
-                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
-            else:
-                seq_size = 1
-                batch_size, obs_size = state.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, batch_size, self.lstm_dense))
-                    c_0 = torch.zeros((1, batch_size, self.lstm_dense))
-                else:
-                    h_0 = torch.Tensor(h_0)
-                    c_0 = torch.Tensor(c_0)
-
-            hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                     self.lstm_dense).contiguous(),
-                   c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                     self.lstm_dense).contiguous())
-            state = state.view(batch_size, seq_size, obs_size)
-            h = state
-            for i, fc in enumerate(self.fcs):
-                if self.recurrent and not i:
-                    fc.flatten_parameters()
-                    h, (h_0, c_0) = fc(h, hxs)
-                else:
-                    h = fc(h)
-                if self.layer_norm and i < len(self.fcs) - 1:
-                    h = self.layer_norms[i](h)
-                h = self.hidden_activation(h)
-            preactivation = self.last_fc(h)
-            output = self.output_activation(preactivation)
-            hx = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
-        else:
-            h = state
-            for i, fc in enumerate(self.fcs):
-                h = fc(h)
-                if self.layer_norm and i < len(self.fcs) - 1:
-                    h = self.layer_norms[i](h)
-                h = self.hidden_activation(h)
-            preactivation = self.last_fc(h)
-            output = self.output_activation(preactivation)
-            hx = (None, None)
+    def forward(self, input, return_preactivations=False):
+        h = input
+        for i, fc in enumerate(self.fcs):
+            h = fc(h)
+            if self.layer_norm and i < len(self.fcs) - 1:
+                h = self.layer_norms[i](h)
+            h = self.hidden_activation(h)
+        preactivation = self.last_fc(h)
+        output = self.output_activation(preactivation)
         if return_preactivations:
-            return output, hx, preactivation
+            return output, preactivation
         else:
-            return output, hx
+            return output
 
 
-class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
+class Policy(object, metaclass=abc.ABCMeta):
+    """
+    General policy interface.
+    """
+
+    @abc.abstractmethod
+    def get_action(self, observation):
+        """
+        :param observation:
+        :return: action, debug_dictionary
+        """
+        pass
+
+    def reset(self):
+        pass
+
+
+class ExplorationPolicy(Policy, metaclass=abc.ABCMeta):
+    def set_num_steps_total(self, t):
+        pass
+
+
+class TanhGaussianPolicy(Mlp, ExplorationPolicy):
     """
     Usage:
     ```
@@ -364,26 +287,20 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
     action, mean, log_std, _ = policy(obs, deterministic=True)
     action, mean, log_std, log_prob = policy(obs, return_log_prob=True)
     ```
-
     Here, mean and log_std are the mean and log_std of the Gaussian that is
     sampled from.
-
     If deterministic is True, action = tanh(mean).
     If return_log_prob is False (default), log_prob = None
         This is done because computing the log_prob can be a bit expensive.
     """
 
-    def __init__(self, hidden_sizes, obs_dim, action_dim, config, std=None, init_w=1e-3, recurrent=False, lstm_cells=1,
-                 lstm_dense=64, **kwargs):
+    def __init__(self, hidden_sizes, obs_dim, action_dim, config, std=None, init_w=1e-3, **kwargs):
         super().__init__(hidden_sizes, input_size=obs_dim, output_size=action_dim, config=config, init_w=init_w,
-                         recurrent=recurrent, lstm_cells=lstm_cells, lstm_dense=lstm_dense, **kwargs)
+                         **kwargs)
         self.config = config
         self.device = config['device']
         self.log_std = None
         self.std = std
-        self.hidden_sizes = hidden_sizes
-        self.lstm_dense = lstm_dense
-
         if std is None:
             last_hidden_size = obs_dim
             if len(hidden_sizes) > 0:
@@ -401,52 +318,19 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
         super(TanhGaussianPolicy, self).to(device)
 
     @torch.no_grad()
-    def get_action(self, obs_np, h_0=None, c_0=None, exploitation=False):
-        action, mean, _, _, _, _, _, _, hx = self.forward(obs_np, h_0=h_0, c_0=c_0)
-        if exploitation:
-            return mean, hx
-        return action, hx
+    def get_action(self, obs_np):
+        action, _, _, _, _, _, _, _ = self.forward(obs_np)
+        return action
 
-    def forward(self, obs, h_0=None, c_0=None, reparameterize=True, deterministic=False, return_log_prob=False):
+    def forward(self, obs, reparameterize=True, deterministic=False, return_log_prob=False):
         """
         :param obs: Observation
         :param deterministic: If True, do not sample
         :param return_log_prob: If True, return a sample and its log probability
         """
         h = obs
-        hxs = None
-        if self.recurrent:
-            if len(h.size()) == 3:
-                batch_size, seq_size, obs_size = h.size()
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((batch_size, seq_size, self.lstm_dense))
-                    c_0 = torch.zeros((batch_size, seq_size, self.lstm_dense))
-
-                hxs = (h_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                         self.lstm_dense).contiguous(),
-                       c_0.clone().detach().to(self.device).view(batch_size, seq_size, -1)[:, 0, :].view(1, batch_size,
-                                                                                                         self.lstm_dense).contiguous())
-            else:
-                if h_0 is None and c_0 is None:
-                    h_0 = torch.zeros((1, self.lstm_dense))
-                    c_0 = torch.zeros((1, self.lstm_dense))
-                else:
-                    h_0 = torch.Tensor(h_0)
-                    c_0 = torch.Tensor(c_0)
-
-                hxs = (h_0.clone().detach().to(self.device).view(1, 1, -1).contiguous(),
-                       c_0.clone().detach().to(self.device).view(1, 1, -1).contiguous())
-                h = h.view(1, 1, len(h))
-
         for i, fc in enumerate(self.fcs):
-            if self.recurrent and not i:
-                fc.flatten_parameters()
-                h, (h_0, c_0) = fc(h, hxs)
-            else:
-                h = fc(h)
-            h = self.hidden_activation(h)
-        if self.recurrent:
-            hxs = (h_0.detach().cpu().numpy(), c_0.detach().cpu().numpy())
+            h = self.hidden_activation(fc(h))
         mean = self.last_fc(h)
         if self.std is None:
             log_std = self.last_fc_log_std(h)
@@ -470,14 +354,14 @@ class TanhGaussianPolicy(Mlp, metaclass=abc.ABCMeta):
                 else:
                     action, pre_tanh_value = tanh_normal.sample(return_pretanh_value=True)
                 log_prob = tanh_normal.log_prob(action, pre_tanh_value=pre_tanh_value)
-                log_prob = log_prob.sum(dim=2 if self.recurrent else 1, keepdim=True)
+                log_prob = log_prob.sum(dim=1, keepdim=True)
             else:
                 if reparameterize is True:
                     action = tanh_normal.rsample()
                 else:
                     action = tanh_normal.sample()
 
-        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value, hxs
+        return action, mean, log_std, log_prob, entropy, std, mean_action_log_prob, pre_tanh_value
 
 
 class ActorSAC(nn.Module):
@@ -553,11 +437,10 @@ class Critic(nn.Module):
         self.l3 = nn.Linear(hidden, 1)
 
     def forward(self, x, u):
-        x = F.relu(self.l1(torch.cat((x, u), 1)))
+        x = F.relu(self.l1(torch.cat([x, u], 1)))
         x = F.relu(self.l2(x))
         x = self.l3(x)
         return x
-
 
 class TanhTransform(torch.distributions.transforms.Transform):
     domain = torch.distributions.constraints.real
@@ -675,27 +558,3 @@ class DiagGaussianActor(nn.Module):
 
         dist = SquashedNormal(mu, std)
         return dist.mean(), hx
-
-
-class DoubleQCritic(nn.Module):
-    """Critic network, employes double Q-learning."""
-    def __init__(self, obs_dim, action_dim, hidden_dim, hidden_depth, device='cuda'):
-        super().__init__()
-
-        self.Q1 = mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth).to(device)
-        self.Q2 = mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth).to(device)
-
-        self.outputs = dict()
-        self.apply(weight_init)
-
-    def forward(self, obs, action):
-        assert obs.size(0) == action.size(0)
-
-        obs_action = torch.cat([obs, action], dim=-1)
-        q1 = self.Q1(obs_action)
-        q2 = self.Q2(obs_action)
-
-        self.outputs['q1'] = q1
-        self.outputs['q2'] = q2
-
-        return q1, q2

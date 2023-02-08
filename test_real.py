@@ -9,7 +9,7 @@ from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import CompressedImage
 from tempfile import TemporaryFile
 from cv_bridge import CvBridge
-from models_oldtimes import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
+from models import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
 import numpy as np
 import pickle
 import torch

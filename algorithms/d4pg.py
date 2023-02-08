@@ -1,6 +1,6 @@
 from utils.l2_projection import _l2_project
 from utils.utils import empty_torch_queue
-from models import ValueNetwork
+from models2 import ValueNetwork
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np

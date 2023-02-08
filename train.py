@@ -24,7 +24,7 @@ from algorithms.d4pg import LearnerD4PG
 from algorithms.ddpg import LearnerDDPG
 from algorithms.sac import LearnerSAC
 from tensorboardX import SummaryWriter
-from models import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
+from models2 import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
 from agent import Agent
 
 
