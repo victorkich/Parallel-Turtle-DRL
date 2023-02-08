@@ -19,6 +19,7 @@ class Agent(object):
         colorama_init(autoreset=True)
         self.colors = dict(Fore.__dict__.items())
         self.color = list(self.colors.keys())[n_agent+1]
+        print(self.color)
 
         print(self.colors[self.color] + f"Initializing agent {n_agent+1}...")
         self.config = config
@@ -108,6 +109,9 @@ class Agent(object):
                     action = action.detach().cpu().numpy().flatten()
                 else:
                     action, hx = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
+                    if self.config['test']:
+                        action = action.squeeze(0)
+                        action = self.ou_noise.get_action(action, local_steps).flatten()
                     if self.agent_type == "exploration":
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, local_steps).flatten()
