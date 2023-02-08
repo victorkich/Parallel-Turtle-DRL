@@ -49,7 +49,7 @@ def getImage(image):
     global state
     global frame
     try:
-        lidar = rospy.wait_for_message('/scan', LaserScan)
+        lidar = rospy.wait_for_message('/scan', LaserScan, timeout=10)
     except:
         pass
 
