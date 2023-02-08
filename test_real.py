@@ -210,6 +210,7 @@ while True:
             print('Step timing:', time.time() - start)
             fps = round(1 / (time.time() - start))
             print('FPS:', fps)
+            time.sleep(0.1)
 
         # Log metrics
         episode_timing = time.time() - ep_start_time
