@@ -64,7 +64,7 @@ def get_state(return_old=False):
         lidar = np.array(scan.ranges)
         lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
         angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
-        distance += 0.1
+        distance += 0.15
     except:
         pass
 
@@ -203,7 +203,7 @@ while True:
             done = False
             reward = 0
 
-            if state[-1] < 0.2:
+            if state[-1] < 0.25:
                 done = True
                 reward = 200
             if 0.1 < min(state[0:24]) < 0.14:
