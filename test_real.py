@@ -60,10 +60,10 @@ def get_state(return_old=False):
     global frame
     state = None
     while state is None:
-        try:
-            scan = rospy.wait_for_message('/scan', LaserScan, timeout=15)
-        except:
-            pass
+        #try:
+        #    scan = rospy.wait_for_message('/scan', LaserScan, timeout=15)
+        #except:
+        #    pass
 
         try:
             lidar = np.array(scan.ranges)
@@ -85,7 +85,12 @@ def getImage(img):
     image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(img))
 
 
+def getScan(msg):
+    global scan
+    scan = msg
+
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
+sub_scan = rospy.Subscriber('/scan', LaserScan, getScan, tcp_nodelay=True, queue_size=1)
 
 RECORD = True
 awn_record = input("Do you wanna record your tests? [Y/n]\n")
