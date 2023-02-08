@@ -45,41 +45,34 @@ real_ttb = rf.RealTtb(config, path, output=(720, 720))
 defisheye = Defisheye(dtype='linear', format='fullframe', fov=155, pfov=110)
 
 
-def getScan(msg):
-    global scan
-    scan = msg
-
-
-
 def getImage(image):
     global state
     global frame
-    #try:
-    #    lidar = rospy.wait_for_message('/scan', LaserScan)
-    #except:
-    #    pass
-    if not scan is None:
-        image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(image))
-        angle = distance = None
-        try:
-            lidar = np.array(scan.ranges)
-            lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
-            angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
-            distance += 0.10
-        except:
-            pass
+    try:
+        lidar = rospy.wait_for_message('/scan', LaserScan)
+    except:
+        pass
 
-        if not angle is None and not distance is None:
-            state = np.hstack([lidar, angle, distance])
+    image = defisheye.convert(bridge.compressed_imgmsg_to_cv2(image))
+    angle = distance = None
+    try:
+        lidar = np.array(lidar.ranges)
+        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+        angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
+        distance += 0.10
+    except:
+        pass
 
-        # Display the resulting frame
-        cv2.imshow('frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            pass
+    if not angle is None and not distance is None:
+        state = np.hstack([lidar, angle, distance])
+
+    # Display the resulting frame
+    cv2.imshow('frame', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        pass
 
 
 sub_image = rospy.Subscriber('/camera_2/image_raw/compressed', CompressedImage, getImage, tcp_nodelay=True, queue_size=1)
-sub_scan = rospy.Subscriber('/scan', LaserScan, getScan, tcp_nodelay=True, queue_size=1)
 
 RECORD = True
 awn_record = input("Do you wanna record your tests? [Y/n]\n")
