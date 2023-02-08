@@ -57,6 +57,7 @@ while scan is None:
 
 def get_state(return_old=False):
     global old_state
+    global frame
     state = old_state
     while not return_old and state is None:
         try:
