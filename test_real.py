@@ -3,14 +3,13 @@
 import rospy
 from utils import range_finder as rf
 import gym_turtlebot3
-from models import DiagGaussianActor
 from utils.defisheye import Defisheye
 from algorithms.bug2 import BUG2
 from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import CompressedImage
 from tempfile import TemporaryFile
 from cv_bridge import CvBridge
-from models_oldtimes import PolicyNetwork, TanhGaussianPolicy
+from models_oldtimes import PolicyNetwork, TanhGaussianPolicy, DiagGaussianActor
 import numpy as np
 import pickle
 import torch
