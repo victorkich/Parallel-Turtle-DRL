@@ -153,7 +153,7 @@ class RealTtb:
         # yellow aimPoint
         mask = cv2.inRange(hsv, self.yellowLower, self.yellowUpper)
         mask = cv2.UMat(mask)
-        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.erode(mask, None, iterations=1)
         mask = cv2.dilate(mask, None, iterations=2)
         mask = cv2.UMat.get(mask)
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
