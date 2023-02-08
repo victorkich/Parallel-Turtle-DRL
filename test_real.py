@@ -137,8 +137,6 @@ while True:
         if value.lower() == 'q':
             break
 
-        print(state)
-
         real_ttb.cleanPath()
         episode_reward = 0
         lidar_list = list()
@@ -159,8 +157,6 @@ while True:
             #    for s in range(len(state)):
             #        if state[s] > 2.5:
             #            state[s] = 2.5
-
-            print('State:', state)
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
@@ -217,6 +213,5 @@ while True:
             pickle.dump(values, fp)
         if RECORD:
             out.release()
-        slots[int(value)] = 'Reward: [{episode_reward}/20] Steps: [{num_steps}/{max_steps}] ' \
-                            'Episode Timing: {round(episode_timing, 2)}s'
+        slots[int(value)] = f'Reward: [{episode_reward}/20] Steps: [{num_steps}/{max_steps}] Episode Timing: {round(episode_timing, 2)}s'
     print('Episode done!')
