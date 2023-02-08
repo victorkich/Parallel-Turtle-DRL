@@ -128,9 +128,10 @@ while True:
               f"{translator[int(algorithm)][0]}_{config['dense_size']}_A{config['num_agents']}_S{env}_{'P' if any(algorithm == algorithms_sel[[2, 3, 6, 7]]) else 'N'}/{list_dir}")
 
         # Loading neural network model
-        if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
-            actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'],
-                                  device=config['device'])
+        if any(algorithm == algorithms_sel[[0, 2]]):
+            actor = PolicyNetwork(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
+        elif any(algorithm == algorithms_sel[[4, 6]]):
+            actor = PolicyNetwork2(config['state_dim'], config['action_dim'], config['dense_size'], device=config['device'])
         elif any(algorithm == algorithms_sel[[1, 3]]):
             actor = TanhGaussianPolicy(config=config, obs_dim=config['state_dim'], action_dim=config['action_dim'],
                                        hidden_sizes=[config['dense_size'], config['dense_size']])
@@ -183,9 +184,10 @@ while True:
             print('State:', state)
 
             if algorithm != '9':
-                if any(algorithm == algorithms_sel[[0, 2, 4, 6]]):
+                if any(algorithm == algorithms_sel[[0, 2,]]):
+                    action = actor.get_action(np.array(state))
+                elif any(algorithm == algorithms_sel[[4, 6]]):
                     action, hx = actor.get_action(np.array(state))
-                    print(action, hx)
                 elif any(algorithm == algorithms_sel[[5, 7]]):
                     action, hx = actor.get_action(torch.Tensor(state).to(config['device']), h_0=None, c_0=None, exploitation=True)
                 else:
