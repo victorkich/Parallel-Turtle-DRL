@@ -204,9 +204,9 @@ class Agent(object):
             # Log metrics
             episode_timing = time.time() - ep_start_time
             if training_on.value:
-                print(self.colors[self.color] if not self.config['test'] else '' + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
+                print(self.colors[self.color] + f"Approach: [{self.config['model']}-{'P' if self.config['replay_memory_prioritized'] else 'N'}] "
                       f"Agent: [{self.n_agent + 1}/{self.config['num_agents']}] Episode: [{self.local_episode}"
-                      f"{('/' + self.config['test_trials']) if self.config['test'] else ''}] Reward: "
+                      f"{('/' + str(self.config['test_trials'])) if self.config['test'] else ''}] Reward: "
                       f"[{int(episode_reward)}/200] Episode Timing: {round(episode_timing, 2)}s")
             aux = 6 + self.n_agent * 3
             with logs.get_lock():
