@@ -190,8 +190,8 @@ if __name__ == "__main__":
             higher = int(saved_model.split('_')[1].split('.')[0])
             higher_model = saved_model
     path_model = f"{model_dir}{higher_model}"
+    path_model = f"{model_dir}step_100000.pth"
     print(path_model)
-    path_model = f"{model_dir}ep_1221.pth"
 
     # Opening gazebo environments
     for i in range(config['num_agents'] if not config['test'] else 1):
