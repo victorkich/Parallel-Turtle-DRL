@@ -217,7 +217,7 @@ while True:
             done = False
             reward = 0
 
-            if state[-1] < 0.3:
+            if state[-1] < 0.25:
                 done = True
                 reward = 200
             if 0.1 < min(state[0:24]) < 0.14:
