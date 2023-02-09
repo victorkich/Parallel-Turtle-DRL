@@ -80,8 +80,8 @@ class RealTtb:
         self.blueUpper = (36, 106, 255)#(104, 30, 255) # (179, 40, 255)
         self.greenLower = (28, 80, 172)  # metrics
         self.greenUpper = (48, 143, 236)
-        self.redLower = (103, 39, 215) #(147, 0, 189)  # left
-        self.redUpper = (164, 149, 255) #(179, 127, 255)
+        self.redLower = (68, 21, 184)#(103, 39, 215) #(147, 0, 189)  # left
+        self.redUpper = (179, 255, 255)#(164, 149, 255) #(179, 127, 255)
         self.yellowLower = (68, 44, 92) #(154, 43, 123) #(142, 99, 0) #(170, 76, 159) # target
         self.yellowUpper = (129, 157, 235) #(179, 137, 255) #(179, 255, 255) # (179, 132, 209)
 
