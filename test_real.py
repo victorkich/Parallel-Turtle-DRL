@@ -57,23 +57,23 @@ while scan is None:
 
 
 def get_state():
-    global old_state
     global frame
+    state = None
 
     angle = distance = None
-    try:
-        lidar = np.array(scan.ranges)
-        lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
-        angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
-        distance += 0.15
-    except:
-        pass
+    while state is None:
+        try:
+            lidar = np.array(scan.ranges)
+            lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+            angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
+            distance += 0.15
+        except:
+            pass
 
-    if not angle is None and not distance is None:
-        state = np.hstack([lidar, angle, distance])
-        old_state = state
-    else:
-        state = old_state
+        if not angle is None and not distance is None:
+            state = np.hstack([lidar, angle, distance])
+            # old_state = state
+
     return state
 
 
