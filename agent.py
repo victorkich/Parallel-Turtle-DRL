@@ -74,10 +74,9 @@ class Agent(object):
             goal = [test_goals(self.local_episode)]
         env = gym.make(self.config['env_name'], env_stage=self.config['env_stage'], observation_mode=0, continuous=True, goal_list=goal)
         time.sleep(1)
-        if not self.config['test']:
-            self.ou_noise.reset()
+        self.ou_noise.reset()
 
-        local_steps = 0
+        local_steps = 50000 if self.config['test'] else 0
         rewards = []
         while training_on.value if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
             episode_reward = 0
@@ -108,12 +107,17 @@ class Agent(object):
                                                        exploitation=True if self.agent_type == "exploitation" else False)
                     action = action.detach().cpu().numpy().flatten()
                 else:
-                    action, hx = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
-                    if self.agent_type == "exploration":
+                    if self.config['test']:
+                        action, hx = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
                         action = action.squeeze(0)
                         action = self.ou_noise.get_action(action, local_steps).flatten()
                     else:
-                        action = action.detach().cpu().numpy().flatten()
+                        action, hx = self.actor.get_action(np.array(state), h_0=h_0, c_0=c_0)
+                        if self.agent_type == "exploration":
+                            action = action.squeeze(0)
+                            action = self.ou_noise.get_action(action, local_steps).flatten()
+                        else:
+                            action = action.detach().cpu().numpy().flatten()
 
                 action[0] = np.clip(action[0], self.action_low[0], self.action_high[0])
                 action[1] = np.clip(action[1], self.action_low[1], self.action_high[1])
