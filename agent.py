@@ -19,7 +19,6 @@ class Agent(object):
         colorama_init(autoreset=True)
         self.colors = dict(Fore.__dict__.items())
         self.color = list(self.colors.keys())[n_agent+1]
-        print(self.color)
 
         print(self.colors[self.color] + f"Initializing agent {n_agent+1}...")
         self.config = config
