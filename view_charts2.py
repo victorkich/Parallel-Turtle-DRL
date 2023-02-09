@@ -36,7 +36,7 @@ b = [1.0 / n] * n
 a = 1
 
 color = {'DDPG-N': 'dodgerblue', 'DDPG-P': 'springgreen', 'SAC-N': 'indigo', 'SAC-P': 'deeppink'}
-x_lim = {'S1': 30000, 'S2': 200000, 'Sl': 200000, 'Su': 200000, 'SL': 200000}
+x_lim = {'S1': 100000, 'S2': 200000, 'Sl': 200000, 'Su': 200000, 'SL': 200000}
 fig, ax = plt.subplots()
 
 print('Generating charts...')
