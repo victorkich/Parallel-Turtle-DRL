@@ -192,6 +192,10 @@ while True:
                         if state[s] > 3.5:
                             state[s] = 3.5
 
+            for s in range(0, len(state) - 2):
+                if state[s] == 0:
+                    state[s] = 1.
+
             print('State:', state)
 
             if algorithm != '9':
