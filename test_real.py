@@ -202,8 +202,7 @@ while True:
                 elif any(algorithm == algorithms_sel[[5, 7]]):
                     action, hx = actor.get_action(torch.Tensor(state).to(config['device']), h_0=None, c_0=None, exploitation=True)
                 else:
-                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']),
-                                                                deterministic=True)
+                    action, _, _, _, _, _, _, _ = actor.forward(torch.Tensor(state).to(config['device']), deterministic=True)
                 action = action.detach().cpu().numpy().flatten()
             else:
                 action = b2.get_action(state)
@@ -222,7 +221,7 @@ while True:
             if state[-1] < 0.35:
                 done = True
                 reward = 200
-            if 0.08 < min(state[0:24]) < 0.25:
+            if 0.06 < min(state[0:24]) < 0.3:
                 done = True
                 reward = -20
             episode_reward += reward
