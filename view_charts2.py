@@ -43,52 +43,59 @@ list_dir = os.listdir(path)
 splitted_dir = list()
 for dir in list_dir:
     splitted_dir.append(dir[:-5].split('_'))
-sorted_dir = sorted(splitted_dir, key=lambda row: row[2])
+
+sorted_dir = sorted(splitted_dir, key=lambda row: row[0])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[2])
 print(sorted_dir)
 
-n = 100  # the larger n is, the smoother curve will be
-b = [1.0 / n] * n
-a = 1
-
 color = {'PDDRL-N': 'dodgerblue', 'PDSRL-N': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink',
-         'DDPG-N': 'orange', 'DDPG-P': 'black', 'SAC-N': 'azure', 'SAC-P': 'brown'}
-x_lim = {'S1': 100000, 'S2': 200000, 'Sl': 200000, 'Su': 200000, 'SL': 200000}
+         'DDPG-N': 'orange', 'DDPG-P': 'black', 'SAC-N': 'darkslategray', 'SAC-P': 'brown'}
+x_lim = {'S1': 30000, 'S2': 200000, 'Sl': 200000, 'Su': 200000}
 fig, ax = plt.subplots()
+fig.set_size_inches(14, 10)
+fig.set_dpi(100)
 
 print('Generating charts...')
 for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     directory = '_'.join(directory)+'.json'
     print(path+directory)
     with open(path+directory) as f:
-        if any(directory == np.array(['DDPG-N', 'DDPG-P', 'SAC-N', 'SAC-P'])):
-            data = json.load(f)
+        if any(sorted_dir[c][0] == np.array(['DDPG', 'SAC'])):
+            data = json.load(f)[0]
         else:
             data = json.load(f)
 
     rewards = data['y']
     rewards = np.array([200 if reward >= 200 else reward for reward in rewards])
-    steps = data['x']
+    if any(sorted_dir[c][0] == np.array(['PDDRL', 'PDSRL'])) or sorted_dir[c][0] == 'DDPG' and sorted_dir[c][1] == 'N' and sorted_dir[c][2] == 'S2':
+        steps = np.linspace(0, x_lim[sorted_dir[c][-1]], len(rewards))
+    else:
+        steps = data['x']
+
+    n = 100 if sorted_dir[c][2] == 'S1' else 150  # the larger n is, the smoother curve will be
+    b = [1.0 / n] * n
+    a = 1
 
     means = lfilter(b, a, rewards)
-    _, stds = mfilter(rewards, n)
+    # _, stds = mfilter(rewards, n)
 
-    # sel = '-'.join([directory[0], directory[4]])
     sel = sorted_dir[c]
-    print(sel)
-    ax.plot(steps, means, linestyle='-', linewidth=2, label='-'.join(sel[:-1]), c=color['-'.join(sel[:-1])])
-    ax.fill_between(steps, means - stds, means + stds, alpha=0.15, facecolor=color['-'.join(sel[:-1])])
+    ax.plot(steps, means, linestyle='-', linewidth=2, label='-'.join(sel[:-1]) if sel[1] == 'P' else sel[0], c=color['-'.join(sel[:-1])])
+    # ax.fill_between(steps, means - stds * 0.4, means + stds * 0.4, alpha=0.08, facecolor=color['-'.join(sel[:-1])])
 
-    if (c+1) % 4 == 0:
+    if (c+1) % 8 == 0:
         ax.legend(loc=4, prop={'size': 14})
-        ax.set_xlabel('Episode', fontsize=12)
+        ax.set_xlabel('Step', fontsize=12)
         ax.set_ylabel('Reward', fontsize=12)
         ax.set_xlim([0, x_lim[sel[-1]]])
         ax.set_ylim([-21, 201])
         ax.grid()
-        # print("Saving at:", "{}.pdf".format(sel))
-        # plt.savefig("{}.pdf".format(sel), format="pdf", bbox_inches="tight", backend='pgf')
+        print("Saving at:", "chart_environment_{}.pdf".format(sorted_dir[c][-1]))
+        plt.savefig("chart_environment_{}.pdf".format(sorted_dir[c][-1]), format="pdf", bbox_inches="tight")
         plt.show()
         fig, ax = plt.subplots()
+        fig.set_size_inches(14, 10)
+        fig.set_dpi(100)
 
     del data
 
