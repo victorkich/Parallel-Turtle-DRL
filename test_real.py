@@ -222,7 +222,7 @@ while True:
             if state[-1] < 0.35:
                 done = True
                 reward = 200
-            if 0.1 < min(state[0:24]) < 0.20:
+            if 0.1 < min(state[0:24]) < 0.25:
                 done = True
                 reward = -20
             episode_reward += reward
