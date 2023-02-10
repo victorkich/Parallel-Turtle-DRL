@@ -195,7 +195,7 @@ while True:
 
             for s in range(0, len(state) - 2):
                 if state[s] == 0:
-                    state[s] = state.mean()
+                    state[s] = state[0:24].mean()
 
             print('State:', state)
 
