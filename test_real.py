@@ -182,8 +182,8 @@ while True:
             print('Num steps:', num_steps)
             if state is not None:
                 if not any(algorithm == algorithms_sel[[4, 5, 6, 7]]):
-                    if state[-1] > 2.5:
-                        state[-1] = 2.5
+                    #if state[-1] > 2.5:
+                    #    state[-1] = 2.5
                     for s in range(0, len(state)-2):
                         if state[s] > 2.5:
                             state[s] = 2.5
@@ -222,7 +222,7 @@ while True:
             if state[-1] < 0.35:
                 done = True
                 reward = 200
-            if 0.1 < min(state[0:24]) < 0.18:
+            if 0.1 < min(state[0:24]) < 0.20:
                 done = True
                 reward = -20
             episode_reward += reward
