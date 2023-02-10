@@ -222,7 +222,7 @@ while True:
                 done = True
                 reward = 200
 
-            state_idx = (state > 0.1) * (state < 0.2)
+            state_idx = (state > 0.1) * (state < 0.15)
             if len(state[state_idx]):
                 done = True
                 reward = -20
