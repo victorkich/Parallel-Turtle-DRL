@@ -184,9 +184,10 @@ while True:
                 if not any(algorithm == algorithms_sel[[4, 5, 6, 7]]):
                     #if state[-1] > 2.5:
                     #    state[-1] = 2.5
-                    for s in range(0, len(state)-2):
-                        if state[s] > 2.5:
-                            state[s] = 2.5
+                    pass
+                    #for s in range(0, len(state)-2):
+                    #    if state[s] > 2.5:
+                    #        state[s] = 2.5
                 else:
                     for s in range(0, len(state)-2):
                         if state[s] > 3.5:
