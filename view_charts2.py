@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import matplotlib
 from scipy.signal import lfilter
 from tqdm import tqdm
 import pandas as pd
@@ -45,14 +46,17 @@ for dir in list_dir:
     splitted_dir.append(dir[:-5].split('_'))
 
 sorted_dir = sorted(splitted_dir, key=lambda row: row[0])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[1])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[0])
 sorted_dir = sorted(sorted_dir, key=lambda row: row[2])
 print(sorted_dir)
 
 color = {'PDDRL-N': 'dodgerblue', 'PDSRL-N': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink',
          'DDPG-N': 'orange', 'DDPG-P': 'black', 'SAC-N': 'darkslategray', 'SAC-P': 'brown'}
 x_lim = {'S1': 30000, 'S2': 200000, 'Sl': 200000, 'Su': 200000}
+matplotlib.rcParams.update({'font.size': 18})
 fig, ax = plt.subplots()
-fig.set_size_inches(14, 10)
+fig.set_size_inches(11, 8)
 fig.set_dpi(100)
 
 print('Generating charts...')
@@ -84,17 +88,17 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     # ax.fill_between(steps, means - stds * 0.4, means + stds * 0.4, alpha=0.08, facecolor=color['-'.join(sel[:-1])])
 
     if (c+1) % 8 == 0:
-        ax.legend(loc=4, prop={'size': 14})
-        ax.set_xlabel('Step', fontsize=12)
-        ax.set_ylabel('Reward', fontsize=12)
+        ax.legend(loc="lower left", mode="expand", ncol=4, prop={'size': 20})
+        ax.set_xlabel('Step', fontsize=20)
+        ax.set_ylabel('Reward', fontsize=20)
         ax.set_xlim([0, x_lim[sel[-1]]])
-        ax.set_ylim([-21, 201])
+        ax.set_ylim([-45, 201])
         ax.grid()
         print("Saving at:", "chart_environment_{}.pdf".format(sorted_dir[c][-1]))
-        plt.savefig("chart_environment_{}.pdf".format(sorted_dir[c][-1]), format="pdf", bbox_inches="tight")
+        plt.savefig("reward_stage_{}_v2.pdf".format(sorted_dir[c][-1]), format="pdf", bbox_inches="tight")
         plt.show()
         fig, ax = plt.subplots()
-        fig.set_size_inches(14, 10)
+        fig.set_size_inches(11, 8)
         fig.set_dpi(100)
 
     del data
