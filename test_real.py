@@ -222,8 +222,8 @@ while True:
                 done = True
                 reward = 200
 
-            state_comparison = (state > 0.1) * (state < 0.2)
-            if len(state_comparison):
+            state_idx = (state > 0.1) * (state < 0.2)
+            if len(state[state_idx]):
                 done = True
                 reward = -20
             episode_reward += reward
