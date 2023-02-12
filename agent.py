@@ -224,11 +224,14 @@ class Agent(object):
                 if self.local_episode % self.config['update_agent_ep'] == 0:
                     self.update_actor_learner(learner_w_queue, training_on)
 
-        if self.agent_type == "exploitation":
+        if self.agent_type == "exploitation" and not self.config['test']:
             self.save(f"step_{self.config['num_steps_train']}")
 
         if not self.config['test']:
             empty_torch_queue(replay_queue)
+
+        if self.config['test']:
+            values = [episode_reward, episode_timing, value, num_steps, real_ttb.pts, lidar_list]
 
         rospy.signal_shutdown(f"Rospy of agent {self.n_agent+1} is closed.")
         print(f"Agent {self.n_agent+1} done.")
