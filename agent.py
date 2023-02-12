@@ -230,8 +230,8 @@ class Agent(object):
         if not self.config['test']:
             empty_torch_queue(replay_queue)
 
-        if self.config['test']:
-            values = [episode_reward, episode_timing, value, num_steps, real_ttb.pts, lidar_list]
+        #if self.config['test']:
+            #values = [episode_reward, episode_timing, value, num_steps, real_ttb.pts, lidar_list]
 
         rospy.signal_shutdown(f"Rospy of agent {self.n_agent+1} is closed.")
         print(f"Agent {self.n_agent+1} done.")
