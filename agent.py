@@ -78,7 +78,7 @@ class Agent(object):
 
         local_steps = 0
         rewards = []
-        while training_on.value if not self.config['test'] else (self.local_episode <= self.config['test_trials']):
+        while training_on.value if not self.config['test'] else (self.local_episode < self.config['test_trials']):
             episode_reward = 0
             num_steps = 0
             self.local_episode += 1
