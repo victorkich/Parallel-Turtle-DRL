@@ -190,7 +190,7 @@ if __name__ == "__main__":
             higher = int(saved_model.split('_')[1].split('.')[0])
             higher_model = saved_model
     path_model = f"{model_dir}{higher_model}"
-    path_model = f"{model_dir}ep_5001.pth"
+    # path_model = f"{model_dir}ep_5001.pth"
     print(path_model)
 
     # Opening gazebo environments
