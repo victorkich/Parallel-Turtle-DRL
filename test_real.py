@@ -227,10 +227,10 @@ while True:
                 done = True
                 reward = 200
 
-            #state_idx = (state > 0.13) * (state < 0.18)
-            #if len(state[state_idx]):
-            #    done = True
-            #    reward = -20
+            state_idx = (state > 0.1) * (state < 0.15)
+            if len(state[state_idx]):
+                done = True
+                reward = -20
             episode_reward += reward
 
             scan = state[0:24]
