@@ -227,8 +227,12 @@ while True:
                 done = True
                 reward = 200
 
-            #state_idx = (state > 0.1) * (state < 0.15)
-            #if len(state[state_idx]):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                done = True
+                reward = -20
+
+            # state_idx = (state > 0.1) * (state < 0.15)
+            # if len(state[state_idx]):
             #    done = True
             #    reward = -20
             episode_reward += reward
