@@ -215,8 +215,8 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] *= 1.15
-            action[1] *= 1.15
+            action[0] *= 1.1
+            action[1] *= 1.1
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
@@ -227,10 +227,10 @@ while True:
                 done = True
                 reward = 200
 
-            state_idx = (state > 0.1) * (state < 0.15)
-            if len(state[state_idx]):
-                done = True
-                reward = -20
+            #state_idx = (state > 0.1) * (state < 0.15)
+            #if len(state[state_idx]):
+            #    done = True
+            #    reward = -20
             episode_reward += reward
 
             scan = state[0:24]
