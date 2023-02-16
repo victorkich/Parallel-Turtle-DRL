@@ -208,6 +208,8 @@ while True:
 
             if state[-1] > 3:
                 state[-1] = 2.5
+            elif state[-1] > 2.5:
+                state[-1] *= 0.5
             # state[-1] *= 0.7
             print('State:', state)
 
