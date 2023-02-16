@@ -64,8 +64,8 @@ def get_state():
     while state is None:
         try:
             lidar = np.array(scan.ranges)
-            # lidar = np.array([lidar[[i - 1, i, i + 1]].mean() for i in range(7, 361, 15)]).squeeze()
-            lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+            lidar = np.array([lidar[[i - 1, i, i + 1]].mean() for i in range(7, 361, 15)]).squeeze()
+            # lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
             angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -224,8 +224,8 @@ while True:
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
             print('Action:', action)
-            action[0] *= 1.1
-            action[1] *= 1.1
+            action[0] *= 0.75
+            action[1] *= 0.75
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
