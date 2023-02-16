@@ -64,7 +64,8 @@ def get_state():
     while state is None:
         try:
             lidar = np.array(scan.ranges)
-            lidar = np.array([lidar[[i - 1, i, i + 1]].mean() for i in range(7, 361, 15)]).squeeze()
+            # lidar = np.array([lidar[[i - 1, i, i + 1]].mean() for i in range(7, 361, 15)]).squeeze()
+            lidar = np.array([min(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
             angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -175,6 +176,8 @@ while True:
         state = get_state()
         while True:
             start = time.time()
+            done = False
+            reward = 0
             if RECORD:
                 out.write(frame)
 
@@ -192,6 +195,11 @@ while True:
                     for s in range(0, len(state)-2):
                         if state[s] > 3.5:
                             state[s] = 3.5
+
+            state_idx = (state > 0.1) * (state < 0.15)
+            if len(state[state_idx]):
+                reward = -20
+                done = True
 
             for s in range(0, len(state) - 2):
                 if state[s] == 0:
@@ -220,21 +228,11 @@ while True:
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
-            done = False
-            reward = 0
 
             if state[-1] < 0.4:
-                done = True
                 reward = 200
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
                 done = True
-                reward = -20
 
-            # state_idx = (state > 0.1) * (state < 0.15)
-            # if len(state[state_idx]):
-            #    done = True
-            #    reward = -20
             episode_reward += reward
 
             scan = state[0:24]

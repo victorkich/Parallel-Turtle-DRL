@@ -6,21 +6,42 @@ import numpy as np
 import json
 import os
 
+
 path = os.path.dirname(os.path.abspath(__file__))
 list_dir = os.listdir(path + '/results/')
+threshold = 10
+
+
+def antispike(old_list_x, old_list_y):
+    new_list_x = list()
+    new_list_y = list()
+    for index in range(1, len(old_list_x)):
+        if abs(old_list_x[index] - old_list_x[index-1]) < threshold and abs(old_list_y[index] - old_list_y[index-1]) < threshold:
+            new_list_x.append(old_list_x[index])
+            new_list_y.append(old_list_y[index])
+    return new_list_x, new_list_y
+
 
 stage = [mpimg.imread(path+'/media/stage_{}.png'.format(i)) for i in range(1, 5)]
-color = {'BUG2': 'gold', 'PDDRL': 'dodgerblue', 'PDSRL': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink'}
+color = {'PDDRL-N': 'dodgerblue', 'PDSRL-N': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink',
+         'DDPG-N': 'orange', 'DDPG-P': 'black', 'SAC-N': 'darkslategray', 'SAC-P': 'brown'}
 sel = {'S1': 0, 'S2': 1, 'Su': 2, 'Sl': 3}
 
 splitted_dir = list()
 for dir in list_dir:
     if dir != 'data' and dir.split('_')[0] != 'BUG2':
         splitted_dir.append(dir.split('_'))
-sorted_dir = sorted(splitted_dir, key=lambda row: row[1] if row[0] == 'BUG2' else row[3])
+# sorted_dir = sorted(splitted_dir, key=lambda row: row[1] if row[0] == 'BUG2' else row[3])
+sorted_dir = sorted(splitted_dir, key=lambda row: row[4])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[0])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[4])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[3])
 print('Dir:', sorted_dir)
+fig, ax = plt.subplots()
+fig.set_size_inches(10, 10)
+fig.set_dpi(100)
 
-sorted_dir = sorted_dir[14:]
+sorted_dir = sorted_dir[5:]
 
 for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     with open(path+'/results/'+'_'.join(directory)+'/writer_data.json') as f:
@@ -53,11 +74,12 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     df = df.groupby(new_key_list[2]).first().reset_index()[1:]
 
     if directory[0] != 'BUG2':
-        if directory[-1] != 'N':
-            name = "-".join([directory[0], directory[-1]])
-        else:
-            name = directory[0]
+        # if directory[-1] != 'N':
+        #    name = "-".join([directory[0], directory[-1]])
+        # else:
+        #    name = directory[0]
         c = directory[-2]
+        name = "-".join([directory[0], directory[-1]])
     else:
         name = directory[0]
         c = directory[1]
@@ -80,13 +102,13 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     x = pd.DataFrame(data['agent_0/x']).iloc[:, 2].to_numpy().tolist()
     y = pd.DataFrame(data['agent_0/y']).iloc[:, 2].to_numpy().tolist()
 
-    plt.imshow(stage[sel[c]], extent=[min(x) - 0.7, max(x) + 0.7, min(y) - 0.7, max(y) + 0.7])
+    plt.imshow(stage[sel[c]], extent=[min(x) - 0.7, max(x) + 0.7, min(y) - 0.4, max(y) + 0.4])
 
     new_x = list()
     new_y = list()
     last = 0
     for i in range(len(x)-1):
-        if abs(x[i]) > 0.5 and abs(x[i+1]) <= 0.5:
+        if abs(x[i]) > 0.5 >= abs(x[i + 1]):
             new_x.append(x[last+1:i-1])
             new_y.append(y[last+1:i-1])
             last = i+1
@@ -94,11 +116,22 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     for x, y in zip(new_x, new_y):
         x = np.array(x)
         y = np.array(y)
-        x -= 0.3
-        y += 0.2
-        plt.plot(x, y, color=color[name], linestyle='-', linewidth=1)
+        x *= 0.8
+        y *= 0.8
+        x -= 0.07
+        y += 0.35
+
+        # x, y = antispike(x, y)
+
+        plt.plot(x, y, color=color[name], linestyle='-', linewidth=2)
 
     plt.title('Path ' + name, size=20)
     plt.xlabel('Meters')
     plt.ylabel('Meters')
+    print(directory)
+    plt.savefig("{}_{}_stage_{}_v2.png".format(directory[0], directory[-1], directory[-2]), format="png", bbox_inches="tight")
     plt.show()
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches(10, 10)
+    fig.set_dpi(100)
