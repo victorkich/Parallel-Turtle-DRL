@@ -200,11 +200,15 @@ while True:
                 if state[s] == 0:
                     state[s] = state[0:24].mean()
 
-            # state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
-            # negative_state = state[:-3]
-            #if len(negative_state[state_idx]):
-            #    reward = -20
-            #    done = True
+            state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
+            negative_state = state[:-3]
+            if len(negative_state[state_idx]):
+                reward = -20
+                done = True
+
+            if state[-1] < 0.4:
+                reward = 200
+                done = True
 
             #if state[-1] > 3:
             #    state[-1] = 2.5
@@ -213,8 +217,8 @@ while True:
             # state[-1] *= 0.7
             print('State:', state)
 
-            #state_old = state
-            #state[:24] -= 0.2
+            state_old = state
+            state[:24] -= 0.2
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2]]):
@@ -231,7 +235,7 @@ while True:
             action[0] = np.clip(action[0], action_low[0], action_high[0])
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
-            #state = state_old
+            state = state_old
 
             print('Action:', action)
             action[0] *= 0.8
@@ -239,10 +243,6 @@ while True:
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
-
-            if state[-1] < 0.4:
-                reward = 200
-                done = True
 
             episode_reward += reward
 
