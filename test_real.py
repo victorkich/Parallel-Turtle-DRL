@@ -64,8 +64,8 @@ def get_state():
     while state is None:
         try:
             lidar = np.array(scan.ranges)
-            lidar = np.array([lidar[[i - 1, i, i + 1]].mean() for i in range(7, 361, 15)]).squeeze()
-            # lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
+            # lidar = np.array([lidar[[i - 1, i, i + 1]].mean() for i in range(7, 361, 15)]).squeeze()
+            lidar = np.array([max(lidar[[i - 1, i, i + 1]]) for i in range(7, 361, 15)]).squeeze()
             angle, distance, frame = real_ttb.get_angle_distance(image, lidar, green_magnitude=1.0)
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
