@@ -198,9 +198,9 @@ while True:
 
             state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
             negative_state = state[:-3]
-            if len(negative_state[state_idx]):
-                reward = -20
-                done = True
+            #if len(negative_state[state_idx]):
+            #    reward = -20
+            #    done = True
 
             state[-1] *= 0.7
             print('State:', state)
