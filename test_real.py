@@ -196,18 +196,20 @@ while True:
                         if state[s] > 3.5:
                             state[s] = 3.5
 
-            state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
-            negative_state = state[:-3]
+            for s in range(0, len(state) - 2):
+                if state[s] == 0:
+                    state[s] = state[0:24].mean()
+
+            # state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
+            # negative_state = state[:-3]
             #if len(negative_state[state_idx]):
             #    reward = -20
             #    done = True
 
-            state[-1] *= 0.7
+            if state[-1] > 3:
+                state[-1] = 2.5
+            # state[-1] *= 0.7
             print('State:', state)
-
-            for s in range(0, len(state) - 2):
-                if state[s] == 0:
-                    state[s] = state[0:24].mean()
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2]]):
