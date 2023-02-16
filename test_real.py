@@ -213,6 +213,9 @@ while True:
             # state[-1] *= 0.7
             print('State:', state)
 
+            state_old = state
+            state[:24] += 0.3
+
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2]]):
                     action = actor.get_action(np.array(state))
@@ -228,9 +231,11 @@ while True:
             action[0] = np.clip(action[0], action_low[0], action_high[0])
             action[1] = np.clip(action[1], action_low[1], action_high[1])
 
+            state = state_old
+
             print('Action:', action)
-            action[0] *= 0.8
-            action[1] *= 0.8
+            action[0] *= 0.7
+            action[1] *= 0.7
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
