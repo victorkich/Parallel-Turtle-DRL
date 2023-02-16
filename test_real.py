@@ -196,16 +196,16 @@ while True:
                         if state[s] > 3.5:
                             state[s] = 3.5
 
-            state_idx = (state > 0.1) * (state < 0.15)
+            state_idx = (state > 0.05) * (state < 0.1)
             if len(state[state_idx]):
                 reward = -20
                 done = True
 
+            print('State:', state)
+
             for s in range(0, len(state) - 2):
                 if state[s] == 0:
                     state[s] = state[0:24].mean()
-
-            print('State:', state)
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2]]):
