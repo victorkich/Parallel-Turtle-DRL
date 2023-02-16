@@ -196,8 +196,9 @@ while True:
                         if state[s] > 3.5:
                             state[s] = 3.5
 
-            state_idx = (state > 0.05) * (state < 0.1)
-            if len(state[state_idx]):
+            state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
+            negative_state = state[:-3]
+            if len(negative_state[state_idx]):
                 reward = -20
                 done = True
 
