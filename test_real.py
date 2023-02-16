@@ -214,7 +214,7 @@ while True:
             print('State:', state)
 
             state_old = state
-            state[:24] += 0.3
+            state[:24] -= 0.1
 
             if algorithm != '9':
                 if any(algorithm == algorithms_sel[[0, 2]]):
