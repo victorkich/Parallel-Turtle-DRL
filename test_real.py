@@ -234,8 +234,8 @@ while True:
             state = state_old
 
             print('Action:', action)
-            action[0] *= 0.7
-            action[1] *= 0.7
+            action[0] *= 0.6
+            action[1] *= 0.8
             _, _, _, _ = env_real.step(action=action)
             if RECORD:
                 out.write(frame)
