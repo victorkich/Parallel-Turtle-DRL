@@ -202,6 +202,7 @@ while True:
                 reward = -20
                 done = True
 
+            state[-1] *= 0.7
             print('State:', state)
 
             for s in range(0, len(state) - 2):
