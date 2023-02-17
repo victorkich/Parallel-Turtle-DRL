@@ -9,8 +9,9 @@ list_dir = os.listdir(path + '/real_results/')
 threshold_x = 10
 threshold_y = 30
 threshold = 10
-STAGE = 4
-c = 7
+STAGE = 1
+c = 0
+
 
 def antispike(old_list_x, old_list_y):
     new_list_x = list()
@@ -20,6 +21,7 @@ def antispike(old_list_x, old_list_y):
             new_list_x.append(old_list_x[index])
             new_list_y.append(old_list_y[index])
     return new_list_x, new_list_y
+
 
 def antispike2(old_list_x, old_list_y):
     pivot_x = old_list_x[0]
@@ -36,19 +38,20 @@ def antispike2(old_list_x, old_list_y):
 
 
 def open_test_data(i):
-    return open(path + '/real_results/PDSRL_P_Sl_episode{}'.format(i), 'rb')
+    return open(path + '/real_results/DDPG_N_S1_episode{}.pkl'.format(i), 'rb')
 
 
 stage = mpimg.imread(path+'/media/stage_{}_real.png'.format(STAGE))
 
 data = list()
-for i in range(1, 15):
+for i in range(0, 12):
     with open_test_data(i) as f:
         data.append(pickle.load(f))
 
 color = {0: 'firebrick', 1: 'tomato', 2: 'peru', 3: 'gold', 4: 'dodgerblue', 5: 'springgreen', 6: 'indigo', 7: 'deeppink'}
 
-data = np.array(data)[[0, 1, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13]]
+print(len(data))
+# data = np.array(data)  # [[0, 1, 3, 4, 5, 6, 7, 8, 9, 11]]
 
 size = len(data)
 plt.imshow(stage)
@@ -79,8 +82,8 @@ for l in range(size):
     y = y / 1.4
     y -= 10
 
-    x, y = antispike(x, y)
-    #x, y = antispike(x, y)
+    # x, y = antispike(x, y)
+    # x, y = antispike(x, y)
 
     plt.plot(x, y, color=color[c], linestyle='-', linewidth=2)
 plt.show()

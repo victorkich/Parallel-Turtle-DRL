@@ -11,17 +11,6 @@ path = os.path.dirname(os.path.abspath(__file__))
 list_dir = os.listdir(path + '/results/')
 threshold = 10
 
-
-def antispike(old_list_x, old_list_y):
-    new_list_x = list()
-    new_list_y = list()
-    for index in range(1, len(old_list_x)):
-        if abs(old_list_x[index] - old_list_x[index-1]) < threshold and abs(old_list_y[index] - old_list_y[index-1]) < threshold:
-            new_list_x.append(old_list_x[index])
-            new_list_y.append(old_list_y[index])
-    return new_list_x, new_list_y
-
-
 stage = [mpimg.imread(path+'/media/stage_{}.png'.format(i)) for i in range(1, 5)]
 color = {'PDDRL-N': 'dodgerblue', 'PDSRL-N': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink',
          'DDPG-N': 'orange', 'DDPG-P': 'black', 'SAC-N': 'darkslategray', 'SAC-P': 'brown'}
@@ -41,7 +30,7 @@ fig, ax = plt.subplots()
 fig.set_size_inches(10, 10)
 fig.set_dpi(100)
 
-sorted_dir = sorted_dir[5:]
+# sorted_dir = sorted_dir[5:]
 
 for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     with open(path+'/results/'+'_'.join(directory)+'/writer_data.json') as f:
@@ -102,7 +91,7 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     x = pd.DataFrame(data['agent_0/x']).iloc[:, 2].to_numpy().tolist()
     y = pd.DataFrame(data['agent_0/y']).iloc[:, 2].to_numpy().tolist()
 
-    plt.imshow(stage[sel[c]], extent=[min(x) - 0.7, max(x) + 0.7, min(y) - 0.4, max(y) + 0.4])
+    plt.imshow(stage[sel[c]], extent=[min(x) - 0.7, max(x) + 0.7, min(y) - 0.7, max(y) + 0.7])
 
     new_x = list()
     new_y = list()
@@ -116,12 +105,10 @@ for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
     for x, y in zip(new_x, new_y):
         x = np.array(x)
         y = np.array(y)
-        x *= 0.8
-        y *= 0.8
-        x -= 0.07
-        y += 0.35
-
-        # x, y = antispike(x, y)
+        # x *= 0.8
+        # y *= 0.8
+        # x -= 0.07
+        # y += 0.35
 
         plt.plot(x, y, color=color[name], linestyle='-', linewidth=2)
 

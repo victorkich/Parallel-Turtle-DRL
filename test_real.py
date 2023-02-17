@@ -200,11 +200,11 @@ while True:
                 if state[s] == 0:
                     state[s] = state[0:24].mean()
 
-            #state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
-            #negative_state = state[:-3]
-            #if len(negative_state[state_idx]):
-            #    reward = -20
-            #    done = True
+            state_idx = (state[:-3] > 0.05) * (state[:-3] < 0.1)
+            negative_state = state[:-3]
+            if len(negative_state[state_idx]):
+                reward = -20
+                done = True
 
             if state[-1] < 0.4:
                 reward = 200
