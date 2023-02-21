@@ -510,7 +510,7 @@ def eval_np(module, *args, **kwargs):
 
 
 def test_goals(t, stage):
-    if stage == '1' or stage == '2':
+    if str(stage) == '1' or stage == '2':
         if t < 2:
             return [-1.5, -1.5]
         elif 2 <= t < 3:
@@ -519,7 +519,7 @@ def test_goals(t, stage):
             return [-1.5, 1.5]
         elif t >= 4:
             return [1.5, 1.5]
-    elif stage == 'u':
+    elif str(stage) == 'u':
         if t < 2:
             return [1.5, -1.5]
         elif 2 <= t < 3:
@@ -528,7 +528,7 @@ def test_goals(t, stage):
             return [0.5, -3.5]
         elif t >= 4:
             return [3.5, -3.5]
-    elif stage == 'l':
+    elif str(stage) == 'l':
         if t < 2:
             return [2.5, -2.0]
         elif 2 <= t < 3:
