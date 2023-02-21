@@ -1,89 +1,86 @@
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
+from tqdm import tqdm
 import numpy as np
 import pickle
 import os
 
+
 path = os.path.dirname(os.path.abspath(__file__))
-list_dir = os.listdir(path + '/real_results/')
-threshold_x = 10
-threshold_y = 30
+list_dir = os.listdir(path + '/saved_models/')
 threshold = 10
-STAGE = 1
-c = 0
 
+color = {'PDDRL-N': 'dodgerblue', 'PDSRL-N': 'springgreen', 'PDDRL-P': 'indigo', 'PDSRL-P': 'deeppink',
+         'DDPG-N': 'orange', 'DDPG-P': 'black', 'SAC-N': 'darkslategray', 'SAC-P': 'brown', 'BUG2-N': 'gold'}
 
-def antispike(old_list_x, old_list_y):
-    new_list_x = list()
-    new_list_y = list()
-    for index in range(1, len(old_list_x)):
-        if abs(old_list_x[index] - old_list_x[index-1]) < threshold and abs(old_list_y[index] - old_list_y[index-1]) < threshold:
-            new_list_x.append(old_list_x[index])
-            new_list_y.append(old_list_y[index])
-    return new_list_x, new_list_y
+splitted_dir = list()
+for dir in list_dir:
+    splitted_dir.append(dir.split('_'))
 
+sorted_dir = sorted(splitted_dir, key=lambda row: row[4])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[0])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[4])
+sorted_dir = sorted(sorted_dir, key=lambda row: row[3])
 
-def antispike2(old_list_x, old_list_y):
-    pivot_x = old_list_x[0]
-    pivot_y = old_list_y[0]
-    new_list_x = list()
-    new_list_y = list()
-    for index in range(1, len(old_list_x)):
-        if abs(old_list_x[index] - pivot_x) < threshold and abs(old_list_y[index] - pivot_y) < threshold:
-            pivot_x = old_list_x[index]
-            pivot_y = old_list_y[index]
-            new_list_x.append(old_list_x[index])
-            new_list_y.append(old_list_y[index])
-    return new_list_x, new_list_y
+fig, ax = plt.subplots()
+fig.set_size_inches(10, 10)
+fig.set_dpi(100)
 
+# print('Sorted dir:', sorted_dir)
+# sorted_dir = sorted_dir[33:]
 
-def open_test_data(i):
-    return open(path + '/real_results/DDPG_N_S1_episode{}.pkl'.format(i), 'rb')
+for c, directory in tqdm(enumerate(sorted_dir), total=len(sorted_dir)):
+    directory = [directory[0], directory[4], directory[3]]
+    file_name = '_'.join(directory[:3])
+    data = list()
+    try:
+        for i in range(0, 12):
+            with open(path + '/real_results_extra/{}_episode{}.pkl'.format(file_name, i), 'rb') as f:
+                data.append(pickle.load(f))
+    except:
+        print('C:', c)
+        continue
 
+    stage = mpimg.imread(path + '/media/stage_extra_real.png'.format(directory[2]))
+    ax.imshow(stage)
 
-stage = mpimg.imread(path+'/media/stage_{}_real.png'.format(STAGE))
+    size = len(data)
+    rewards = list()
+    times = list()
+    for i in range(size):
+        rewards.append(1 if data[i][0] == 20 else 0)
+        times.append(round(data[i][1], 2))
 
-data = list()
-for i in range(0, 12):
-    with open_test_data(i) as f:
-        data.append(pickle.load(f))
+    print('Algorithm:', file_name)
+    print('Rewards:', rewards)
+    print('Times:', times)
+    print('Valores testados:', size)
+    print('Time mean:', round(np.mean(times), 2), 'std:', round(np.std(times), 2))
+    print('Sucess rate:', (sum(rewards) / size) * 100, '%')
 
-color = {0: 'firebrick', 1: 'tomato', 2: 'peru', 3: 'gold', 4: 'dodgerblue', 5: 'springgreen', 6: 'indigo', 7: 'deeppink'}
+    for l in range(size):
+        x = []
+        y = []
+        for x_n, y_n in data[l][4]:
+            x.append(x_n)
+            y.append(y_n)
 
-print(len(data))
-# data = np.array(data)  # [[0, 1, 3, 4, 5, 6, 7, 8, 9, 11]]
+        x = np.array(x)
+        y = np.array(y)
 
-size = len(data)
-plt.imshow(stage)
-rewards = list()
-times = list()
-for i in range(size):
-    rewards.append(1 if data[i][0] == 20 else 0)
-    times.append(data[i][1])
+        x = x * 1.25
+        x += 10
+        y = y * 1.25
+        y += 10
 
-print(rewards)
-print(times)
-print('')
-print('Valores testados:', size)
-print('Time mean:', np.mean(times), 'std:', np.std(times))
-print('Sucess rate:', (sum(rewards)/size) * 100, '%')
+        ax.plot(x, y, color=color['-'.join(directory[:-1])], linestyle='-', linewidth=2)
 
-for l in range(size):
-    x = []
-    y = []
-    for x_n, y_n in data[l][4]:
-        x.append(x_n)
-        y.append(y_n)
+    plt.title('Path ' + file_name, size=20)
+    ax.set_xlabel('Step', fontsize=20)
+    ax.set_ylabel('Reward', fontsize=20)
+    plt.show()
+    plt.show()
 
-    x = np.array(x)
-    x = x / 1.7
-    x += 10
-    y = np.array(y)
-    y = y / 1.4
-    y -= 10
-
-    # x, y = antispike(x, y)
-    # x, y = antispike(x, y)
-
-    plt.plot(x, y, color=color[c], linestyle='-', linewidth=2)
-plt.show()
+    fig, ax = plt.subplots()
+    fig.set_size_inches(10, 10)
+    fig.set_dpi(100)
